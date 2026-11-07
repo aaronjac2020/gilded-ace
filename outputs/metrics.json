@@ -1,0 +1,61 @@
+{
+  "seed": 42,
+  "scorecard_rows": 2762,
+  "hold_flags_full": 1,
+  "verdicts_full": {
+    "inspect_hold": 1,
+    "downtime": 0,
+    "location": 34,
+    "luck": 19,
+    "truly_weak": 136,
+    "ok": 120
+  },
+  "manager_10": [
+    "M-5076",
+    "M-1158",
+    "M-1120",
+    "M-1118",
+    "M-1238",
+    "M-1181",
+    "M-1035",
+    "M-1179",
+    "M-1017",
+    "M-1265"
+  ],
+  "our_10": [
+    "M-1262",
+    "M-1265",
+    "M-1086",
+    "M-1181",
+    "M-1190",
+    "M-1139",
+    "M-1124",
+    "M-1145",
+    "M-1050",
+    "M-1274"
+  ],
+  "overlap": [
+    "M-1181",
+    "M-1265"
+  ],
+  "frozen_columns": [
+    "machine_id",
+    "period",
+    "days_on_floor",
+    "availability",
+    "coin_in_per_avail_hr",
+    "theo_usd",
+    "house_win_usd",
+    "luck_resid_usd",
+    "luck_z",
+    "hold_obs",
+    "hold_expected",
+    "hold_ci_lo",
+    "hold_ci_hi",
+    "location_expected_per_hr",
+    "machine_effect",
+    "machine_effect_shrunk",
+    "verdict",
+    "verdict_reason"
+  ]
+}

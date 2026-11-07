@@ -31,6 +31,7 @@ verdicts:
   theo_hr_low_quantile: 0.10
   min_days_on_floor: 30
   list_size: 10
+  low_hold_design: 0.05   # configured hold at/below this gets a 'by design' note
 persistence:
   min_days_each_window: 14
 moved:
