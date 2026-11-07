@@ -148,29 +148,6 @@ def _slope(moves: list[dict], key: str) -> float:
     return float((da * ds).sum() / (ds**2).sum())
 
 
-def residual_sd(md: pd.DataFrame, window: int = 28, step: int = 14) -> dict:
-    """Noise for sizing a planned move test: sd over unmoved machines of the change in log(actual / spot expectation)
-    between adjacent `window`-day windows, alone and as a difference vs. another unmoved machine in the same bank."""
-    mv = md.groupby("machine_id")["location_id"].nunique()
-    md = md[md.machine_id.isin(mv[mv == 1].index)]
-    dates = np.sort(md.gaming_date.unique())
-    agg = {"c": ("coin_in_usd", "sum"), "e": ("loc_expected_coin_in_usd", "sum"), "n": ("coin_in_usd", "size")}
-    single, paired = [], []
-    for st in range(0, len(dates) - 2 * window + 1, step):
-        w = [
-            md[md.gaming_date.isin(dates[st + k * window : st + (k + 1) * window])].groupby("machine_id").agg(**agg)
-            for k in (0, 1)
-        ]
-        j = w[0].join(w[1], how="inner", lsuffix="1", rsuffix="2")
-        j = j[(j.n1 >= 0.75 * window) & (j.n2 >= 0.75 * window)]
-        r = np.log(j.c2 / j.e2) - np.log(j.c1 / j.e1)
-        single += list(r)
-        bank = md.drop_duplicates("machine_id").set_index("machine_id")["bank_id"].reindex(r.index)
-        for _, v in r.groupby(bank):
-            paired += list(v.to_numpy()[:-1] - v.to_numpy()[1:])
-    return {"window_days": window, "sd": float(np.std(single)), "sd_vs_control": float(np.std(paired)), "n": len(single)}
-
-
 def carded_share(full: pd.DataFrame, mgr_ids: list[str], seed: int = 42) -> dict:
     """Coin-in-weighted carded share for flagged groups vs. the floor, with bootstrap CI on the difference."""
     reps = cfg()["bootstrap"]["resamples"]
@@ -227,7 +204,56 @@ def run(full: pd.DataFrame, mgr_ids: list[str], start: date, end: date) -> dict:
     md = prepare_days(start, end)
     return {
         "moved": moved_experiment(md),
-        "noise": residual_sd(md),
+        "move_noise": move_noise(md),
         "carded": carded_share(full, mgr_ids),
         "volatility": volatility_mix(full, mgr_ids),
+    }
+
+
+def move_noise(md: pd.DataFrame, pre: int = 28, post: int = 16, n: int = 2000, seed: int = 42) -> dict:
+    """Empirical per-move noise for a planned move test, from real play per available hour.
+
+    Each draw: a random bank, two unmoved machines in it (treated, control), a random start; noise =
+    [log rate/expected over the `post` operating days after a `pre`-day baseline] change for treated minus control.
+    Spot error: a moved machine also meets the new spot's own deviation from the model, which unmoved machines never
+    see; proxied by bank-level log(actual/expected) over the period (one value per bank, centered).
+    Returns the draws (for resampling in the sizing simulation) and their spread.
+    """
+    mv = md.groupby("machine_id")["location_id"].nunique()
+    d = md[md.machine_id.isin(mv[mv == 1].index) & (md.available_hours > 0)]
+    c = d.pivot_table(index="machine_id", columns="gaming_date", values="coin_in_usd", aggfunc="sum")
+    e = d.pivot_table(index="machine_id", columns="gaming_date", values="loc_expected_coin_in_usd", aggfunc="sum")
+    e = e.reindex_like(c)
+    ok = c.notna().to_numpy()
+    C, E = c.fillna(0).to_numpy(), e.fillna(0).to_numpy()
+    bank = d.drop_duplicates("machine_id").set_index("machine_id")["bank_id"].reindex(c.index).to_numpy()
+    banks = [np.flatnonzero(bank == b) for b in np.unique(bank)]
+    banks = [b for b in banks if len(b) >= 2]
+    rng = np.random.default_rng(seed)
+    T = C.shape[1]
+
+    def chg(i: int, s: int) -> float | None:
+        a, b = slice(s, s + pre), slice(s + pre, s + pre + post)
+        if ok[i, a].mean() < 0.75 or ok[i, b].mean() < 0.75:
+            return None
+        return float(np.log(C[i, b].sum() / E[i, b].sum()) - np.log(C[i, a].sum() / E[i, a].sum()))
+
+    draws: list[float] = []
+    while len(draws) < n:
+        b = banks[rng.integers(len(banks))]
+        t, k = rng.choice(b, 2, replace=False)
+        s = int(rng.integers(0, T - pre - post + 1))
+        x, y = chg(t, s), chg(k, s)
+        if x is not None and y is not None:
+            draws.append(x - y)
+    g = d.groupby("bank_id")[["coin_in_usd", "loc_expected_coin_in_usd"]].sum()
+    spot = np.log(g.coin_in_usd / g.loc_expected_coin_in_usd)
+    spot = (spot - spot.mean()).to_numpy()
+    return {
+        "pre_days": pre,
+        "post_days": post,
+        "sd": float(np.std(draws)),
+        "sd_spot": float(np.std(spot)),
+        "draws": [round(v, 5) for v in draws],
+        "spot_draws": [round(float(v), 5) for v in spot],
     }

@@ -100,6 +100,29 @@ def main() -> dict:
             f"  {mid}  effect {r.machine_effect_shrunk:.2f} (hi {r.effect_shrunk_hi:.2f})  {r.zone_id} {r.theme}  [{r.verdict}]"
         )
     overlap = sorted(set(mgr.index) & set(ours.index))
+    # Game setting: machines configured to pay back more (low expected hold) earn less house win on the same play
+    lh, med = cfg()["verdicts"]["low_hold_design"], float(full["hold_expected"].median())
+    low = mgr[mgr["hold_expected"] <= lh]
+    n_floor = int((full["hold_expected"] <= lh).sum())
+    from scipy import stats
+
+    metrics["low_hold"] = {
+        "threshold": lh,
+        "floor_median_hold": med,
+        "manager_n": len(low),
+        "manager_ids": list(low.index),
+        "floor_n": n_floor,
+        "floor_total": len(full),
+        "p_value": float(stats.hypergeom.sf(len(low) - 1, len(full), n_floor, len(mgr))),
+        "manager_theo_usd": float(low["theo_usd"].sum()),
+        "manager_theo_at_median_usd": float((low["coin_in_usd"] * med).sum()),
+    }
+    lw = metrics["low_hold"]
+    print(
+        f"Game setting: {lw['manager_n']}/{len(mgr)} of the manager's list configured at hold <= {lh:.0%} "
+        f"(floor {n_floor}/{len(full)}, median {med:.0%}; hypergeometric p = {lw['p_value']:.4f}); "
+        f"their theo ${lw['manager_theo_usd']:,.0f} vs ${lw['manager_theo_at_median_usd']:,.0f} at median hold"
+    )
     print(f"Overlap manager vs ours: {len(overlap)} {overlap}; truly_weak excluded for eligibility: {len(excluded)}")
 
     metrics.update(
@@ -190,7 +213,7 @@ def main() -> dict:
     pk, a, b = mt["pick"], cmp["move_test"], cmp["lowest"]
     print(
         f"  move test sizing: {pk['swaps']} swaps / {pk['moves']} moves (${pk['cost_usd']:,.0f}), planned 90% CI on beta "
-        f"+/-{pk['halfwidth']:.2f} (+/-{pk['halfwidth_vs_control']:.2f} vs matched controls); "
+        f"+/-{pk['halfwidth']:.2f} (noise only +/-{pk['halfwidth_noise_only']:.2f}; peer-calibrated tau +/-{pk['halfwidth_tau_peer']:.2f}); "
         f"theo ${pk['theo_lo_usd']:,.0f} / ${pk['theo_mid_usd']:,.0f} / ${pk['theo_hi_usd']:,.0f}; VOI ${mt['voi_usd']:,.0f}"
     )
     print(

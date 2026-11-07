@@ -91,7 +91,7 @@ type Lab = {
     train_house_win_rho?: { spot: number; effect: number; n: number };
   } | null;
   alternatives: { moved: Moved } | null;
-  move_test_pick: { swaps: number; moves: number; cost_usd: number; halfwidth_vs_control: number } | null;
+  move_test_pick: { swaps: number; moves: number; cost_usd: number; halfwidth: number } | null;
   model1_change: {
     truly_weak_before: number;
     truly_weak_after: number;
@@ -624,7 +624,7 @@ function FollowsSpot({ mv, test }: { mv: Moved; test: Lab["move_test_pick"] }) {
         {test && (
           <li>
             The plan settles it with a controlled test: {test.swaps} swaps ({test.moves} moves, {fmt.usdK(test.cost_usd)}) between quiet and
-            busy spots, each against an unmoved same-bank control; planned 90% interval about ±{test.halfwidth_vs_control.toFixed(2)}.
+            busy spots, each against an unmoved same-bank control; planned 90% interval about ±{test.halfwidth.toFixed(2)}.
           </li>
         )}
       </ul>

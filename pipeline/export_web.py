@@ -163,7 +163,11 @@ def model_lab() -> dict:
         "model1": m.get("model1"),
         "persistence": m.get("persistence"),
         "persistence_compare": m.get("persistence_compare"),
-        "alternatives": m.get("alternatives"),
+        # resampling pools stay in metrics.json; the page only needs their spread
+        "alternatives": {
+            k: ({kk: vv for kk, vv in v.items() if not kk.endswith("draws")} if k == "move_noise" else v)
+            for k, v in (m.get("alternatives") or {}).items()
+        },
         "move_test_pick": (m.get("move_test") or {}).get("pick"),
         "model1_change": m.get("model1_change"),
     }
@@ -233,6 +237,10 @@ def run() -> dict[str, int]:
         "seed": cfg()["seed"],
         "periods": {k: [str(a), str(b)] for k, (a, b) in periods().items()},
         "row_counts": {"machines": int(len(mach)), "machine_days": int(len(machine_days())), "scorecard": int(len(sc))},
+        "rules": {
+            "low_hold_design": cfg()["verdicts"]["low_hold_design"],
+            "floor_median_hold": float(full["hold_expected"].median()),
+        },
     }
     sizes["meta.json"] = write("meta.json", meta)
     total = sum(sizes.values())

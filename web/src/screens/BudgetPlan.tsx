@@ -9,7 +9,8 @@ import { useJson } from "../lib/useData";
 
 type Cmp = { cost_usd: number; theo_mid_usd: number; voi_usd: number; value_usd: number };
 type MoveTest = {
-  sizing: { swaps: number; moves: number; cost_usd: number; halfwidth_vs_control: number; theo_mid_usd: number }[];
+  sizing: { swaps: number; moves: number; cost_usd: number; halfwidth: number; theo_mid_usd: number }[];
+  power: { post_days: number };
   pick: { swaps: number };
   voi_usd: number;
   comparison: { move_test: Cmp; lowest: Cmp & { action_type_id: string }; replaces: string | null; errors: string[]; included: boolean };
@@ -179,12 +180,11 @@ function MoveTestCompare({ mt }: { mt: MoveTest }) {
       }
       sub="Information value = expected gain on the follow-on decision (lease-replace quiet-spot weak machines for 90 days) from knowing whether play follows the spot."
       table={{
-        columns: ["Swaps", "Moves", "Cost", "Planned 90% CI on slope", "Expected theo (mid)"],
+        columns: ["Swaps (moves)", "Cost", "Planned 90% CI on slope", "Expected theo (mid)"],
         rows: mt.sizing.map((r) => [
-          String(r.swaps),
-          String(r.moves),
+          `${r.swaps} (${r.moves})${r.swaps === mt.pick.swaps ? " · plan" : ""}`,
           fmt.usd(r.cost_usd),
-          `±${r.halfwidth_vs_control.toFixed(2)}`,
+          `±${r.halfwidth.toFixed(2)}`,
           fmt.usd(r.theo_mid_usd),
         ]),
       }}
@@ -213,6 +213,8 @@ function MoveTestCompare({ mt }: { mt: MoveTest }) {
       </table>
       <p className="mt-3 text-xs text-fg-muted">
         Picked {mt.pick.swaps} swaps: the fewest with ≥ 3 swaps (so no single move carries the estimate) and a planned interval within ±0.2.
+        Intervals are simulated from real same-bank play over {mt.power.post_days} operating days, plus machine-to-machine variation fitted
+        to the 4 observed moves.
       </p>
     </Tile>
   );

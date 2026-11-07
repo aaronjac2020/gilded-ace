@@ -9,10 +9,10 @@ def _mt(theo: float, voi: float) -> dict:
         "theo_lo_usd": theo / 2,
         "theo_mid_usd": theo,
         "theo_hi_usd": theo * 1.5,
-        "halfwidth_vs_control": 0.12,
+        "halfwidth": 0.14,
     }
     pairs = [{"ours": f"M-{i}", "manager": f"M-{i + 10}"} for i in range(3)]
-    return {"pick": pick, "pairs": pairs, "voi_usd": voi}
+    return {"pick": pick, "pairs": pairs, "voi_usd": voi, "power": {"post_days": 16}}
 
 
 def _lines() -> list[Line]:

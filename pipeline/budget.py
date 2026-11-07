@@ -123,7 +123,7 @@ def move_test(full: pd.DataFrame, alt: dict, cat: pd.DataFrame | None = None, se
 
     cat = catalog() if cat is None else cat
     mt = cfg()["budget"]["move_test"]
-    mv, noise = alt["moved"], alt["noise"]
+    mv, noise = alt["moved"], alt["move_noise"]
     mv_cat = cat.loc["A-MOVE-MACHINE"]
     f = full[full["on_floor_end"].astype(bool)].copy()
     f["spot"] = f["location_expected_per_hr"]
@@ -150,23 +150,53 @@ def move_test(full: pd.DataFrame, alt: dict, cat: pd.DataFrame | None = None, se
         return g * hrs * live - sum(down_h * rate(i, f.at[i, "spot"], b) for p in P for i in p)
 
     ci = cfg()["bootstrap"]["ci"]
+    # Planned interval by simulation: each move's noise is resampled from real treated-minus-control changes in
+    # log(play / spot expectation) over the operating days after lead time, plus the new-vs-old spot's own model error
+    # scaled by the prior beta. beta_hat - beta = sum(noise * ds) / sum(ds^2); width = central 90% of that spread.
+    # Machine-to-machine variation in beta (tau): the noise alone predicts a narrower interval on the 4 observed moves
+    # than their bootstrap gave; tau is set so the simulation reproduces the observed interval (model, and peers as a
+    # sensitivity). Each move's error then gets tau * ds * N(0, 1).
+    rng = np.random.default_rng(seed)
+    e_pool, u_pool = np.asarray(noise["draws"]), np.asarray(noise["spot_draws"])
+    z = stats.norm.ppf(ci / 2 + 0.5)
+    sig2 = float(e_pool.var() + 2 * u_pool.var() * mv["beta_model"] ** 2)
+    ds_obs = np.array([np.log(x["spot_after"] / x["spot_before"]) for x in mv["moves"]])
+    s2, s4 = float((ds_obs**2).sum()), float((ds_obs**4).sum())
+
+    def tau_for(hw_obs: float) -> float:
+        return float(np.sqrt(max(0.0, ((hw_obs / z) ** 2 * s2**2 - sig2 * s2) / s4)))
+
+    tau = tau_for((mv["beta_model_hi"] - mv["beta_model_lo"]) / 2)
+    tau_peer = tau_for((mv["beta_peer_hi"] - mv["beta_peer_lo"]) / 2)
+
+    def errs(ds: np.ndarray, t: float) -> dict[str, np.ndarray]:
+        k = len(ds)
+        e = rng.choice(e_pool, (mt["sims"], k))
+        u = (rng.choice(u_pool, (mt["sims"], k)) - rng.choice(u_pool, (mt["sims"], k))) * mv["beta_model"]
+        h = t * ds * rng.standard_normal((mt["sims"], k))
+        return {k_: (x * ds).sum(1) / (ds**2).sum() for k_, x in (("noise", e), ("full", e + u + h))}
+
+    def hw_of(x: np.ndarray) -> float:
+        return float(np.diff(np.quantile(x, [0.5 - ci / 2, 0.5 + ci / 2]))[0] / 2)
+
     rows = []
     for n in range(1, len(pairs) + 1):
         P = pairs[:n]
-        ss = 2 * sum(np.log(f.at[w, "spot"] / f.at[m, "spot"]) ** 2 for w, m in P)
-        t = stats.t.ppf(ci / 2 + 0.5, 2 * n - 1)
+        ds = np.repeat([np.log(f.at[m, "spot"] / f.at[w, "spot"]) for w, m in P], 2) * np.tile([-1, 1], n)
+        err = errs(ds, tau)
         rows.append(
             {
                 "swaps": n,
                 "moves": 2 * n,
                 "cost_usd": line_cost("A-MOVE-MACHINE", 2 * n, cat),
-                "halfwidth": float(t * noise["sd"] / np.sqrt(ss)),
-                "halfwidth_vs_control": float(t * noise["sd_vs_control"] / np.sqrt(ss)),
-                "se_vs_control": float(noise["sd_vs_control"] / np.sqrt(ss)),
+                "halfwidth_noise_only": hw_of(err["noise"]),
+                "halfwidth": hw_of(err["full"]),
+                "halfwidth_tau_peer": hw_of(errs(ds, tau_peer)["full"]),
+                "se": float(err["full"].std()),
                 **{f"theo_{k}_usd": theo(P, mv[f"beta_model{sfx}"]) for k, sfx in (("lo", "_lo"), ("mid", ""), ("hi", "_hi"))},
             }
         )
-    ok = [r for r in rows if r["swaps"] >= mt["min_swaps"] and r["halfwidth_vs_control"] <= mt["target_halfwidth"]]
+    ok = [r for r in rows if r["swaps"] >= mt["min_swaps"] and r["halfwidth"] <= mt["target_halfwidth"]]
     pick = ok[0] if ok else rows[-1]
     P = pairs[: pick["swaps"]]
     moved = [i for p in P for i in p]
@@ -183,7 +213,7 @@ def move_test(full: pd.DataFrame, alt: dict, cat: pd.DataFrame | None = None, se
     z = stats.norm.ppf(ci / 2 + 0.5)
     m0 = mv["beta_model"]
     s0 = max(mv["beta_model_hi"] - mv["beta_model_lo"], mv["beta_peer_hi"] - mv["beta_peer_lo"]) / (2 * z)
-    se = pick["se_vs_control"]
+    se = pick["se"]
     lease = cat.loc["A-REPLACE-LEASE"]
     fo_live = max(0, mt["followon_days"] - int(lease["lead_days"]))
     fo_cost = float(lease["unit_cost_usd"] + lease["recurring_usd_per_day"] * fo_live)
@@ -194,7 +224,6 @@ def move_test(full: pd.DataFrame, alt: dict, cat: pd.DataFrame | None = None, se
         b = beta[:, None]
         return (mt["new_title_effect"] * hold_ref * sp**b * s_ref ** (1 - b) - r_old) * hrs * fo_live - fo_cost
 
-    rng = np.random.default_rng(seed)
     beta = rng.normal(m0, s0, mt["sims"])
     without = float(np.maximum(v(beta).mean(0), 0).sum())
     bhat = beta + rng.normal(0, se, len(beta))
@@ -211,6 +240,14 @@ def move_test(full: pd.DataFrame, alt: dict, cat: pd.DataFrame | None = None, se
         "sizing": rows,
         "pick": pick,
         "voi_usd": max(0.0, with_info - without),
+        "power": {
+            "post_days": noise["post_days"],
+            "noise_sd": noise["sd"],
+            "spot_sd": noise["sd_spot"],
+            "tau": tau,
+            "tau_peer": tau_peer,
+            "observed_design_halfwidth_noise_only": hw_of(errs(ds_obs, 0.0)["full"]),
+        },
         "prior_beta": {"mean": float(m0), "sd": float(s0)},
         "posterior_sd": float(ps),
         "followon": {
@@ -313,7 +350,7 @@ def move_line(mt: dict) -> Line:
         ),
         measurement=(
             f"Pooled slope of log play change on log spot change over {p['moves']} moves, each against a matched unmoved machine "
-            f"in the same bank, 28 live days. Planned 90% CI on the slope about +/-{p['halfwidth_vs_control']:.2f}."
+            f"in the same bank, over the first {mt['power']['post_days']} operating days after the move. Planned 90% CI on the slope about +/-{p['halfwidth']:.2f}."
         ),
         uncertainty=(
             "Theo range uses the natural-experiment slope and its 90% CI. The manager's quiet-spot machines are low hold, "

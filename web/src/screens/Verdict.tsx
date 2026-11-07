@@ -6,6 +6,7 @@ import { HeroBand, Kpi, KpiStrip } from "../components/ui/hero-band";
 import { CiBar, RowList, type RowItem } from "../components/ui/list-row";
 import { Delta, Num } from "../components/ui/num";
 import { EmptyState, ErrorState, ScreenSkeleton } from "../components/ui/skeleton";
+import { GameSettingChip } from "../components/ui/game-setting-chip";
 import { Tile } from "../components/ui/tile";
 
 import { fmt } from "../lib/format";
@@ -15,6 +16,7 @@ import { useFilters } from "../lib/urlState";
 import { verdictLabels, verdictOrder } from "../theme/tokens";
 
 type Budget = { total_usd: number; kept_usd: number; effect: { lo: number; mid: number; hi: number } };
+type Meta = { rules?: { low_hold_design: number; floor_median_hold: number } };
 
 export default function Verdict() {
   const [f, setF] = useFilters();
@@ -23,6 +25,7 @@ export default function Verdict() {
   const prior = useScorecard({ ...f, period: mi > 0 ? MONTHS[mi - 1] : f.period }).rows;
   const hasPrior = mi > 0 && prior.length > 0;
   const budget = useJson<Budget>("budget.json").data;
+  const rules = useJson<Meta>("meta.json").data?.rules;
   const mgr = useMemo(() => managerList(rows), [rows]);
   const ours = useMemo(() => oursList(rows), [rows]);
   const [machine, open] = useMachineParam();
@@ -59,11 +62,16 @@ export default function Verdict() {
     ),
     metric: fmt.usdK(r.house_win_usd),
     highlight: overlap.has(r.machine_id),
-    tag: overlap.has(r.machine_id) ? (
-      <span className="rounded-sm bg-gold/15 px-1.5 py-0.5 text-2xs text-gold-soft">on our list</span>
-    ) : (
-      <span className="rounded-sm border border-divider px-1.5 py-0.5 text-2xs text-fg-subtle" data-testid="not-ours">
-        not on our list
+    tag: (
+      <span className="flex items-center gap-1.5">
+        {rules && r.hold_expected <= rules.low_hold_design && <GameSettingChip hold={r.hold_expected} median={rules.floor_median_hold} />}
+        {overlap.has(r.machine_id) ? (
+          <span className="rounded-sm bg-gold/15 px-1.5 py-0.5 text-2xs text-gold-soft">on our list</span>
+        ) : (
+          <span className="rounded-sm border border-divider px-1.5 py-0.5 text-2xs text-fg-subtle" data-testid="not-ours">
+            not on our list
+          </span>
+        )}
       </span>
     ),
   }));

@@ -6,6 +6,7 @@ import type { ScoreRow } from "../lib/data";
 import { fmt } from "../lib/format";
 import { useDrawerList, useMachineParam } from "../lib/uiStore";
 import { useJson, useScorecard } from "../lib/useData";
+import { GameSettingChip } from "./ui/game-setting-chip";
 import { useFilters } from "../lib/urlState";
 import { Button } from "./ui/button";
 import { Kbd } from "./ui/kbd";
@@ -17,6 +18,7 @@ import { Tip } from "./ui/tooltip";
 export function MachineDrawer() {
   const [f] = useFilters();
   const { all } = useScorecard(f);
+  const meta = useJson<{ rules?: { low_hold_design: number; floor_median_hold: number } }>("meta.json");
   const lab = useJson<{ alternatives: { moved: { moves: Move[] } } | null }>("model_lab.json");
   const floorCarded = useMemo(() => {
     const ci = (all ?? []).reduce((t, r) => t + r.coin_in_usd, 0);
@@ -57,6 +59,7 @@ export function MachineDrawer() {
               step={step}
               close={() => setId(null)}
               floorCarded={floorCarded}
+              rules={meta.data?.rules}
               moves={(lab.data?.alternatives?.moved.moves ?? []).filter((mv) => mv.machine_id === row.machine_id)}
             />
           )}
@@ -74,6 +77,7 @@ function Body({
   close,
   floorCarded,
   moves,
+  rules,
 }: {
   row: ScoreRow;
   pos: number;
@@ -82,6 +86,7 @@ function Body({
   close: () => void;
   floorCarded: number | null;
   moves: Move[];
+  rules?: { low_hold_design: number; floor_median_hold: number };
 }) {
   return (
     <>
@@ -123,6 +128,11 @@ function Body({
         <p className="mt-1 text-sm text-fg-muted">
           <span className="mono text-xs">{row.zone_id}</span> › <span className="mono text-xs">{row.bank_id}</span> ›{" "}
           <span className="mono text-xs">{row.location_id}</span> · {row.theme} · {String(row.volatility_class ?? "")} volatility
+          {rules && row.hold_expected <= rules.low_hold_design && (
+            <span className="ml-2 inline-block align-middle">
+              <GameSettingChip hold={row.hold_expected} median={rules.floor_median_hold} />
+            </span>
+          )}
         </p>
         <Tabs defaultValue="breakdown" className="mt-3">
           <TabsList
