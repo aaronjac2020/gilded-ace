@@ -15,3 +15,10 @@ Resume point for a fresh session: read this file, then `python run.py all`.
 - Findings: total downtime is small — 5,021 unavailable machine-hours ≈ $94k lost theo (range $80k–$106k) vs $23.5M theo (0.4%). Zone Z-B40 coin-in/hr fell 137→100 in March (walkway W-ENT-B40 closed 03-03→04-07). 4 of manager's 10 run G-VID95 (5% configured hold): low win by design.
 - Open: provisional expectation = zone × weekday, ignores game → truly_weak inflated and our 10 is all Comet Cash (G-HIGH92 draws ~20% less coin-in/hr). Fixed by Model 1 (M6).
 - Next: M2.
+
+## M2 · Model 2 floor forecast + leakage tests; handoff schema FROZEN — done (~30 min)
+- Built: `model_floor.py` (Jan–Apr weekday mean × citywide-event uplift, only events announced by 2025-04-30), `forecast_holdout.parquet`, `tests/test_no_leakage.py` (8 tests: split order, disjoint train/test, params invariant to test outcomes, announced-only events, prior-day lags, no real_sources inputs, dated placement join, holdout schema). 17/17 tests pass.
+- Metrics (test May–Jun, 61 days): MAE $63.9k vs constant-mean baseline $218.3k (−70.7%); WAPE 4.7% vs 16.1%. Weekday-only MAE $68.7k → event uplift (×1.072, 20 train event-days) adds 7%.
+- Findings: Sat/Fri peak, Tue/Wed trough, peak/trough 1.64×. Model over-forecasts by +$45k/day in May–Jun (June +$59k): floor demand drifted down after April.
+- Schema G frozen: machine_scorecard.parquet (18 frozen cols first), forecast_holdout.parquet (gaming_date, actual, pred_model, pred_baseline), build_scorecard(start, end).
+- Next: M3.

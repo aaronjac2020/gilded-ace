@@ -7,7 +7,7 @@ import time
 
 import pandas as pd
 
-from pipeline import verdicts
+from pipeline import model_floor, verdicts
 from pipeline.config import OUTPUTS, cfg, period, periods
 from pipeline.load import path
 from pipeline.scorecard import FROZEN_COLUMNS, build_scorecard
@@ -89,6 +89,20 @@ def main() -> dict:
             "frozen_columns": FROZEN_COLUMNS,
         }
     )
+    mf = model_floor.run()
+    mm = mf["metrics"]
+    mf["holdout"][["gaming_date", "actual", "pred_model", "pred_baseline"]].to_parquet(
+        OUTPUTS / "forecast_holdout.parquet", index=False
+    )
+    print("\n=== Model 2: daily floor coin-in, train Jan-Apr -> test May-Jun ===")
+    print(f"  MAE model (weekday mean x citywide-event uplift {mm['event_uplift']:.3f}): ${mm['mae_model']:,.0f}")
+    print(f"  MAE weekday-only: ${mm['mae_weekday_only']:,.0f}   MAE baseline (constant mean): ${mm['mae_baseline']:,.0f}")
+    print(
+        f"  improvement vs baseline: {mm['improvement_pct']:.1%}; WAPE {mm['wape_model']:.1%} vs {mm['wape_baseline']:.1%}; "
+        f"model bias {mm['bias_model']:+,.0f}/day"
+    )
+    metrics["model2"] = mm
+
     (OUTPUTS / "metrics.json").write_text(json.dumps(metrics, indent=2, default=str), encoding="utf-8")
     print(f"\nwrote outputs/machine_scorecard.parquet, outputs/metrics.json in {time.time() - t0:.0f}s")
     return metrics

@@ -57,5 +57,43 @@
     "machine_effect_shrunk",
     "verdict",
     "verdict_reason"
-  ]
+  ],
+  "model2": {
+    "train_range": [
+      "2025-01-01",
+      "2025-04-30"
+    ],
+    "test_range": [
+      "2025-05-01",
+      "2025-06-30"
+    ],
+    "mae_model": 63874.30158376415,
+    "mae_weekday_only": 68698.55169827497,
+    "mae_baseline": 218258.0969262295,
+    "wape_model": 0.047105549726356916,
+    "wape_baseline": 0.1609593746313751,
+    "event_uplift": 1.071502675318502,
+    "event_days_in_train": 20,
+    "test_event_days": 3,
+    "weekday_mean": {
+      "Mon": 1212138.3205882353,
+      "Tue": 1112941.95,
+      "Wed": 1149981.0444444446,
+      "Thu": 1290980.4529411765,
+      "Fri": 1655737.2029411765,
+      "Sat": 1820595.1852941175,
+      "Sun": 1465879.0823529414
+    },
+    "bias_model": 45078.759750020115,
+    "improvement_pct": 0.7073450997542903,
+    "peak_days": [
+      "Sat",
+      "Fri"
+    ],
+    "trough_days": [
+      "Tue",
+      "Wed"
+    ],
+    "peak_to_trough": 1.635840202891191
+  }
 }

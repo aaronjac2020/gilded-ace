@@ -1,0 +1,86 @@
+"""Leakage guards for both models: time split, frozen features, prior-day lags, no real_sources inputs."""
+
+from datetime import date
+from pathlib import Path
+
+import pandas as pd
+import pytest
+
+from pipeline import model_floor
+from pipeline.config import cfg
+from pipeline.load import sql, table
+
+ROOT = Path(__file__).resolve().parent.parent
+SPLIT = cfg()["split"]
+TRAIN_END = pd.Timestamp(SPLIT["train_end"])
+TEST_START = pd.Timestamp(SPLIT["test_start"])
+
+
+@pytest.fixture(scope="module")
+def m2():
+    return model_floor.run()
+
+
+def test_split_order():
+    assert TRAIN_END < TEST_START
+    assert TRAIN_END == pd.Timestamp("2025-04-30")
+
+
+def test_model2_train_test_disjoint(m2):
+    assert m2["train"].gaming_date.max() <= TRAIN_END
+    assert m2["holdout"].gaming_date.min() >= TEST_START
+
+
+def test_model2_params_ignore_test_outcomes(m2):
+    """Perturbing test-period actuals must not change the fitted parameters."""
+    d = model_floor.floor_daily()
+    train = d[d.gaming_date <= TRAIN_END]
+    p1 = model_floor.fit(train, TRAIN_END.date())
+    d2 = d.copy()
+    d2.loc[d2.gaming_date >= TEST_START, "coin_in_usd"] *= 10
+    p2 = model_floor.fit(d2[d2.gaming_date <= TRAIN_END], TRAIN_END.date())
+    assert p1["weekday_mean"] == p2["weekday_mean"] and p1["event_uplift"] == p2["event_uplift"]
+
+
+def test_model2_only_announced_events():
+    ev = table("events")
+    late = ev[ev.announced_date > TRAIN_END]
+    assert len(late) >= 1  # Locals Appreciation Week was announced after the cutoff
+    known = model_floor.known_events(TRAIN_END.date())
+    assert set(known.event_id).isdisjoint(set(late.event_id))
+
+
+def test_lags_use_prior_days_only():
+    """lag_coin_in_7d_mean_usd on day t equals the mean of days t-7..t-1 for one machine."""
+    d = sql("select gaming_date, coin_in_usd, lag_coin_in_7d_mean_usd lag from {pdv} where machine_id='M-1001' order by 1")
+    prior = d.coin_in_usd.shift(1).rolling(7).mean()
+    ok = d.lag.notna() & prior.notna()
+    assert ok.sum() > 100
+    assert (d.lag[ok] - prior[ok]).abs().max() < 0.01
+
+
+def test_no_real_sources_in_models():
+    for f in ("model_floor.py", "model_machine.py"):
+        p = ROOT / "pipeline" / f
+        if p.exists():
+            src = p.read_text(encoding="utf-8")
+            for banned in ("real_sources", "city_visitation", "weather", "visitor_profile", "benchmark"):
+                assert banned not in src, f"{f} references {banned}"
+
+
+def test_placement_joined_by_date():
+    """Location used by models comes from the dated prepared view, which matches placements (checks rule 6)."""
+    from pipeline.checks import rule_checks
+
+    r6 = [c for c in rule_checks() if c.rule == "6"][0]
+    assert r6.ok, r6.detail
+
+
+def test_forecast_holdout_schema():
+    p = ROOT / "outputs" / "forecast_holdout.parquet"
+    if not p.exists():
+        pytest.skip("pipeline not run yet")
+    df = pd.read_parquet(p)
+    assert list(df.columns) == ["gaming_date", "actual", "pred_model", "pred_baseline"]
+    assert pd.to_datetime(df.gaming_date).min() >= TEST_START
+    assert date(2025, 6, 30) == pd.to_datetime(df.gaming_date).max().date()
