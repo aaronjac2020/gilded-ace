@@ -14,7 +14,7 @@ from datetime import UTC, datetime
 import numpy as np
 import pandas as pd
 
-from pipeline import verdicts
+from pipeline import budget, verdicts
 from pipeline.config import OUTPUTS, WEB_DATA, cfg, periods
 from pipeline.load import machine_days, table
 
@@ -24,7 +24,6 @@ PENDING = {
     "downtime.json": "M9",
     "players_segments.json": "M10",
     "comps.json": "M10",
-    "budget.json": "M11",
     "claims.json": "M12",
 }
 
@@ -166,6 +165,24 @@ def model_lab() -> dict:
     }
 
 
+def budget_json(full: pd.DataFrame) -> dict:
+    cat = budget.catalog().reset_index()
+    keep = ["action_type_id", "name", "unit", "unit_cost_usd", "recurring_usd_per_day", "lead_days", "live_days",
+            "unit_total_usd", "downtime_minutes", "quantity_limit", "incompatibility_group", "notes"]
+    s = budget.plan_summary(full)
+    return {
+        "rules": {k: cfg()["budget"][k] for k in ("total_usd", "horizon_days", "max_action_types")},
+        "formula": "cost = quantity x (unit_cost + recurring_per_day x max(0, horizon_days - lead_days))",
+        "catalog": columnar(cat[keep]),
+        "recommended": columnar(s["lines"]),
+        "total_usd": s["total_usd"],
+        "kept_usd": s["kept_usd"],
+        "effect": s["effect"],
+        "errors": s["errors"],
+        "version": "v0",
+    }
+
+
 def run() -> dict[str, int]:
     """Write every web JSON; returns {file: bytes}. Raises if the total exceeds web.max_total_mb."""
     sizes: dict[str, int] = {}
@@ -185,6 +202,7 @@ def run() -> dict[str, int]:
     sizes["machine_day_slim.json"] = write("machine_day_slim.json", machine_day_slim())
     sizes["lists.json"] = write("lists.json", lists(full))
     sizes["model_lab.json"] = write("model_lab.json", model_lab())
+    sizes["budget.json"] = write("budget.json", budget_json(full))
     for f, ms in PENDING.items():
         if not (WEB_DATA / f).exists() or json.loads((WEB_DATA / f).read_text(encoding="utf-8")).get("pending"):
             sizes[f] = write(f, {"pending": ms})
