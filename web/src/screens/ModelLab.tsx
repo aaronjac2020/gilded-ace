@@ -1,4 +1,3 @@
-import { Check } from "lucide-react";
 import { lazy, Suspense, type ReactNode } from "react";
 import { HeroBand, Kpi, KpiStrip } from "../components/ui/hero-band";
 import { Num } from "../components/ui/num";
@@ -400,7 +399,7 @@ export default function ModelLab() {
         <ul className="grid gap-x-8 md:grid-cols-2">
           {LEAKAGE.map((t) => (
             <li key={t} className="flex h-row items-center gap-2.5 border-b border-divider text-sm text-fg-muted">
-              <Check size={14} className="shrink-0 text-gold" aria-label="passes" />
+              <span className="size-2 shrink-0 rotate-45 bg-gold" role="img" aria-label="passes" />
               {t}
             </li>
           ))}
@@ -441,7 +440,7 @@ function RankingCompare({ c, moved, test }: { c: NonNullable<Lab["persistence_co
     <Tile
       id="ranking-compare"
       testId="ranking-compare"
-      className="mt-6"
+      className="mt-6 outline outline-1 outline-offset-[5px] outline-gold/35 ring-1 ring-gold/60"
       label="Manager vs. ours"
       title={`Our ranking predicts play vs. the spot (ρ ${e.ours.spearman.toFixed(2)} vs. ${e.manager.spearman.toFixed(2)}); the manager's predicts house win better (ρ ${hw.manager.spearman.toFixed(2)} vs. ${hw.ours.spearman.toFixed(2)})`}
       sub={

@@ -3,6 +3,7 @@ import { HeroBand, Kpi, KpiStrip } from "../components/ui/hero-band";
 import { Num } from "../components/ui/num";
 import { ErrorState, ScreenSkeleton } from "../components/ui/skeleton";
 import { Tile } from "../components/ui/tile";
+import { BettingTable } from "../components/theme/BettingTable";
 import { rows, type Columnar } from "../lib/data";
 import { fmt } from "../lib/format";
 import { useJson } from "../lib/useData";
@@ -83,32 +84,25 @@ export default function BudgetPlan() {
             value={<Num value={data.effect.mid} kind="usdCompact" />}
             note={`Range ${fmt.usdK(data.effect.lo)}–${fmt.usdK(data.effect.hi)} within ${data.rules.horizon_days} days`}
           />
-          <Kpi label="Action types" value={<Num value={lines.length} />} note={`Limit ${data.rules.max_action_types}`} />
         </KpiStrip>
       </HeroBand>
 
-      <section id="plan" aria-label="Budget bar" className="mt-8 scroll-mt-20">
-        <div className="flex h-2 gap-0.5 overflow-hidden rounded-full" title={data.formula}>
-          {lines.map((l, i) => (
-            <div
-              key={l.action_type_id}
-              className={i === 0 ? "bg-gold" : i === 1 ? "bg-gold-soft" : "bg-gold/50"}
-              style={{ flex: l.cost_usd }}
-            />
-          ))}
-          <div className="bg-surface-3" style={{ flex: data.kept_usd }} />
-        </div>
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-2xs text-fg-muted">
-          {lines.map((l) => (
-            <span key={l.action_type_id}>
-              {l.name} <span className="mono text-fg">{fmt.usdK(l.cost_usd)}</span>
-            </span>
-          ))}
-          <span>
-            Kept <span className="mono text-fg">{fmt.usdK(data.kept_usd)}</span>
-          </span>
-          <span className="ml-auto text-fg-subtle">{data.formula}</span>
-        </div>
+      <section id="plan" aria-label="The bets" className="mt-16 scroll-mt-20">
+        <BettingTable
+          bets={lines.map((l) => ({
+            id: l.action_type_id,
+            name: l.name,
+            cost: l.cost_usd,
+            quantity: l.quantity,
+            targets: l.targets,
+            lo: l.effect_lo_usd,
+            mid: l.effect_mid_usd,
+            hi: l.effect_hi_usd,
+          }))}
+          held={data.kept_usd}
+          formula={data.formula}
+          total={data.effect}
+        />
         {data.errors.length > 0 && <p className="mt-2 text-xs text-verdict-downtime">{data.errors.join("; ")}</p>}
       </section>
 
@@ -116,7 +110,7 @@ export default function BudgetPlan() {
         {lines.map((l) => (
           <Tile
             key={l.action_type_id}
-            className="col-span-12 lg:col-span-4"
+            className="col-span-12 lg:col-span-6"
             label={l.action_type_id}
             title={l.name}
             sub={
@@ -155,7 +149,7 @@ export default function BudgetPlan() {
       {data.move_test && <MoveTestCompare mt={data.move_test} />}
       <p className="mt-6 max-w-prose text-xs text-fg-subtle">
         Value of information is credited to the move test only; other lines count it as $0. The interactive allocator and sensitivity view
-        arrive with the M11 optimizer.
+        are in progress.
       </p>
     </div>
   );

@@ -205,6 +205,48 @@ def budget_json(full: pd.DataFrame) -> dict:
     }
 
 
+MONTH_ABBR = {"01": "Jan", "02": "Feb", "03": "Mar", "04": "Apr", "05": "May", "06": "Jun"}
+
+
+def month_highlights(sc: pd.DataFrame) -> dict:
+    """Up to 3 neutral "what changed" lines per month for the Verdict panel (presentation only)."""
+    months = sorted(p for p in sc.period.unique() if len(p) == 7 and p[4] == "-")
+    pl = table("placements")
+    first = pl.effective_from_utc.min()
+    moves = pl[pl.effective_from_utc > first]
+    ww = table("floor_walkways")
+    out: dict[str, list[str]] = {}
+    prev_theo, prev_name = None, ""
+    for m in months:
+        _, mo = m.split("-")
+        lo = pd.Timestamp(f"{m}-01")
+        hi = lo + pd.offsets.MonthBegin(1)
+        name = MONTH_ABBR.get(mo, m)
+        lines: list[str] = []
+        for _, w in ww.iterrows():
+            for col, verb in (("closed_from_utc", "closed"), ("closed_to_utc", "reopened")):
+                t = w[col]
+                if pd.notna(t) and lo <= t < hi:
+                    lines.append(f"Walkway {w.walkway_id} {verb} {t.strftime('%b')} {t.day}")
+        mv = moves[(moves.effective_from_utc >= lo) & (moves.effective_from_utc < hi)]
+        if len(mv):
+            n = mv.machine_id.nunique()
+            lines.append(f"{n} machine{'s' if n != 1 else ''} moved to a new spot")
+        cur = sc[sc.period == m]
+        by_bank = cur.groupby("bank_id").lost_theo_usd.sum().sort_values(ascending=False)
+        if len(by_bank) and by_bank.iloc[0] > 0:
+            lines.append(f"Most theo lost to downtime: {by_bank.index[0]} (${by_bank.iloc[0] / 1000:,.1f}k)")
+        theo = float(cur.theo_usd.sum())
+        if prev_theo:
+            d = (theo - prev_theo) / prev_theo
+            lines.append(f"Floor theo ${theo / 1000:,.0f}k, {'up' if d >= 0 else 'down'} {abs(d):.0%} vs. {prev_name}")
+        else:
+            lines.append(f"Floor theo ${theo / 1000:,.0f}k")
+        prev_theo, prev_name = theo, name
+        out[m] = lines[:3]
+    return {"months": out}
+
+
 def run() -> dict[str, int]:
     """Write every web JSON; returns {file: bytes}. Raises if the total exceeds web.max_total_mb."""
     sizes: dict[str, int] = {}
@@ -225,6 +267,7 @@ def run() -> dict[str, int]:
     sizes["lists.json"] = write("lists.json", lists(full))
     sizes["model_lab.json"] = write("model_lab.json", model_lab())
     sizes["budget.json"] = write("budget.json", budget_json(full))
+    sizes["month_highlights.json"] = write("month_highlights.json", month_highlights(sc))
     for f, ms in PENDING.items():
         if not (WEB_DATA / f).exists() or json.loads((WEB_DATA / f).read_text(encoding="utf-8")).get("pending"):
             sizes[f] = write(f, {"pending": ms})

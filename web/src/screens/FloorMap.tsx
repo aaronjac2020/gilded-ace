@@ -9,6 +9,8 @@ import { Num } from "../components/ui/num";
 import { ErrorState, ScreenSkeleton } from "../components/ui/skeleton";
 import { Button } from "../components/ui/button";
 import { Tip } from "../components/ui/tooltip";
+import { Chip } from "../components/theme/Chip";
+import { CardIndex } from "../components/theme/Deco";
 import { cn } from "../lib/cn";
 import { rows as decode, type Columnar, type ScoreRow } from "../lib/data";
 import { fmt } from "../lib/format";
@@ -91,19 +93,31 @@ export default function FloorMap() {
       d3.select(svg.current).on(".zoom", null);
     };
   }, [geo]);
-  const zoomBy = (k: number) => svg.current && zoom.current && d3.select(svg.current).transition().duration(240).call(zoom.current.scaleBy, k);
-  const reset = () => svg.current && zoom.current && d3.select(svg.current).transition().duration(240).call(zoom.current.transform, d3.zoomIdentity);
+  const zoomBy = (k: number) =>
+    svg.current && zoom.current && d3.select(svg.current).transition().duration(240).call(zoom.current.scaleBy, k);
+  const reset = () =>
+    svg.current && zoom.current && d3.select(svg.current).transition().duration(240).call(zoom.current.transform, d3.zoomIdentity);
 
   if (error || floor.error) return <ErrorState what="floor" error={String(error ?? floor.error)} />;
   if (!geo || !all) return <ScreenSkeleton />;
 
   const inScope = (r: ScoreRow) => (!f.zone || r.zone_id === f.zone) && (!f.bank || r.bank_id === f.bank);
   const scoped = all.filter(inScope);
-  const counts = d3.rollup(scoped, (v) => v.length, (r) => r.verdict);
+  const counts = d3.rollup(
+    scoped,
+    (v) => v.length,
+    (r) => r.verdict,
+  );
   const notOk = scoped.length - (counts.get("ok") ?? 0) - (counts.get("truly_weak") ?? 0);
   const scope = f.bank ? `in ${f.bank}` : f.zone ? `in ${f.zone}` : "on the floor";
-  const div = d3.scaleQuantize<string>().domain([0.8, 1.2]).range([...scales.diverging].reverse());
-  const winQ = d3.scaleQuantile<string>().domain(all.map((r) => r.house_win_usd)).range(scales.sequential.slice(1, 6));
+  const div = d3
+    .scaleQuantize<string>()
+    .domain([0.8, 1.2])
+    .range([...scales.diverging].reverse());
+  const winQ = d3
+    .scaleQuantile<string>()
+    .domain(all.map((r) => r.house_win_usd))
+    .range(scales.sequential.slice(1, 6));
   const lostMax = d3.max(all, (r) => r.lost_theo_usd) || 1;
   const lost = d3.scaleSqrt<string>().domain([0, lostMax]).range([scales.sequential[1], scales.sequential[6]]);
   const fill = (r: ScoreRow) =>
@@ -120,7 +134,11 @@ export default function FloorMap() {
     metric === "effect"
       ? { lo: "0.80", hi: "1.20", stops: [...scales.diverging].reverse() }
       : metric === "win"
-        ? { lo: fmt.usdK(d3.min(all, (r) => r.house_win_usd) ?? 0), hi: fmt.usdK(d3.max(all, (r) => r.house_win_usd) ?? 0), stops: scales.sequential.slice(1, 6) }
+        ? {
+            lo: fmt.usdK(d3.min(all, (r) => r.house_win_usd) ?? 0),
+            hi: fmt.usdK(d3.max(all, (r) => r.house_win_usd) ?? 0),
+            stops: scales.sequential.slice(1, 6),
+          }
         : { lo: "$0", hi: fmt.usdK(lostMax), stops: scales.sequential.slice(1) };
   const hoverBank = hover && geo.banks.some((b) => b.b === hover) ? hover : null;
 
@@ -132,7 +150,10 @@ export default function FloorMap() {
       action: { label: "Undo", onClick: () => setF(prev) },
     });
   };
-  const ids = all.filter(inScope).map((r) => r.machine_id).sort();
+  const ids = all
+    .filter(inScope)
+    .map((r) => r.machine_id)
+    .sort();
 
   return (
     <div>
@@ -140,20 +161,29 @@ export default function FloorMap() {
         eyebrow={`Floor map · ${PERIOD_LONG[f.period] ?? f.period}`}
         title={
           <>
-            {notOk} of {scoped.length} machines {scope} have a reason other than weak play
+            {notOk} of {scoped.length} machines{f.zone || f.bank ? ` ${scope}` : ""} have a reason besides weak play
           </>
         }
-        sub="Each mark is a machine at its last spot in the period. Click a bank to filter every screen; click a machine for its breakdown."
+        sub="Each mark is a machine. Click a bank to filter every screen, a machine for its case file."
       >
         <KpiStrip testId="floor-kpis">
-          {(["luck", "location", "downtime", "inspect_hold", "truly_weak"] as Verdict[]).map((v) => (
-            <Kpi key={v} label={verdictLabels[v]} value={<Num value={counts.get(v) ?? 0} />} note={`${fmt.pct((counts.get(v) ?? 0) / Math.max(1, scoped.length))} of machines`} />
+          {(["location", "luck", "truly_weak"] as Verdict[]).map((v, i) => (
+            <Kpi
+              key={v}
+              focal={i === 0}
+              label={verdictLabels[v]}
+              value={<Num value={counts.get(v) ?? 0} />}
+              note={`${fmt.pct((counts.get(v) ?? 0) / Math.max(1, scoped.length))} of machines`}
+            />
           ))}
         </KpiStrip>
       </HeroBand>
 
-      <section id="map" aria-label="Floor map" className="relative mx-6 mt-6 overflow-hidden rounded-xl bg-surface-1 ring-1 ring-inset ring-ring md:mx-10">
-        <div className="grid-backdrop pointer-events-none absolute inset-0 opacity-60" aria-hidden />
+      <section
+        id="map"
+        aria-label="Floor map"
+        className="felt relative mx-6 mt-10 overflow-hidden rounded-xl ring-1 ring-inset ring-gold/20 md:mx-10"
+      >
         <svg
           ref={svg}
           viewBox={`0 0 ${W} ${H}`}
@@ -166,12 +196,31 @@ export default function FloorMap() {
             <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="3" />
             </filter>
+            <filter id="lamp" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="5" />
+            </filter>
           </defs>
           <g transform={t.toString()}>
             {geo.hulls.map((h) => (
               <g key={h.z} opacity={f.zone && f.zone !== h.z ? 0.3 : 1} className="transition-opacity duration-menu">
-                <polygon points={h.hull.map((p) => p.join(",")).join(" ")} fill={colors.fg} fillOpacity={0.03} stroke={colors.fg} strokeOpacity={0.06} strokeWidth={36} strokeLinejoin="round" />
-                <text x={h.c[0]} y={h.top - 26} textAnchor="middle" fill={colors["fg-subtle"]} fontSize={11 / Math.sqrt(t.k)} letterSpacing="0.08em" fontWeight={500}>
+                <polygon
+                  points={h.hull.map((p) => p.join(",")).join(" ")}
+                  fill={colors.fg}
+                  fillOpacity={0.03}
+                  stroke={colors.fg}
+                  strokeOpacity={0.06}
+                  strokeWidth={36}
+                  strokeLinejoin="round"
+                />
+                <text
+                  x={h.c[0]}
+                  y={Math.max(16, h.top - 26)}
+                  textAnchor="middle"
+                  fill={colors["fg-subtle"]}
+                  fontSize={11 / Math.sqrt(t.k)}
+                  letterSpacing="0.08em"
+                  fontWeight={500}
+                >
                   {h.name.toUpperCase()}
                 </text>
               </g>
@@ -232,6 +281,23 @@ export default function FloorMap() {
                 </rect>
               );
             })}
+            {metric === "verdict" && (
+              <g filter="url(#lamp)" opacity={0.5} pointerEvents="none" aria-hidden>
+                {all.map((r) => {
+                  const p = geo.pos.get(r.location_id);
+                  if (!p || r.verdict === "ok" || !inScope(r)) return null;
+                  return (
+                    <circle
+                      key={r.machine_id}
+                      r={7 / Math.sqrt(t.k)}
+                      fill={verdictColors[r.verdict]}
+                      style={{ transform: `translate(${p[0]}px, ${p[1]}px)` }}
+                      className="transition-transform duration-700 ease-out motion-reduce:transition-none"
+                    />
+                  );
+                })}
+              </g>
+            )}
             {all.map((r) => {
               const p = geo.pos.get(r.location_id);
               if (!p) return null;
@@ -260,8 +326,14 @@ export default function FloorMap() {
                     setTip(null);
                   }}
                 >
-                  <g style={{ transform: `translate(${p[0]}px, ${p[1]}px)` }} className="transition-transform duration-700 ease-out motion-reduce:transition-none">
-                    {sel && <circle r={10} fill={colors.gold} opacity={0.5} filter="url(#glow)" />}
+                  <g
+                    style={{ transform: `translate(${p[0]}px, ${p[1]}px)` }}
+                    className="transition-transform duration-700 ease-out motion-reduce:transition-none"
+                  >
+                    {sel && <circle r={12 / Math.sqrt(t.k)} fill={colors.gold} opacity={0.45} filter="url(#glow)" />}
+                    {sel && (
+                      <circle r={10 / Math.sqrt(t.k)} fill="none" stroke={colors.gold} strokeWidth={1} vectorEffect="non-scaling-stroke" />
+                    )}
                     <Glyph v={r.verdict} x={0} y={0} r={(sel ? 6 : 4.5) / Math.sqrt(t.k)} fill={fill(r)} ring={sel} />
                   </g>
                 </g>
@@ -280,7 +352,8 @@ export default function FloorMap() {
               <span className="text-fg-muted">{verdictLabels[tip.r.verdict]}</span>
             </p>
             <p className="mono mt-0.5 text-2xs text-fg-muted">
-              win {fmt.usdK(tip.r.house_win_usd)} · {fmt.usdK(tip.r.coin_in_per_avail_hr)}/hr · effect {fmt.num(tip.r.machine_effect_shrunk)}
+              win {fmt.usdK(tip.r.house_win_usd)} · {fmt.usdK(tip.r.coin_in_per_avail_hr)}/hr · effect{" "}
+              {fmt.num(tip.r.machine_effect_shrunk)}
             </p>
           </div>
         )}
@@ -325,7 +398,11 @@ export default function FloorMap() {
         </div>
 
         {/* legend */}
-        <div className="float absolute bottom-4 left-4 flex max-w-[calc(100%-200px)] flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2" aria-label="Legend">
+        <div
+          className="card-face absolute bottom-4 left-4 flex max-w-[calc(100%-200px)] flex-wrap items-center gap-x-3 gap-y-1 rounded-[8px] py-2 pl-8 pr-3 text-ink shadow-lg [&_.text-fg-muted]:text-ink/75 [&_.text-fg]:text-ink"
+          aria-label="Legend"
+        >
+          <CardIndex card="K♠" className="!text-ink absolute left-2.5 top-1.5 text-xs" />
           {metric === "verdict" ? (
             verdictOrder.map((v) => (
               <span key={v} className="inline-flex items-center gap-1.5 text-2xs text-fg-muted">
@@ -358,7 +435,9 @@ export default function FloorMap() {
         <Minimap geo={geo} t={t} />
       </section>
       <Scrubber period={f.period} onChange={(period) => setF({ period })} />
-      <p className="mx-6 mt-2 text-2xs text-fg-subtle md:mx-10">Drag to pan · {navigator.platform.includes("Mac") ? "⌘" : "Ctrl"} + scroll to zoom · Tab to reach banks, Enter to filter</p>
+      <p className="mx-6 mt-2 text-2xs text-fg-subtle md:mx-10">
+        Drag to pan · {navigator.platform.includes("Mac") ? "⌘" : "Ctrl"} + scroll to zoom · Tab to reach banks, Enter to filter
+      </p>
     </div>
   );
 }
@@ -400,7 +479,7 @@ function Scrubber({ period, onChange }: { period: string; onChange: (p: string) 
         }}
         className="focus-ring relative flex flex-1 items-center rounded-sm py-2"
       >
-        <div className="absolute inset-x-0 top-[13px] h-px bg-divider" aria-hidden />
+        <div className="absolute inset-x-0 top-[12px] h-[3px] rounded-full bg-gold/15 ring-1 ring-inset ring-gold/25" aria-hidden />
         {i >= 0 && (
           <div
             className="absolute left-0 top-[12.5px] h-0.5 rounded-full bg-gold transition-[width] duration-menu"
@@ -410,19 +489,33 @@ function Scrubber({ period, onChange }: { period: string; onChange: (p: string) 
         )}
         <div className="relative flex w-full justify-between">
           {MONTHS.map((m, j) => (
-            <button key={m} type="button" tabIndex={-1} data-scrub={m} onClick={() => onChange(m)} className="group flex flex-col items-center gap-1.5" aria-label={PERIOD_LABELS[m]}>
-              <span
-                className={cn(
-                  "size-2.5 rounded-full ring-2 ring-surface-1 transition-colors",
-                  j < i ? "bg-gold" : j === i ? "bg-gold-soft" : "bg-surface-3 group-hover:bg-fg-subtle",
-                )}
-              />
+            <button
+              key={m}
+              type="button"
+              tabIndex={-1}
+              data-scrub={m}
+              onClick={() => onChange(m)}
+              className="group flex flex-col items-center gap-1.5"
+              aria-label={PERIOD_LABELS[m]}
+            >
+              {j === i ? (
+                <Chip size={18} tone="gold" className="-my-[4px] drop-shadow" />
+              ) : (
+                <span
+                  className={cn(
+                    "size-2.5 rotate-45 rounded-[2px] ring-2 ring-bg transition-colors",
+                    j < i ? "bg-gold" : "bg-surface-3 group-hover:bg-fg-subtle",
+                  )}
+                />
+              )}
               <span className={cn("text-2xs", j === i ? "text-fg" : "text-fg-subtle")}>{PERIOD_LABELS[m]}</span>
             </button>
           ))}
         </div>
       </div>
-      <span className="w-28 text-right text-2xs text-fg-muted">{i >= 0 ? "Month view" : `${PERIOD_LONG[period] ?? period}, press play`}</span>
+      <span className="w-28 text-right text-2xs text-fg-muted">
+        {i >= 0 ? "Month view" : `${PERIOD_LONG[period] ?? period}, press play`}
+      </span>
     </div>
   );
 }
@@ -436,14 +529,28 @@ function Minimap({ geo, t }: { geo: { hulls: { z: string; hull: [number, number]
       {geo.hulls.map((h) => (
         <polygon key={h.z} points={h.hull.map((p) => p.join(",")).join(" ")} fill={colors.fg} fillOpacity={0.08} />
       ))}
-      <rect x={x0} y={y0} width={x1 - x0} height={y1 - y0} fill="none" stroke={colors.gold} strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
+      <rect
+        x={x0}
+        y={y0}
+        width={x1 - x0}
+        height={y1 - y0}
+        fill="none"
+        stroke={colors.gold}
+        strokeWidth={1.5}
+        vectorEffect="non-scaling-stroke"
+      />
     </svg>
   );
 }
 
 /** Verdict glyph: color + shape (colorblind-safe pairing). */
 function Glyph({ v, x, y, r, fill, ring = false }: { v: Verdict; x: number; y: number; r: number; fill: string; ring?: boolean }) {
-  const common = { fill, stroke: ring ? colors.gold : colors.bg, strokeWidth: ring ? 2 : 0.75, vectorEffect: "non-scaling-stroke" as const };
+  const common = {
+    fill,
+    stroke: ring ? colors.gold : colors.bg,
+    strokeWidth: ring ? 2 : 0.75,
+    vectorEffect: "non-scaling-stroke" as const,
+  };
   switch (v) {
     case "inspect_hold":
       return <rect x={x - r} y={y - r} width={2 * r} height={2 * r} transform={`rotate(45 ${x} ${y})`} {...common} />;

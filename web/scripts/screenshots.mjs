@@ -50,7 +50,7 @@ try {
     for (const [name, path] of ROUTES) {
       await page.goto(`${url}${path}`, { waitUntil: "networkidle" });
       // Verdict deals and flips its cards (~1.6s); wait past it so shots show the settled table.
-      await page.waitForTimeout(path.startsWith("/?") || path === "/" ? 2200 : 700);
+      await page.waitForTimeout(path.startsWith("/?") || path === "/" ? 3400 : 700);
       const file = `${out}/${name}_${w}x${h}.png`;
       await page.screenshot({ path: file, fullPage: full });
       console.log(file);

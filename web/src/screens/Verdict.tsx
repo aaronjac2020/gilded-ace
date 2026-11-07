@@ -10,6 +10,7 @@ import { GameSettingChip } from "../components/ui/game-setting-chip";
 import { Tile } from "../components/ui/tile";
 import { GoldNumber } from "../components/theme/GoldNumber";
 import { RevealTable } from "../components/theme/RevealTable";
+import { MonthHighlights } from "../components/theme/MonthHighlights";
 
 import { fmt } from "../lib/format";
 import { useMachineParam } from "../lib/uiStore";
@@ -202,6 +203,7 @@ export default function Verdict() {
             />
           </KpiStrip>
         </div>
+        <MonthHighlights period={f.period} />
       </HeroBand>
 
       <section id="ours" aria-label="Our call" className="mt-16 grid grid-cols-12 gap-8">

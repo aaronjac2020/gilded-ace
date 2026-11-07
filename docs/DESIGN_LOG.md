@@ -36,3 +36,23 @@ Not building: boot screens, logs, terminal styling, LED dots, pixel/neon/CRT, ma
   clipped zone label, off-palette dots; top-bar density.
 - Kept against critic: verdict hues (inspect = violet) are the app-wide verdict encoding, not decoration.
 - Judge check 0 flaked once (3.7s) on the first cold serve after a rebuild; 2 reruns 0.8s / 0.6s.
+
+## Round 2 — shipped (outputs/figures/ui_v6/r2, r2b after fixes)
+- Plan betting table: chip stacks on 3 spots + Held (height ∝ cost, $4k/chip), arc in on first view, hover/focus
+  shows qty · targets · theo range · formula; totals line when idle. Line tiles 2 per row.
+- Floor: verdict-colored lamp glow on non-ok marks, gold halo on the selected machine, ivory K♠ legend card,
+  gold rail scrubber with a chip playhead; KPIs 5 → 3; felt map frame.
+- Header: ‹ ▶ › playback (1.5 s/month via URL period, off by default; Space · , · .), dealer puck on the active
+  month, ON FLOOR / THEO / LOST TO DOWNTIME readouts (NumberFlow) from 1360px.
+- Verdict "Month · what changed": ≤3 lines per month from month_highlights.json (0.7 KB, export_web), cross-fade,
+  aria-live off while playing.
+- Model Lab: double gold frame on manager-vs-ours, gold diamond pips on the leakage checklist.
+- Critic #2: Verdict 9/9/8/7/9/8 · Case file 8/6/7/6/6/6 · Floor 7/7/7/6/7/6 · Plan 8/8/7/6/8/6 ·
+  Model 7/6/6/6/5/5 · stubs 4/6/7/4/2/3.
+- Applied (top 3 by impact/effort, #2 swapped): top-bar nowrap + readouts from 1360px (fixes wrap at 1280);
+  stub screens → felt panel with planned exhibits dealt face down; betting labels on one baseline + gold rim
+  on the Held stack.
+- Kept against critic (again): inspect = violet. It is the verdict encoding on every screen; gold is taken by
+  location. [deviation] readouts show from 1360px, not 1280px, to stop top-bar wrapping at 1280.
+- Squint: Verdict = card grid; Plan = chip table below the fold, gold Spend above; stubs = felt panel. Floor and
+  Model still split focus (gold KPI vs. hero visual) — next pass.

@@ -9,7 +9,9 @@ import { useFilters } from "../../lib/urlState";
 import { Button } from "../ui/button";
 import { copyLink } from "../ui/tile";
 import { Tip } from "../ui/tooltip";
+import { DealerButton } from "../theme/DealerButton";
 import { MONTHS, navFor } from "./nav";
+import { Playback, Readouts } from "./Playback";
 
 export const PERIOD_LABELS: Record<string, string> = {
   full: "Jan–Jun",
@@ -36,21 +38,23 @@ export function TopBar() {
   return (
     <header className="sticky top-0 z-30 flex h-topbar items-center gap-4 border-b border-divider bg-bg/80 px-4 backdrop-blur-md md:px-6">
       <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 text-sm">
-        <span className="text-fg">{screen?.title ?? "Not found"}</span>
+        <span className="whitespace-nowrap text-fg">{screen?.title ?? "Not found"}</span>
         {crumbs.map((c) => (
           <span key={c} className="flex items-center gap-1.5 text-fg-muted">
             <span className="text-fg-subtle">›</span>
-            <span className="mono text-xs">{c}</span>
+            <span className="mono whitespace-nowrap text-xs">{c}</span>
           </span>
         ))}
       </nav>
+      <Readouts />
       <div className="ml-auto flex items-center gap-2">
+        <Playback />
         <PeriodControl />
         <Filters />
         <Tip label="Copy link to this view">
           <Button variant="ghost" size="sm" aria-label="Copy link" onClick={() => copyLink()}>
             <Link2 size={14} strokeWidth={1.5} aria-hidden />
-            <span className="hidden xl:inline">Copy link</span>
+            <span className="hidden 2xl:inline">Copy link</span>
           </Button>
         </Tip>
         <Tip label="Start judge tour">
@@ -66,7 +70,7 @@ export function TopBar() {
 
 const seg = (on: boolean) =>
   cn(
-    "focus-ring h-6 rounded-[5px] px-2 text-xs font-medium transition-colors duration-hover",
+    "focus-ring h-6 whitespace-nowrap rounded-[5px] px-2 text-xs font-medium transition-colors duration-hover",
     on ? "bg-surface-3 text-fg shadow-highlight ring-1 ring-inset ring-ring-strong" : "text-fg-muted hover:text-fg",
   );
 
@@ -77,15 +81,36 @@ export function PeriodControl() {
     <div role="radiogroup" aria-label="Period" data-testid="period-control" className="flex items-center gap-1">
       <div className="flex items-center gap-0.5 rounded-sm bg-surface-1 p-0.5 ring-1 ring-inset ring-ring">
         {["full", "train", "test"].map((p) => (
-          <button key={p} type="button" role="radio" aria-checked={f.period === p} data-period={p} onClick={() => set({ period: p })} className={seg(f.period === p)}>
+          <button
+            key={p}
+            type="button"
+            role="radio"
+            aria-checked={f.period === p}
+            data-period={p}
+            onClick={() => set({ period: p })}
+            className={seg(f.period === p)}
+          >
             {PERIOD_LABELS[p]}
           </button>
         ))}
       </div>
       <div className="hidden items-center gap-0.5 rounded-sm bg-surface-1 p-0.5 ring-1 ring-inset ring-ring lg:flex">
         {MONTHS.map((p) => (
-          <button key={p} type="button" role="radio" aria-checked={f.period === p} data-period={p} onClick={() => set({ period: p })} className={seg(f.period === p)}>
+          <button
+            key={p}
+            type="button"
+            role="radio"
+            aria-checked={f.period === p}
+            data-period={p}
+            onClick={() => set({ period: p })}
+            className={cn(seg(f.period === p), "relative")}
+          >
             {PERIOD_LABELS[p]}
+            {f.period === p && (
+              <span aria-hidden className="pointer-events-none absolute -right-1.5 -top-1.5">
+                <DealerButton className="h-3.5 min-w-3.5 px-0 text-[7px] ring-1" />
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -113,8 +138,10 @@ function Filters() {
         <Popover.Trigger asChild>
           <Button variant="ghost" size="sm" aria-label={`Filters${n ? ` (${n} active)` : ""}`}>
             <SlidersHorizontal size={14} strokeWidth={1.5} aria-hidden />
-            <span className="hidden xl:inline">Filters</span>
-            {n > 0 && <span className="mono rounded-full bg-gold/10 px-1.5 text-2xs text-gold-soft ring-1 ring-inset ring-gold/25">{n}</span>}
+            <span className="hidden 2xl:inline">Filters</span>
+            {n > 0 && (
+              <span className="mono rounded-full bg-gold/10 px-1.5 text-2xs text-gold-soft ring-1 ring-inset ring-gold/25">{n}</span>
+            )}
             <ChevronDown size={12} aria-hidden />
           </Button>
         </Popover.Trigger>
@@ -122,7 +149,12 @@ function Filters() {
           <Popover.Content align="end" sideOffset={6} className="float z-50 w-64 space-y-3 p-3 data-[state=open]:animate-fade-up">
             <label className="block">
               <span className="eyebrow">Zone</span>
-              <select aria-label="Zone" className="select mt-1 w-full" value={f.zone ?? ""} onChange={(e) => set({ zone: e.target.value || null, bank: null })}>
+              <select
+                aria-label="Zone"
+                className="select mt-1 w-full"
+                value={f.zone ?? ""}
+                onChange={(e) => set({ zone: e.target.value || null, bank: null })}
+              >
                 <option value="">All zones</option>
                 {zones.map((z) => (
                   <option key={z.zone_id} value={z.zone_id}>
@@ -133,7 +165,12 @@ function Filters() {
             </label>
             <label className="block">
               <span className="eyebrow">Bank</span>
-              <select aria-label="Bank" className="select mt-1 w-full" value={f.bank ?? ""} onChange={(e) => set({ bank: e.target.value || null })}>
+              <select
+                aria-label="Bank"
+                className="select mt-1 w-full"
+                value={f.bank ?? ""}
+                onChange={(e) => set({ bank: e.target.value || null })}
+              >
                 <option value="">All banks</option>
                 {banks.map((b) => (
                   <option key={b.bank_id} value={b.bank_id}>
@@ -156,7 +193,10 @@ function Filters() {
 
 function Chip({ label, onClear }: { label: string; onClear: () => void }) {
   return (
-    <span className="mono inline-flex h-6 items-center gap-1 rounded-full bg-gold/10 pl-2 pr-1 text-2xs text-gold-soft ring-1 ring-inset ring-gold/25" data-filter-pill>
+    <span
+      className="mono inline-flex h-6 items-center gap-1 rounded-full bg-gold/10 pl-2 pr-1 text-2xs text-gold-soft ring-1 ring-inset ring-gold/25"
+      data-filter-pill
+    >
       {label}
       <button type="button" aria-label={`Clear ${label}`} onClick={onClear} className="focus-ring rounded-full p-0.5 hover:bg-gold/10">
         <X size={12} aria-hidden />

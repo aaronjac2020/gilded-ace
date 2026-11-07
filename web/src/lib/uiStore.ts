@@ -34,6 +34,10 @@ export const shortcutsStore = createStore(false);
 export const useShortcutsOpen = () => useSyncExternalStore(shortcutsStore.sub, shortcutsStore.get);
 
 export const commandStore = createStore(false);
+
+/** True while month playback runs; live regions stay quiet so autoplay doesn't chatter. */
+export const playingStore = createStore(false);
+export const usePlaying = () => useSyncExternalStore(playingStore.sub, playingStore.get);
 export const useCommandOpen = () => useSyncExternalStore(commandStore.sub, commandStore.get);
 
 /** Open/close the machine drawer via ?machine= so it stays deep-linkable. */
