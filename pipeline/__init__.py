@@ -1,0 +1,1 @@
+"""Gilded Ace analysis pipeline."""

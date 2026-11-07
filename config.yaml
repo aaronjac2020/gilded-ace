@@ -1,0 +1,51 @@
+# All thresholds live here. DATA_DIR env var overrides data_dir.
+data_dir: ../dashboard-royale
+seed: 42
+bootstrap:
+  resamples: 1000
+  block_days: 7
+  ci: 0.90
+periods:
+  full:  ["2025-01-01", "2025-06-30"]
+  train: ["2025-01-01", "2025-04-30"]
+  test:  ["2025-05-01", "2025-06-30"]
+  "2025-01": ["2025-01-01", "2025-01-31"]
+  "2025-02": ["2025-02-01", "2025-02-28"]
+  "2025-03": ["2025-03-01", "2025-03-31"]
+  "2025-04": ["2025-04-01", "2025-04-30"]
+  "2025-05": ["2025-05-01", "2025-05-31"]
+  "2025-06": ["2025-06-01", "2025-06-30"]
+split:
+  inner_train_end: "2025-03-31"
+  inner_valid_end: "2025-04-30"
+  train_end: "2025-04-30"
+  test_start: "2025-05-01"
+  half1_end: "2025-03-31"   # split-half consistency for hold-gap test
+holdgap:
+  fdr_q: 0.10
+verdicts:
+  luck_z: 1.64
+  downtime_avail_quantile: 0.10
+  downtime_gap_share: 0.50
+  location_quantile: 0.25
+  theo_hr_low_quantile: 0.10
+  min_days_on_floor: 30
+  list_size: 10
+persistence:
+  min_days_each_window: 14
+moved:
+  min_days_each_placement: 14
+budget:
+  total_usd: 100000
+  horizon_days: 30
+  max_action_types: 3
+  tech_reduction: [0.20, 0.35, 0.50]
+  preventive_reduction: [0.20, 0.35, 0.50]
+  sensitivity_scale: 0.5
+checks:
+  machines_total: 310
+  on_floor_min: 300
+  on_floor_max: 308
+  offfloor_rows: 1018
+web:
+  max_total_mb: 15
