@@ -12,6 +12,14 @@ import { colors } from "../theme/tokens";
 
 const Chart = lazy(() => import("../components/Chart").then((m) => ({ default: m.Chart })));
 
+type Agreement = {
+  spearman: number;
+  spearman_lo: number;
+  spearman_hi: number;
+  precision_at_k: number;
+  precision_lo: number;
+  precision_hi: number;
+};
 type Lab = {
   split: Record<string, string>;
   model2: {
@@ -49,6 +57,15 @@ type Lab = {
     precision_hi: number;
     k: number;
     random_precision: number;
+  } | null;
+  persistence_compare: {
+    n: number;
+    k: number;
+    random_precision: number;
+    outcomes: Record<
+      "effect" | "house_win",
+      Record<"manager" | "ours", Agreement> & { delta_rho: number; delta_rho_lo: number; delta_rho_hi: number }
+    >;
   } | null;
   model1_change: {
     truly_weak_before: number;
@@ -126,7 +143,9 @@ export default function ModelLab() {
               note={`Baseline ${fmt.usd(m1.mae_baseline)} · ${fmt.pct(m1.improvement_pct)} lower`}
             />
           )}
-          {m1 && <Kpi label="Model 1 WMAPE" value={<Num value={m1.wmape_model} kind="pct" />} note={`Baseline ${fmt.pct(m1.wmape_baseline)}`} />}
+          {m1 && (
+            <Kpi label="Model 1 WMAPE" value={<Num value={m1.wmape_model} kind="pct" />} note={`Baseline ${fmt.pct(m1.wmape_baseline)}`} />
+          )}
           {p && (
             <Kpi
               label="Rank persistence, Spearman"
@@ -177,7 +196,13 @@ export default function ModelLab() {
             label="Model 1"
             title="What sets expected play"
             sub="Share of LightGBM gain, top 10 features"
-            table={{ columns: ["Feature", "Gain share"], rows: imp.slice().reverse().map(([k, v]) => [FEATURE_LABELS[k] ?? k, fmt.pct(v)]) }}
+            table={{
+              columns: ["Feature", "Gain share"],
+              rows: imp
+                .slice()
+                .reverse()
+                .map(([k, v]) => [FEATURE_LABELS[k] ?? k, fmt.pct(v)]),
+            }}
           >
             <Suspense fallback={<Skeleton className="h-[260px] w-full" />}>
               <Chart
@@ -249,15 +274,17 @@ export default function ModelLab() {
               </dl>
               {ch && (
                 <Changed>
-                  Pricing game and walkway access into each spot cut truly weak from {ch.truly_weak_before} to {ch.truly_weak_after} machines.
-                  Our list went from {ch.themes_before} themes to {ch.themes_after} ({ch.our10_kept} of 10 kept); overlap with the manager fell
-                  from {ch.overlap_before} to {ch.overlap_after}.
+                  Pricing game and walkway access into each spot cut truly weak from {ch.truly_weak_before} to {ch.truly_weak_after}{" "}
+                  machines. Our list went from {ch.themes_before} themes to {ch.themes_after} ({ch.our10_kept} of 10 kept); overlap with the
+                  manager fell from {ch.overlap_before} to {ch.overlap_after}.
                 </Changed>
               )}
             </Tile>
           )}
         </div>
       )}
+
+      {data.persistence_compare && <RankingCompare c={data.persistence_compare} />}
 
       <div className="mt-6 grid grid-cols-12 gap-6">
         <Tile
@@ -336,7 +363,9 @@ export default function ModelLab() {
             Event uplift ×{m.event_uplift.toFixed(3)}. Peaks {m.peak_days.join("/")}, troughs {m.trough_days.join("/")}. Runs{" "}
             {fmt.usdK(m.bias_model)}/day high in May–Jun: demand drifted down after April.
           </p>
-          <Changed>Staff and time promotions to {m.peak_days.join("/")} peaks, not a flat schedule; re-fit monthly because of the drift.</Changed>
+          <Changed>
+            Staff and time promotions to {m.peak_days.join("/")} peaks, not a flat schedule; re-fit monthly because of the drift.
+          </Changed>
         </Tile>
       </div>
 
@@ -351,6 +380,128 @@ export default function ModelLab() {
         </ul>
       </Tile>
     </div>
+  );
+}
+
+const OUTCOME_LABELS = { effect: "May–Jun play vs. spot and game", house_win: "May–Jun raw house win" } as const;
+const RANKING_LABELS = { manager: "Manager: house win", ours: "Ours: shrunk effect" } as const;
+
+/** Dot-and-whisker: both Jan–Apr rankings scored on the same machines and the same May–Jun outcomes. */
+function RankingCompare({ c }: { c: NonNullable<Lab["persistence_compare"]> }) {
+  const e = c.outcomes.effect;
+  const hw = c.outcomes.house_win;
+  const metrics = [
+    {
+      key: "rho",
+      label: "Spearman rank corr.",
+      lo: -0.2,
+      ticks: [-0.2, 0, 0.5, 1],
+      pick: (a: Agreement) => [a.spearman, a.spearman_lo, a.spearman_hi] as const,
+      fmtV: (v: number) => v.toFixed(2),
+    },
+    {
+      key: "p",
+      label: `Bottom ${c.k} hit rate`,
+      lo: 0,
+      ticks: [0, 0.5, 1],
+      pick: (a: Agreement) => [a.precision_at_k, a.precision_lo, a.precision_hi] as const,
+      fmtV: (v: number) => fmt.pct(v, 0),
+    },
+  ];
+  const outcomes = (["effect", "house_win"] as const).map((o) => [o, c.outcomes[o]] as const);
+  return (
+    <Tile
+      id="ranking-compare"
+      testId="ranking-compare"
+      className="mt-6"
+      label="Manager vs. ours"
+      title={`Our ranking predicts play vs. the spot (ρ ${e.ours.spearman.toFixed(2)} vs. ${e.manager.spearman.toFixed(2)}); the manager's predicts house win better (ρ ${hw.manager.spearman.toFixed(2)} vs. ${hw.ours.spearman.toFixed(2)})`}
+      sub={`Same ${c.n} machines, ranked on Jan–Apr only, scored on May–Jun. Dots are estimates, whiskers 90% intervals. Random bottom-${c.k} hit rate ${fmt.pct(c.random_precision, 0)}.`}
+      table={{
+        columns: ["Outcome", "Ranking", "Spearman", "90% CI", `Bottom ${c.k} hits`, "90% CI"],
+        rows: outcomes.flatMap(([o, r]) =>
+          (["manager", "ours"] as const).map((k) => [
+            OUTCOME_LABELS[o],
+            RANKING_LABELS[k],
+            r[k].spearman.toFixed(2),
+            `${r[k].spearman_lo.toFixed(2)} to ${r[k].spearman_hi.toFixed(2)}`,
+            fmt.pct(r[k].precision_at_k, 0),
+            `${fmt.pct(r[k].precision_lo, 0)} to ${fmt.pct(r[k].precision_hi, 0)}`,
+          ]),
+        ),
+      }}
+    >
+      <div className="grid gap-6 lg:grid-cols-2">
+        {metrics.map((m) => {
+          const x = (v: number) => `${((v - m.lo) / (1 - m.lo)) * 100}%`;
+          return (
+            <figure key={m.key} aria-label={m.label}>
+              <figcaption className="eyebrow">{m.label}</figcaption>
+              <div className="mt-3 space-y-5">
+                {outcomes.map(([o, r]) => (
+                  <div key={o}>
+                    <p className="text-xs text-fg-muted">{OUTCOME_LABELS[o]}</p>
+                    {(["manager", "ours"] as const).map((k) => {
+                      const [v, a, b] = m.pick(r[k]);
+                      return (
+                        <div key={k} className="mt-1.5 grid grid-cols-[9.5rem_1fr_3rem] items-center gap-3">
+                          <span className={k === "ours" ? "truncate text-xs text-fg" : "truncate text-xs text-fg-muted"}>
+                            {RANKING_LABELS[k]}
+                          </span>
+                          <div
+                            className="relative h-4"
+                            role="img"
+                            aria-label={`${RANKING_LABELS[k]}: ${m.fmtV(v)}, 90% interval ${m.fmtV(a)} to ${m.fmtV(b)}`}
+                          >
+                            <div className="absolute inset-y-1/2 left-0 right-0 h-px bg-divider" />
+                            <div className="absolute inset-y-0 w-px bg-ring-strong" style={{ left: x(0) }} />
+                            <div
+                              className={
+                                k === "ours"
+                                  ? "absolute top-1/2 h-0.5 -translate-y-1/2 bg-gold/60"
+                                  : "absolute top-1/2 h-0.5 -translate-y-1/2 bg-fg-subtle"
+                              }
+                              style={{ left: x(a), right: `calc(100% - ${x(b)})` }}
+                            />
+                            <div
+                              className={
+                                k === "ours"
+                                  ? "absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold-soft"
+                                  : "absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-fg-muted bg-bg"
+                              }
+                              style={{ left: x(v) }}
+                            />
+                          </div>
+                          <span className="mono text-right text-xs text-fg">{m.fmtV(v)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+              <div className="mt-1 grid grid-cols-[9.5rem_1fr_3rem] gap-3" aria-hidden>
+                <span />
+                <div className="mono relative h-4 text-2xs text-fg-subtle">
+                  {m.ticks.map((t) => (
+                    <span key={t} className="absolute -translate-x-1/2" style={{ left: x(t) }}>
+                      {m.fmtV(t).replace("-", "−")}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </figure>
+          );
+        })}
+      </div>
+      <Changed>
+        Each ranking predicts its own yardstick. Low house win persists because the spot persists: Jan–Apr house win tracks the spot&apos;s
+        expected coin-in, so the manager&apos;s list keeps landing on quiet spots, not weaker machines. On play relative to spot and game,
+        the manager&apos;s ranking is close to random (ρ {e.manager.spearman.toFixed(2)}, {e.manager.spearman_lo.toFixed(2)} to{" "}
+        {e.manager.spearman_hi.toFixed(2)}; difference {e.delta_rho >= 0 ? "+" : ""}
+        {e.delta_rho.toFixed(2)}, 90% CI {e.delta_rho_lo.toFixed(2)} to {e.delta_rho_hi.toFixed(2)}). Moving or replacing a machine only
+        helps if the machine is the problem.
+      </Changed>
+    </Tile>
   );
 }
 

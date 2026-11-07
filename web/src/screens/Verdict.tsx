@@ -58,6 +58,13 @@ export default function Verdict() {
     ),
     metric: fmt.usdK(r.house_win_usd),
     highlight: overlap.has(r.machine_id),
+    tag: overlap.has(r.machine_id) ? (
+      <span className="rounded-sm bg-gold/15 px-1.5 py-0.5 text-2xs text-gold-soft">on our list</span>
+    ) : (
+      <span className="rounded-sm border border-divider px-1.5 py-0.5 text-2xs text-fg-subtle" data-testid="not-ours">
+        not on our list
+      </span>
+    ),
   }));
   const ourItems: RowItem[] = ours.map((r) => ({
     id: r.machine_id,
@@ -87,7 +94,9 @@ export default function Verdict() {
         sub={
           <>
             We test the {mgr.length} lowest earners for luck, location, downtime and hold variance before cutting any.{" "}
-            {overlap.size === 0 ? "None of them" : `Only ${overlap.size}`} also draw less play than their spot and game predict.
+            {overlap.size === 0
+              ? "None also make our list of machines that draw less play than their spot and game predict."
+              : `Only ${overlap.size} also ${overlap.size === 1 ? "makes" : "make"} our list of machines that draw less play than their spot and game predict.`}
           </>
         }
       >

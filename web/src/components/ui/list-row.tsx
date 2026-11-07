@@ -12,6 +12,8 @@ export type RowItem = {
   meta: ReactNode;
   metric: ReactNode;
   mini?: ReactNode;
+  /** Small tag before the metric, e.g. list membership. */
+  tag?: ReactNode;
   title?: string;
   highlight?: boolean;
 };
@@ -81,6 +83,7 @@ export function RowList({
               {it.id}
             </m.span>
             <span className="min-w-0 flex-1 truncate text-fg-muted">{it.meta}</span>
+            {it.tag && <span className="shrink-0">{it.tag}</span>}
             <span className="mono shrink-0 text-right text-xs text-fg">{it.metric}</span>
             {it.mini && <span className="hidden w-[60px] shrink-0 sm:block">{it.mini}</span>}
             <ChevronRight size={14} strokeWidth={1.5} className="shrink-0 text-fg-subtle group-hover:text-fg-muted" aria-hidden />
