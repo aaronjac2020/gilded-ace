@@ -35,9 +35,9 @@ const record = (n, name, ok, detail) => {
 
 const browser = await chromium.launch();
 
-// Remote deploys: the first requests after a push can land on cold CDN edges (seen twice: check 0 at ~4 s right after a
-// deploy with every resource < 310 ms; steady-state runs 0.8–1.0 s). Warm up with a throwaway browser context so the edge
-// sees the same request headers as the measured load; check 0 still runs in a fresh context with an empty browser cache.
+// Remote runs: the first page load in a freshly launched browser process is slow (4.5–5.7 s measured, every resource
+// < 310 ms; client DNS/TLS + cold renderer), while later loads take 0.8–1.0 s. Warm up with a throwaway context so check 0
+// measures the site; it still runs in a fresh context with an empty browser cache.
 if (!server) {
   const t = Date.now();
   const warm = await browser.newContext();

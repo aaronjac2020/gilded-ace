@@ -65,3 +65,13 @@ Resume point for a fresh session: read this file, then `python run.py all`.
 - Checks: typecheck clean; judge 0–4/9 PASS locally; Lighthouse (local preview, desktop) Perf 91 · A11y 96 · BP 100; mobile-throttled Perf 59 (TBT from React render under 4× CPU). Accusatory-word and Playfair greps empty.
 - Screenshots: `outputs/figures/ui_v2/{before,after}/` at 1440×900 and 1280×800.
 - Next: M7.
+
+## Pre-M7 · judge flake, manager-vs-ours persistence, Verdict tags — done (~1.5 h)
+- Netlify (deployed): Lighthouse desktop Perf 96 · A11y 96 · BP 100 (LCP 0.7 s); mobile 69/100/100 (deferred to M13).
+- Judge flake = check 0 (first load > 3 s), twice, both on the first page load of a fresh browser process after idle (3.98 s; every resource < 310 ms). Probes: forced CDN edge misses 0.8–1.3 s; first load per process 2–5.7 s, later loads 0.8–0.9 s → client cold start, not the site. Fix: throwaway-context browser warm-up before check 0 (fresh context, empty cache) + navigation timing printed on failure. 5/5 Netlify runs pass right after a deploy, check 0 811–908 ms.
+- `persistence_compare` (same 307 machines, Jan–Apr rankings, May–Jun outcomes, Fisher/Wilson 90% CIs, paired bootstrap Δρ over machines):
+  - vs May–Jun shrunk effect: manager ρ 0.05 [−0.05, 0.14], P@10 0% [0%, 21%]; ours ρ 0.58 [0.51, 0.64], P@10 40% [19%, 65%]; Δρ +0.53 [+0.41, +0.64].
+  - vs May–Jun raw house win: manager ρ 0.67 [0.62, 0.72], P@10 40%; ours ρ −0.01 [−0.10, 0.08], P@10 0%; Δρ −0.68 [−0.80, −0.56].
+  - Jan–Apr house win vs spot's expected coin-in ρ 0.61 (vs our effect 0.10): low house win persists because the spot persists.
+- Model Lab: dot-and-whisker tile (`#ranking-compare`) titled from the result, table toggle, honest "each ranking predicts its own yardstick" note. Verdict: "on our list"/"not on our list" tag per manager row; zero-overlap subtitle copy. New leakage test (28/28 pass), ruff clean.
+- Next: M7.
