@@ -1,11 +1,13 @@
-import { CheckCircle2 } from "lucide-react";
-import { lazy, Suspense } from "react";
-import { AssertionTitle } from "../components/AssertionTitle";
-import { ChartCard } from "../components/ChartCard";
-import { ErrorNote, Loading } from "../components/Loading";
+import { Check } from "lucide-react";
+import { lazy, Suspense, type ReactNode } from "react";
+import { HeroBand, Kpi, KpiStrip } from "../components/ui/hero-band";
+import { Num } from "../components/ui/num";
+import { ErrorState, ScreenSkeleton, Skeleton } from "../components/ui/skeleton";
+import { DataTable, Tile } from "../components/ui/tile";
 import { rows, type Columnar } from "../lib/data";
 import { fmt } from "../lib/format";
 import { useJson } from "../lib/useData";
+import { areaFill, tipHtml } from "../theme/echartsTheme";
 import { colors } from "../theme/tokens";
 
 const Chart = lazy(() => import("../components/Chart").then((m) => ({ default: m.Chart })));
@@ -94,8 +96,8 @@ const LEAKAGE = [
 
 export default function ModelLab() {
   const { data, error } = useJson<Lab>("model_lab.json");
-  if (error) return <ErrorNote what="model results" error={error} />;
-  if (!data) return <Loading />;
+  if (error) return <ErrorState what="model results" error={error} />;
+  if (!data) return <ScreenSkeleton />;
   const m = data.model2;
   const h = rows<H>(data.model2_holdout);
   const m1 = data.model1;
@@ -105,214 +107,281 @@ export default function ModelLab() {
 
   return (
     <div>
-      <AssertionTitle
-        kicker="Model Lab · validation"
-        sub={`Trained on ${data.split.train_end ? "Jan 1 – " + data.split.train_end : "Jan–Apr"}, scored on unseen days from ${data.split.test_start}. Every model is compared with a simple baseline.`}
+      <HeroBand
+        className="-mx-6"
+        eyebrow="Model lab · validation"
+        title={
+          m1 && p
+            ? `Location + game model cuts machine-day error ${fmt.pct(m1.improvement_pct, 0)}, and weak machines stay weak`
+            : `A weekday + event forecast cuts daily coin-in error ${fmt.pct(m.improvement_pct, 0)} vs. a flat average`
+        }
+        sub="Fit on January to April, scored on unseen May and June days. Every model is measured against a simple baseline."
       >
-        {m1 && p
-          ? `Location + game model cuts machine-day error ${fmt.pct(m1.improvement_pct, 0)}, and weak machines stay weak (ρ ${p.spearman.toFixed(2)})`
-          : `A weekday + event forecast cuts daily coin-in error ${fmt.pct(m.improvement_pct, 0)} vs. a flat average`}
-      </AssertionTitle>
+        <KpiStrip testId="model-kpis">
+          {m1 && (
+            <Kpi
+              focal
+              label="Model 1 MAE / machine-day"
+              value={<Num value={m1.mae_model} kind="usd" />}
+              note={`Baseline ${fmt.usd(m1.mae_baseline)} · ${fmt.pct(m1.improvement_pct)} lower`}
+            />
+          )}
+          {m1 && <Kpi label="Model 1 WMAPE" value={<Num value={m1.wmape_model} kind="pct" />} note={`Baseline ${fmt.pct(m1.wmape_baseline)}`} />}
+          {p && (
+            <Kpi
+              label="Rank persistence, Spearman"
+              value={<Num value={p.spearman} kind="dec" />}
+              note={`90% CI ${p.spearman_lo.toFixed(2)}–${p.spearman_hi.toFixed(2)}, ${p.n} machines`}
+            />
+          )}
+          <Kpi
+            label="Model 2 MAE / day"
+            value={<Num value={m.mae_model} kind="usdCompact" />}
+            note={`Baseline ${fmt.usdK(m.mae_baseline)} · ${fmt.pct(m.improvement_pct)} lower`}
+          />
+        </KpiStrip>
+      </HeroBand>
 
-      <TimelineSplit split={data.split} />
+      <div className="mt-8">
+        <TimelineSplit split={data.split} />
+      </div>
 
       {m1 && (
-        <div className="mt-6 grid gap-4 lg:grid-cols-3">
-          <section className="card p-4" aria-label="Model 1 error table" data-testid="mae-table-model1">
-            <h2 className="text-sm font-semibold">Model 1 · expected coin-in per available hour</h2>
-            <p className="mb-3 text-xs text-muted">
-              LightGBM on location, game and calendar (no machine id, theme or lags); {m1.best_iteration} rounds chosen on April. Test{" "}
-              {m1.n_test.toLocaleString()} machine-days, May–Jun.
+        <div className="mt-6 grid grid-cols-12 gap-6">
+          <Tile
+            className="col-span-12 lg:col-span-4"
+            label="Model 1"
+            title="Expected coin-in per available hour"
+            sub={`LightGBM on location, game and calendar. No machine ID, theme or lags. ${m1.best_iteration} rounds chosen on April.`}
+            testId="mae-table-model1"
+            footer={<p className="text-2xs text-fg-subtle">Test: {m1.n_test.toLocaleString()} machine-days, May–Jun</p>}
+          >
+            <DataTable
+              t={{
+                columns: ["Per machine-day", "MAE", "WMAPE"],
+                rows: [
+                  ["Model 1", fmt.usd(m1.mae_model), fmt.pct(m1.wmape_model)],
+                  ["Baseline (zone × weekday)", fmt.usd(m1.mae_baseline), fmt.pct(m1.wmape_baseline)],
+                ],
+              }}
+            />
+            <p className="mt-3 text-xs text-fg-muted">
+              Runs {fmt.usd(m1.bias_model)}/machine-day high in May–Jun, the same post-April drift Model 2 sees. Scorecard expectations use
+              out-of-fold predictions, so a machine never sets its own baseline.
             </p>
-            <table className="w-full text-sm tabular-nums">
-              <thead className="text-left text-xs text-muted">
-                <tr>
-                  <th className="py-1 font-medium">Per machine-day</th>
-                  <th className="py-1 text-right font-medium">MAE</th>
-                  <th className="py-1 text-right font-medium">WMAPE</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-t border-rule">
-                  <td className="py-1.5 text-gold-soft">Model 1</td>
-                  <td className="py-1.5 text-right">{fmt.usd(m1.mae_model)}</td>
-                  <td className="py-1.5 text-right">{fmt.pct(m1.wmape_model)}</td>
-                </tr>
-                <tr className="border-t border-rule">
-                  <td className="py-1.5 text-muted">Baseline (zone × weekday)</td>
-                  <td className="py-1.5 text-right">{fmt.usd(m1.mae_baseline)}</td>
-                  <td className="py-1.5 text-right">{fmt.pct(m1.wmape_baseline)}</td>
-                </tr>
-              </tbody>
-            </table>
-            <p className="mt-3 text-xs text-muted">
-              Runs {fmt.usd(m1.bias_model)}/machine-day high in May–Jun, the same post-April demand drift Model 2 sees. Scorecard
-              expectations use out-of-fold predictions (a machine never sets its own baseline), scaled to same-zone peers each day.
-            </p>
-          </section>
+          </Tile>
 
-          <ChartCard
+          <Tile
             id="importance"
-            title="What sets a machine's expected play"
-            subtitle="Share of LightGBM gain, top 10 features"
+            className="col-span-12 lg:col-span-4"
+            label="Model 1"
+            title="What sets expected play"
+            sub="Share of LightGBM gain, top 10 features"
             table={{ columns: ["Feature", "Gain share"], rows: imp.slice().reverse().map(([k, v]) => [FEATURE_LABELS[k] ?? k, fmt.pct(v)]) }}
           >
-            <Suspense fallback={<div className="h-[260px]" />}>
+            <Suspense fallback={<Skeleton className="h-[260px] w-full" />}>
               <Chart
                 height={260}
                 label="Bar chart of Model 1 feature importance"
                 option={{
-                  grid: { left: 150, right: 40, top: 4, bottom: 20 },
-                  xAxis: { type: "value", axisLabel: { formatter: (v: number) => fmt.pct(v, 0) } },
-                  yAxis: { type: "category", data: imp.map(([k]) => FEATURE_LABELS[k] ?? k) },
-                  tooltip: { valueFormatter: (v) => fmt.pct(Number(v)) },
-                  series: [{ type: "bar", data: imp.map(([, v]) => v), itemStyle: { color: colors.gold, borderRadius: [0, 3, 3, 0] } }],
+                  grid: { left: 4, right: 40, top: 0, bottom: 0, containLabel: true },
+                  xAxis: { type: "value", show: false },
+                  yAxis: { type: "category", data: imp.map(([k]) => FEATURE_LABELS[k] ?? k), axisLabel: { color: colors["fg-muted"] } },
+                  tooltip: {
+                    trigger: "item",
+                    formatter: (q: unknown) => {
+                      const d = q as { name: string; value: number };
+                      return tipHtml(d.name, [["Gain share", fmt.pct(d.value)]]);
+                    },
+                  },
+                  series: [
+                    {
+                      type: "bar",
+                      barWidth: 10,
+                      data: imp.map(([, v], i) => ({
+                        value: v,
+                        itemStyle: { color: i === imp.length - 1 ? colors.gold : colors["fg-subtle"], borderRadius: [0, 3, 3, 0] },
+                      })),
+                      label: {
+                        show: true,
+                        position: "right",
+                        color: colors["fg-muted"],
+                        fontSize: 11,
+                        formatter: (q: { value?: unknown }) => fmt.pct(Number(q.value), 0),
+                      },
+                    },
+                  ],
                 }}
               />
             </Suspense>
-          </ChartCard>
+          </Tile>
 
           {p && (
-            <section id="persistence" className="card p-4" aria-label="Rank persistence" data-testid="persistence">
-              <h2 className="text-sm font-semibold">Do weak machines stay weak?</h2>
-              <p className="mb-3 text-xs text-muted">
-                Shrunk machine effect, Jan–Apr vs May–Jun, {p.n} machines with ≥ 14 days in each window. 90% intervals.
-              </p>
-              <dl className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg border border-rule bg-surface-2 p-3">
-                  <dt className="text-xs text-muted">Spearman rank correlation</dt>
-                  <dd className="font-display text-2xl tabular-nums">{p.spearman.toFixed(2)}</dd>
-                  <dd className="text-[11px] tabular-nums text-muted">
+            <Tile
+              id="persistence"
+              className="col-span-12 lg:col-span-4"
+              label="Stability"
+              title="Do weak machines stay weak?"
+              sub={`Shrunk effect, Jan–Apr vs. May–Jun. ${p.n} machines with 14+ days in each window.`}
+              testId="persistence"
+            >
+              <dl className="grid grid-cols-2 divide-x divide-divider">
+                <div className="pr-4">
+                  <dt className="eyebrow">Spearman rank corr.</dt>
+                  <dd className="display mt-1 text-3xl text-fg">
+                    <Num value={p.spearman} kind="dec" />
+                  </dd>
+                  <dd className="mono text-2xs text-fg-muted">
                     {p.spearman_lo.toFixed(2)}–{p.spearman_hi.toFixed(2)}
                   </dd>
                 </div>
-                <div className="rounded-lg border border-rule bg-surface-2 p-3">
-                  <dt className="text-xs text-muted">Bottom {p.k} still bottom {p.k}</dt>
-                  <dd className="font-display text-2xl tabular-nums">{fmt.pct(p.precision_at_k, 0)}</dd>
-                  <dd className="text-[11px] tabular-nums text-muted">
+                <div className="pl-4">
+                  <dt className="eyebrow">
+                    Bottom {p.k} stays bottom {p.k}
+                  </dt>
+                  <dd className="display mt-1 text-3xl text-fg">
+                    <Num value={p.precision_at_k} kind="pct" />
+                  </dd>
+                  <dd className="mono text-2xs text-fg-muted">
                     {fmt.pct(p.precision_lo, 0)}–{fmt.pct(p.precision_hi, 0)} · random {fmt.pct(p.random_precision, 0)}
                   </dd>
                 </div>
               </dl>
               {ch && (
-                <div className="mt-4 rounded-lg border border-gold/40 bg-gold/5 p-3 text-xs">
-                  <p className="font-semibold text-gold-soft">What this changed</p>
-                  <p className="mt-1 text-ink">
-                    Pricing game and walkway access into each spot cut &ldquo;truly weak&rdquo; from {ch.truly_weak_before} to{" "}
-                    {ch.truly_weak_after} machines. Our list went from {ch.themes_before} themes to {ch.themes_after} ({ch.our10_kept} of 10
-                    kept), and its overlap with the manager&rsquo;s list fell from {ch.overlap_before} to {ch.overlap_after}.
-                  </p>
-                </div>
+                <Changed>
+                  Pricing game and walkway access into each spot cut truly weak from {ch.truly_weak_before} to {ch.truly_weak_after} machines.
+                  Our list went from {ch.themes_before} themes to {ch.themes_after} ({ch.our10_kept} of 10 kept); overlap with the manager fell
+                  from {ch.overlap_before} to {ch.overlap_after}.
+                </Changed>
               )}
-            </section>
+            </Tile>
           )}
         </div>
       )}
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-[2fr_1fr]">
-        <ChartCard
+      <div className="mt-6 grid grid-cols-12 gap-6">
+        <Tile
           id="model2"
-          title="Model 2 · daily floor coin-in: predicted vs. actual (test window)"
-          subtitle="Model 2 = Jan–Apr weekday mean × citywide-event uplift; baseline = constant Jan–Apr daily mean"
+          className="col-span-12 lg:col-span-8"
+          label="Model 2"
+          title="Daily floor coin-in, test window"
+          sub="Jan–Apr weekday mean × citywide-event uplift, against a flat Jan–Apr mean"
           table={{
             columns: ["Date", "Actual", "Model", "Baseline"],
             rows: h.map((r) => [r.gaming_date, fmt.usd(r.actual), fmt.usd(r.pred_model), fmt.usd(r.pred_baseline)]),
           }}
         >
-          <Suspense fallback={<div className="h-[300px]" />}>
+          <Suspense fallback={<Skeleton className="h-[300px] w-full" />}>
             <Chart
               height={300}
               label="Line chart of actual and predicted daily coin-in for May and June 2025"
               option={{
-                grid: { left: 64, right: 16, top: 28, bottom: 32 },
-                legend: { top: 0, right: 0 },
-                tooltip: { trigger: "axis", valueFormatter: (v) => fmt.usdK(Number(v)) },
-                xAxis: { type: "time" },
+                grid: { left: 4, right: 72, top: 12, bottom: 4, containLabel: true },
+                tooltip: {
+                  trigger: "axis",
+                  formatter: (q: unknown) => {
+                    const a = q as { axisValueLabel: string; seriesName: string; value: [string, number]; color: string }[];
+                    return tipHtml(
+                      a[0]?.axisValueLabel ?? "",
+                      a.map((s) => [s.seriesName, fmt.usdK(s.value[1]), s.color]),
+                    );
+                  },
+                },
+                xAxis: { type: "time", axisLabel: { formatter: "{MMM} {d}" } },
                 yAxis: { type: "value", axisLabel: { formatter: (v: number) => fmt.usdK(v) }, scale: true },
                 series: [
-                  { name: "Actual", type: "line", data: h.map((r) => [r.gaming_date, r.actual]), lineStyle: { color: colors.ink, width: 1.5 }, itemStyle: { color: colors.ink } },
-                  { name: "Model 2", type: "line", data: h.map((r) => [r.gaming_date, r.pred_model]), lineStyle: { color: colors.gold }, itemStyle: { color: colors.gold } },
-                  { name: "Baseline", type: "line", data: h.map((r) => [r.gaming_date, r.pred_baseline]), lineStyle: { color: colors.muted, type: "dashed" }, itemStyle: { color: colors.muted } },
+                  {
+                    name: "Actual",
+                    type: "line",
+                    data: h.map((r) => [r.gaming_date, r.actual]),
+                    lineStyle: { color: colors["fg-muted"], width: 1.25 },
+                    itemStyle: { color: colors["fg-muted"] },
+                    areaStyle: { color: areaFill(colors["fg-muted"], 0.12) },
+                    endLabel: { show: true, formatter: "Actual", color: colors["fg-muted"], fontSize: 11 },
+                  },
+                  {
+                    name: "Model 2",
+                    type: "line",
+                    data: h.map((r) => [r.gaming_date, r.pred_model]),
+                    lineStyle: { color: colors.gold, width: 1.75 },
+                    itemStyle: { color: colors.gold },
+                    endLabel: { show: true, formatter: "Model 2", color: colors["gold-soft"], fontSize: 11 },
+                  },
+                  {
+                    name: "Baseline",
+                    type: "line",
+                    data: h.map((r) => [r.gaming_date, r.pred_baseline]),
+                    lineStyle: { color: colors["fg-subtle"], type: [4, 4], width: 1 },
+                    itemStyle: { color: colors["fg-subtle"] },
+                    endLabel: { show: true, formatter: "Baseline", color: colors["fg-subtle"], fontSize: 11 },
+                  },
                 ],
               }}
             />
           </Suspense>
-        </ChartCard>
+        </Tile>
 
-        <section className="card p-4" aria-label="Model 2 error table" data-testid="mae-table">
-          <h2 className="mb-3 text-sm font-semibold">Model 2 · test-window error (May–Jun, {h.length} days)</h2>
-          <table className="w-full text-sm tabular-nums">
-            <thead className="text-left text-xs text-muted">
-              <tr>
-                <th className="py-1 font-medium">Model</th>
-                <th className="py-1 text-right font-medium">MAE</th>
-                <th className="py-1 text-right font-medium">WAPE</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-t border-rule">
-                <td className="py-1.5 text-gold-soft">Weekday × event</td>
-                <td className="py-1.5 text-right">{fmt.usdK(m.mae_model)}</td>
-                <td className="py-1.5 text-right">{fmt.pct(m.wape_model)}</td>
-              </tr>
-              <tr className="border-t border-rule">
-                <td className="py-1.5">Weekday only</td>
-                <td className="py-1.5 text-right">{fmt.usdK(m.mae_weekday_only)}</td>
-                <td className="py-1.5 text-right">–</td>
-              </tr>
-              <tr className="border-t border-rule">
-                <td className="py-1.5 text-muted">Baseline (flat mean)</td>
-                <td className="py-1.5 text-right">{fmt.usdK(m.mae_baseline)}</td>
-                <td className="py-1.5 text-right">{fmt.pct(m.wape_baseline)}</td>
-              </tr>
-            </tbody>
-          </table>
-          <p className="mt-3 text-xs text-muted">
-            Event uplift ×{m.event_uplift.toFixed(3)}. Peaks {m.peak_days.join("/")}, troughs {m.trough_days.join("/")}. The model runs{" "}
+        <Tile className="col-span-12 lg:col-span-4" label="Model 2" title={`Test-window error, ${h.length} days`} testId="mae-table">
+          <DataTable
+            t={{
+              columns: ["Model", "MAE", "WAPE"],
+              rows: [
+                ["Weekday × event", fmt.usdK(m.mae_model), fmt.pct(m.wape_model)],
+                ["Weekday only", fmt.usdK(m.mae_weekday_only), "–"],
+                ["Baseline (flat mean)", fmt.usdK(m.mae_baseline), fmt.pct(m.wape_baseline)],
+              ],
+            }}
+          />
+          <p className="mt-3 text-xs text-fg-muted">
+            Event uplift ×{m.event_uplift.toFixed(3)}. Peaks {m.peak_days.join("/")}, troughs {m.trough_days.join("/")}. Runs{" "}
             {fmt.usdK(m.bias_model)}/day high in May–Jun: demand drifted down after April.
           </p>
-          <div className="mt-4 rounded-lg border border-gold/40 bg-gold/5 p-3 text-xs">
-            <p className="font-semibold text-gold-soft">What this changed</p>
-            <p className="mt-1 text-ink">
-              Staff and time promotions to {m.peak_days.join("/")} peaks, not a flat schedule; re-fit monthly because of the downward drift.
-            </p>
-          </div>
-        </section>
+          <Changed>Staff and time promotions to {m.peak_days.join("/")} peaks, not a flat schedule; re-fit monthly because of the drift.</Changed>
+        </Tile>
       </div>
 
-      <section className="card mt-4 p-4" aria-label="Leakage checklist">
-        <h2 className="mb-2 text-sm font-semibold">Leakage checklist (each is an automated test)</h2>
-        <ul className="grid gap-1.5 text-sm md:grid-cols-2">
+      <Tile className="mt-6" label="Guardrails" title="Leakage checklist" sub="Each line is an automated test in tests/test_no_leakage.py">
+        <ul className="grid gap-x-8 md:grid-cols-2">
           {LEAKAGE.map((t) => (
-            <li key={t} className="flex items-start gap-2">
-              <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-gold" aria-label="passes" />
+            <li key={t} className="flex h-row items-center gap-2.5 border-b border-divider text-sm text-fg-muted">
+              <Check size={14} className="shrink-0 text-gold" aria-label="passes" />
               {t}
             </li>
           ))}
         </ul>
-      </section>
+      </Tile>
     </div>
   );
 }
 
-function TimelineSplit({ split }: { split: Record<string, string> }) {
+function Changed({ children }: { children: ReactNode }) {
+  return (
+    <div className="mt-4 rounded-md bg-gold/[0.06] p-3 ring-1 ring-inset ring-gold/20">
+      <p className="eyebrow !text-gold-soft">What this changed</p>
+      <p className="mt-1 text-sm text-fg">{children}</p>
+    </div>
+  );
+}
+
+function TimelineSplit(_: { split: Record<string, string> }) {
   const seg = [
-    { label: "Train (Model 1 inner)", from: "Jan 1", to: "Mar 31", cls: "bg-maroon", w: 90 },
-    { label: "Validate (hyperparameters)", from: "Apr 1", to: "Apr 30", cls: "bg-maroon-hover", w: 30 },
-    { label: "Test (never used to fit)", from: split.test_start, to: "Jun 30", cls: "bg-gold/70", w: 61 },
+    { label: "Train", note: "Model 1 inner fit", from: "Jan 1", to: "Mar 31", cls: "bg-surface-3", w: 90 },
+    { label: "Validate", note: "hyperparameters", from: "Apr 1", to: "Apr 30", cls: "bg-maroon", w: 30 },
+    { label: "Test", note: "never used to fit", from: "May 1", to: "Jun 30", cls: "bg-gold/20 ring-1 ring-inset ring-gold/40", w: 61 },
   ];
   return (
     <div aria-label="Train, validate and test timeline">
-      <div className="flex h-8 overflow-hidden rounded-lg border border-rule">
+      <div className="flex h-8 gap-1">
         {seg.map((s) => (
-          <div key={s.label} className={`${s.cls} flex items-center px-2 text-[11px] font-medium text-ink`} style={{ flex: s.w }}>
-            {s.label}
+          <div key={s.label} className={`${s.cls} flex items-center gap-2 rounded-sm px-3 text-xs`} style={{ flex: s.w }}>
+            <span className="font-medium text-fg">{s.label}</span>
+            <span className="hidden truncate text-fg-muted md:inline">{s.note}</span>
           </div>
         ))}
       </div>
-      <div className="mt-1 flex text-[10px] text-muted">
+      <div className="mono mt-1.5 flex gap-1 text-2xs text-fg-subtle">
         {seg.map((s) => (
-          <div key={s.label} style={{ flex: s.w }}>
+          <div key={s.label} className="px-3" style={{ flex: s.w }}>
             {s.from} – {s.to}
           </div>
         ))}

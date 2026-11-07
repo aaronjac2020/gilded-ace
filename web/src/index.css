@@ -3,40 +3,142 @@
 @tailwind utilities;
 
 @layer base {
-  html {
+  :root {
+    /* OKLCH channels (L C H); hex equivalents in theme/tokens.ts */
+    --bg: 14.1% 0.002 17.4;
+    --surface-1: 17.4% 0.002 17.3;
+    --surface-2: 19.8% 0.003 17.4;
+    --surface-3: 22.6% 0.005 17.5;
+    --fg: 93.9% 0.004 39.5;
+    --fg-muted: 63% 0.01 26.1;
+    --fg-subtle: 46.3% 0.009 27.3;
+    --maroon: 27.1% 0.111 29.2;
+    --maroon-bright: 38.3% 0.131 25.9;
+    --gold: 66.6% 0.129 66.1;
+    --gold-soft: 79.5% 0.107 76.7;
+    --luck: 71.3% 0.097 247.1;
+    --location: 66.6% 0.129 66.1;
+    --downtime: 59.9% 0.102 12.5;
+    --inspect_hold: 65.5% 0.122 298.7;
+    --truly_weak: 87.4% 0.006 31.1;
+    --ok: 33.1% 0.009 17.6;
+    --ring: rgb(255 255 255 / 0.08);
+    --ring-strong: rgb(255 255 255 / 0.14);
+    --divider: rgb(255 255 255 / 0.06);
+    --gold-tint: oklch(var(--gold) / 0.12);
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     color-scheme: dark;
+    accent-color: oklch(var(--gold));
+  }
+  html {
+    background: oklch(var(--bg));
   }
   body {
-    @apply bg-bg font-sans text-ink antialiased;
-    font-feature-settings: "tnum" 1, "cv11" 1;
+    @apply bg-bg font-sans text-base text-fg antialiased;
+    font-feature-settings: "cv11" 1, "ss01" 1, "ss03" 1;
+  }
+  /* 2% grain on the page background only */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.02;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  ::selection {
+    background: var(--gold-tint);
   }
   :focus-visible {
-    outline: 2px solid theme("colors.gold");
+    outline: 2px solid oklch(var(--gold));
     outline-offset: 2px;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--ring-strong) transparent;
+  }
+  kbd {
+    font-family: theme("fontFamily.mono");
   }
 }
 
 @layer components {
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+  .mono {
+    @apply font-mono num;
+  }
+  .eyebrow {
+    @apply text-2xs font-medium uppercase tracking-eyebrow text-fg-subtle;
+  }
+  .display {
+    @apply font-semibold tracking-tightest;
+  }
+  /* Tile / card: lighter surface + inset ring + top highlight; no shadow. */
   .card {
-    @apply rounded-card border border-rule bg-surface;
+    @apply rounded-lg bg-surface-1 shadow-highlight ring-1 ring-inset ring-ring;
+  }
+  .float {
+    @apply rounded-md bg-surface-3 shadow-float;
   }
   .focus-ring {
     @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold;
   }
-  .chip {
-    @apply focus-ring rounded-full border border-rule px-3 py-1 text-xs font-medium text-muted transition-colors hover:border-gold/60 hover:text-ink;
+  .hairline-dashed {
+    background-image: linear-gradient(to right, var(--ring-strong) 50%, transparent 0);
+    background-size: 8px 1px;
+    background-repeat: repeat-x;
+    height: 1px;
   }
-  .chip-on {
-    @apply border-gold bg-gold/15 text-gold-soft;
+  /* Faint 40px grid, faded at the edges (hero bands + floor map only). */
+  .grid-backdrop {
+    background-image:
+      linear-gradient(to right, rgb(255 255 255 / 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse 70% 80% at 30% 0%, #000 30%, transparent 75%);
   }
-  .btn-ghost {
-    @apply focus-ring inline-flex items-center gap-1.5 rounded-lg border border-rule px-2.5 py-1 text-xs text-muted transition-colors hover:border-gold/60 hover:text-ink;
+  .spotlight {
+    background: radial-gradient(closest-side, oklch(var(--maroon) / 0.3), oklch(var(--maroon) / 0.12) 55%, transparent);
   }
-  .btn-primary {
-    @apply focus-ring inline-flex items-center gap-1.5 rounded-lg bg-maroon px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-maroon-hover;
+  /* 1px gold->transparent gradient border for the one hero card per screen. */
+  .gradient-ring {
+    position: relative;
+  }
+  .gradient-ring::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, oklch(var(--gold) / 0.4), transparent 60%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+  .skeleton {
+    @apply rounded-md bg-surface-2;
+    background-image: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.04), transparent);
+    background-size: 400px 100%;
+    background-repeat: no-repeat;
+    @apply animate-shimmer;
+  }
+  .pulse-target {
+    @apply animate-pulse-ring;
   }
   .select {
-    @apply focus-ring rounded-lg border border-rule bg-surface-2 px-2 py-1 text-xs text-ink;
+    @apply focus-ring h-8 rounded-sm bg-surface-2 px-2 text-sm text-fg ring-1 ring-inset ring-ring hover:ring-ring-strong;
   }
 }
 
@@ -45,6 +147,13 @@
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 240ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }

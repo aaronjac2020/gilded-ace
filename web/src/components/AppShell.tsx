@@ -1,74 +1,126 @@
-import { BookOpen, Cpu, Gift, LayoutGrid, Map, PiggyBank, TrendingUp, Users, Wrench } from "lucide-react";
-import type { ReactNode } from "react";
-import { NavLink, useLocation } from "react-router-dom";
-import { DateRangePicker } from "./DateRangePicker";
-import { FilterBar } from "./FilterBar";
+import { LazyMotion, m } from "framer-motion";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
+import { Toaster } from "sonner";
+import { cn } from "../lib/cn";
+import { useCommandOpen, useTour } from "../lib/uiStore";
+import { navFor } from "./shell/nav";
+import { ShortcutsSheet, useGlobalKeys } from "./shell/Shortcuts";
+import { Sidebar } from "./shell/Sidebar";
+import { TopBar } from "./shell/TopBar";
 
-export const NAV = [
-  { to: "/", label: "Verdict", icon: LayoutGrid },
-  { to: "/floor", label: "Floor Map", icon: Map },
-  { to: "/demand", label: "Demand", icon: TrendingUp },
-  { to: "/downtime", label: "Downtime", icon: Wrench },
-  { to: "/players", label: "Players", icon: Users },
-  { to: "/comps", label: "Comps", icon: Gift },
-  { to: "/model", label: "Model Lab", icon: Cpu },
-  { to: "/plan", label: "$100k Plan", icon: PiggyBank },
-  { to: "/method", label: "Methodology", icon: BookOpen },
-] as const;
+// Overlays load on first use so the entry chunk stays small; they stay mounted afterwards for exit animations.
+const MachineDrawer = lazy(() =>
+  import("./MachineDrawer").then((x) => ({ default: x.MachineDrawer })),
+);
+const CommandMenu = lazy(() =>
+  import("./shell/CommandMenu").then((x) => ({ default: x.CommandMenu })),
+);
+const Tour = lazy(() =>
+  import("./shell/Tour").then((x) => ({ default: x.Tour })),
+);
+const motionFeatures = () => import("framer-motion").then((x) => x.domMax);
+
+function useSticky(on: boolean) {
+  const [seen, setSeen] = useState(on);
+  useEffect(() => {
+    if (on) setSeen(true);
+  }, [on]);
+  return on || seen;
+}
+import { TooltipProvider } from "./ui/tooltip";
+
+const SITE = "The Gilded Ace";
+
+/** ?focus=<id>: scroll the anchor into view and pulse it gold once it renders. */
+function useFocusAnchor() {
+  const { pathname, search } = useLocation();
+  useEffect(() => {
+    const id = new URLSearchParams(search).get("focus");
+    if (!id) return;
+    let tries = 0;
+    let raf = 0;
+    const seek = () => {
+      const el = document.getElementById(id);
+      if (!el) {
+        if (tries++ < 120) raf = requestAnimationFrame(seek);
+        return;
+      }
+      el.scrollIntoView({ block: "start", behavior: "smooth" });
+      el.classList.remove("pulse-target");
+      void el.offsetWidth;
+      el.classList.add("pulse-target");
+    };
+    seek();
+    return () => cancelAnimationFrame(raf);
+  }, [pathname, search]);
+}
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { search } = useLocation();
+  const { pathname } = useLocation();
+  const [params] = useSearchParams();
+  const drawerOn = useSticky(params.has("machine"));
+  const commandOn = useSticky(useCommandOpen());
+  const tourOn = useSticky(useTour() !== null);
+  useGlobalKeys();
+  useFocusAnchor();
+  useEffect(() => {
+    const n = navFor(pathname);
+    document.title = n
+      ? n.to === "/"
+        ? `${SITE} · Floor review`
+        : `${n.title} · ${SITE}`
+      : `Not found · ${SITE}`;
+  }, [pathname]);
+  const bleed = pathname === "/floor";
+
   return (
-    <div className="flex min-h-screen">
-      <a
-        href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-gold focus:px-3 focus:py-1 focus:text-bg"
-      >
-        Skip to content
-      </a>
-      <nav aria-label="Screens" className="sticky top-0 flex h-screen w-56 shrink-0 flex-col border-r border-rule bg-surface px-3 py-5">
-        <div className="mb-6 px-2">
-          <p className="font-display text-xl font-semibold text-gold-soft">Gilded Ace</p>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-muted">Luck · Location · Leak</p>
-        </div>
-        <ul className="flex flex-col gap-0.5">
-          {NAV.map(({ to, label, icon: Icon }) => (
-            <li key={to}>
-              <NavLink
-                to={{ pathname: to, search }}
-                end={to === "/"}
-                className={({ isActive }) =>
-                  `focus-ring flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors ${
-                    isActive ? "bg-maroon text-ink" : "text-muted hover:bg-surface-2 hover:text-ink"
-                  }`
-                }
-              >
-                <Icon size={16} aria-hidden />
-                {label}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-auto px-2 text-[10px] leading-snug text-muted">
-          Synthetic data, fictional casino. Findings are not facts about any real property.
-        </p>
-      </nav>
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 border-b border-rule bg-bg/90 backdrop-blur">
-          <div className="mx-auto flex max-w-content flex-wrap items-center justify-between gap-3 px-6 py-3">
-            <DateRangePicker />
-            <div className="flex items-center gap-3">
-              <FilterBar />
-              <NavLink to={{ pathname: "/method", search }} className="btn-ghost">
-                <BookOpen size={14} aria-hidden /> Methodology
-              </NavLink>
-            </div>
+    <LazyMotion features={motionFeatures}>
+      <TooltipProvider>
+        <div className="flex min-h-screen">
+          <a
+            href="#main"
+            className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-sm focus:bg-gold focus:px-3 focus:py-1 focus:text-bg"
+          >
+            Skip to content
+          </a>
+          <Sidebar />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <TopBar />
+            <m.main
+              key={pathname}
+              id="main"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className={cn(
+                "w-full flex-1 pb-16",
+                bleed ? "" : "mx-auto max-w-content px-6",
+              )}
+            >
+              {children}
+            </m.main>
           </div>
-        </header>
-        <main id="main" className="mx-auto w-full max-w-content flex-1 px-6 py-8">
-          {children}
-        </main>
-      </div>
-    </div>
+        </div>
+        <Suspense fallback={null}>
+          {drawerOn && <MachineDrawer />}
+          {commandOn && <CommandMenu />}
+          {tourOn && <Tour />}
+        </Suspense>
+        <ShortcutsSheet />
+        <Toaster
+          position="bottom-center"
+          theme="dark"
+          toastOptions={{
+            classNames: {
+              toast:
+                "!bg-surface-3 !text-fg !ring-1 !ring-ring-strong !border-0 !rounded-lg !shadow-float !font-sans !text-sm",
+              description: "!text-fg-muted",
+              actionButton: "!bg-transparent !text-gold-soft !font-medium",
+            },
+          }}
+        />
+      </TooltipProvider>
+    </LazyMotion>
   );
 }

@@ -38,32 +38,63 @@ export const THEME = "gilded";
 
 let registered = false;
 
-/** Register the ECharts theme once, built from tokens. */
+/** Linear-quiet: dashed horizontal gridlines only, 11px ticks, no axis lines, neutral series + gold highlight. */
 export function registerTheme(): void {
   if (registered) return;
   registered = true;
-  const axis = {
-    axisLine: { lineStyle: { color: colors.rule } },
-    axisTick: { lineStyle: { color: colors.rule } },
-    axisLabel: { color: colors.muted, fontFamily: fonts.sans },
-    splitLine: { lineStyle: { color: colors.rule, type: "dashed" as const } },
-    nameTextStyle: { color: colors.muted },
+  const label = { color: colors["fg-subtle"], fontFamily: fonts.sans, fontSize: 11 };
+  const cat = {
+    axisLine: { show: false },
+    axisTick: { show: false },
+    axisLabel: label,
+    splitLine: { show: false },
+    nameTextStyle: label,
   };
+  const val = { ...cat, splitLine: { show: true, lineStyle: { color: colors.divider, type: [3, 3] as number[] } } };
   echarts.registerTheme(THEME, {
-    color: [colors.gold, verdictColors.luck, verdictColors.downtime, verdictColors.inspect_hold, colors["gold-soft"], verdictColors.truly_weak],
+    color: [colors["fg-muted"], colors.gold, verdictColors.luck, verdictColors.downtime, verdictColors.inspect_hold, colors["gold-soft"]],
     backgroundColor: "transparent",
-    textStyle: { fontFamily: fonts.sans, color: colors.ink },
-    title: { textStyle: { color: colors.ink, fontFamily: fonts.display } },
-    legend: { textStyle: { color: colors.muted } },
-    tooltip: {
-      backgroundColor: colors["surface-2"],
-      borderColor: colors.rule,
-      textStyle: { color: colors.ink, fontFamily: fonts.sans },
-    },
-    categoryAxis: axis,
-    valueAxis: axis,
-    timeAxis: axis,
-    line: { symbol: "none", lineStyle: { width: 2 } },
-    bar: { itemStyle: { borderRadius: [3, 3, 0, 0] } },
+    textStyle: { fontFamily: fonts.sans, color: colors.fg, fontSize: 12 },
+    title: { show: false },
+    legend: { show: false, textStyle: label },
+    grid: { left: 8, right: 16, top: 16, bottom: 8, containLabel: true },
+    tooltip: tooltipStyle,
+    categoryAxis: cat,
+    valueAxis: val,
+    timeAxis: cat,
+    line: { symbol: "none", lineStyle: { width: 1.5 }, emphasis: { lineStyle: { width: 2 } } },
+    bar: { itemStyle: { borderRadius: [3, 3, 0, 0] }, barMaxWidth: 28 },
+    scatter: { symbolSize: 6 },
   });
 }
+
+/** The one tooltip: surface-3 card, hairline ring, mono numbers. */
+export const tooltipStyle = {
+  backgroundColor: colors["surface-3"],
+  borderColor: colors["ring-strong"],
+  borderWidth: 1,
+  padding: [8, 10],
+  extraCssText: "border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.45);",
+  textStyle: { color: colors.fg, fontFamily: fonts.sans, fontSize: 12 },
+  axisPointer: { lineStyle: { color: colors["ring-strong"] }, crossStyle: { color: colors["ring-strong"] } },
+};
+
+/** Tooltip body: title + rows of [swatch, label, value]. Values render mono. */
+export function tipHtml(title: string, rows: [string, string, string?][]): string {
+  const r = rows
+    .map(
+      ([k, v, c]) =>
+        `<div style="display:flex;gap:12px;justify-content:space-between;align-items:center;line-height:20px">` +
+        `<span style="color:${colors["fg-muted"]};display:flex;align-items:center;gap:6px">${c ? `<i style="width:6px;height:6px;border-radius:9px;background:${c};display:inline-block"></i>` : ""}${k}</span>` +
+        `<span style="font-family:${fonts.mono};font-size:11px">${v}</span></div>`,
+    )
+    .join("");
+  return `<div style="min-width:160px"><div style="font-weight:600;margin-bottom:4px">${title}</div>${r}</div>`;
+}
+
+/** Vertical gradient fill for an area series. */
+export const areaFill = (hex: string, a = 0.22) =>
+  new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+    { offset: 0, color: hex + Math.round(a * 255).toString(16).padStart(2, "0") },
+    { offset: 1, color: hex + "00" },
+  ]);

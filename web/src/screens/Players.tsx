@@ -1,5 +1,5 @@
-import { AssertionTitle } from "../components/AssertionTitle";
+import { Pending } from "../components/Pending";
 
 export default function Players() {
-  return <AssertionTitle kicker="Players">Loading analysis…</AssertionTitle>;
+  return <Pending eyebrow="Players · Q5" question="Which segments drive play, and did any shift?" milestone="M10" plan={["Segment drilldown", "Change point with date CI and effect size", "Visit frequency by tier"]} />;
 }

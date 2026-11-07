@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 import { AppShell } from "./components/AppShell";
-import { Loading } from "./components/Loading";
+import { ScreenSkeleton } from "./components/ui/skeleton";
 import Verdict from "./screens/Verdict";
 
 const FloorMap = lazy(() => import("./screens/FloorMap"));
@@ -12,11 +12,12 @@ const Comps = lazy(() => import("./screens/Comps"));
 const ModelLab = lazy(() => import("./screens/ModelLab"));
 const BudgetPlan = lazy(() => import("./screens/BudgetPlan"));
 const Methodology = lazy(() => import("./screens/Methodology"));
+const NotFound = lazy(() => import("./screens/NotFound"));
 
 export default function App() {
   return (
     <AppShell>
-      <Suspense fallback={<Loading />}>
+      <Suspense fallback={<ScreenSkeleton />}>
         <Routes>
           <Route path="/" element={<Verdict />} />
           <Route path="/floor" element={<FloorMap />} />
@@ -27,7 +28,7 @@ export default function App() {
           <Route path="/model" element={<ModelLab />} />
           <Route path="/plan" element={<BudgetPlan />} />
           <Route path="/method" element={<Methodology />} />
-          <Route path="*" element={<Verdict />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
     </AppShell>

@@ -53,3 +53,15 @@ Resume point for a fresh session: read this file, then `python run.py all`.
 - Rank persistence Jan–Apr → May–Jun (n=307, ≥14 days each): Spearman 0.58 [0.51, 0.64]; precision@10 40% [19%, 65%] vs random 3%.
 - Model Lab: Model 1 table, feature-importance chart (+table), persistence card with CIs, "What this changed". 5 new leakage tests (27/27 pass), ruff clean, judge 0–4/9 PASS on preview.
 - Next: M7.
+
+## M6.5 · Design System v2 — done (~2.75 h)
+- Presentation only: no analysis, JSON schema, route or handoff changes.
+- Tokens (oklch vars + canvas hex mirrors), Inter/JetBrains Mono self-hosted (Playfair and Google Fonts removed), 232/56px collapsible sidebar, 48px top bar with period control, filters popover, copy link, tour.
+- Primitives in `web/src/components/ui/` (button, kbd, tooltip, tabs, status-pill, skeleton/empty/error, Num/Delta via NumberFlow, HeroBand/KpiStrip/Kpi, Tile with table toggle + ⋯ menu, RowList with J/K, CiBar).
+- Shell: ⌘K command menu (screens, actions, periods, recent, 310 machines), G+key nav, [ ] months, ? sheet, 5-step tour, route fade, per-route titles, styled 404.
+- Screens: Verdict and Model Lab/Plan on hero band + 12-col tiles; Floor Map full-bleed with zoom/minimap, color-by toggle, bank click → global filter with Undo toast, hover focus+context dimming; global vaul machine drawer (520px, tabs, ←/→, layoutId morph from list rows); stubs show the question + planned evidence, no numbers.
+- Brand: GA monogram favicon (SVG + 32px PNG), OG 1200×630, theme-color #0A0909, JSON preload (`web/scripts/brand-assets.mjs`).
+- Perf: overlays (drawer, ⌘K, tour) lazy-mounted on first use, framer-motion via LazyMotion; entry chunk 648 → 228 kB (72 kB gzip). Fixed echarts-for-react CJS default-interop crash on Model Lab.
+- Checks: typecheck clean; judge 0–4/9 PASS locally; Lighthouse (local preview, desktop) Perf 91 · A11y 96 · BP 100; mobile-throttled Perf 59 (TBT from React render under 4× CPU). Accusatory-word and Playfair greps empty.
+- Screenshots: `outputs/figures/ui_v2/{before,after}/` at 1440×900 and 1280×800.
+- Next: M7.
