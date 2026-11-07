@@ -9,3 +9,6 @@ __pycache__/
 .env
 web/test-results/
 web/playwright-report/
+
+# Derived web data is committed so static hosts can build without the pipeline
+!web/public/data/

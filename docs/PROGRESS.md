@@ -36,3 +36,8 @@ Resume point for a fresh session: read this file, then `python run.py all`.
 - Budget v0: spend $42.5k, keep $57.5k, 30-day theo effect $8.7k–$45.8k (mid $22.9k) — below spend inside the horizon; M11 optimizer to revisit.
 - Judge check 0 now uses page-side `performance.now()`; a single cold run measured 3.3 s wall (Google Fonts cold fetch), not reproducible (0.43–0.65 s after).
 - Next: M5.
+
+## M5 · Deploy prep — done (~10 min), STOP for Vercel
+- `web/vercel.json` (vite framework, build `npm run build`, output `dist`, SPA rewrite for everything except /data and /assets, cache headers); `postbuild` copies dist/index.html → dist/404.html.
+- `web/public/data/` (22 files, 4.2 MB, derived aggregates; 0 player-id matches) now committed — root `data/` ignore previously hid it, so a host build would have shipped with no data.
+- Next: Aaron imports the repo on Vercel; then `npm run judge -- --url <URL>`; then M6.
