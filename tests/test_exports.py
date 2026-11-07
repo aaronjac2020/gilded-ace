@@ -47,7 +47,7 @@ def test_scorecard_frozen_columns():
 
 def test_no_player_identifiers():
     pat = re.compile(r'"(player_id|guest_id|card_number|loyalty_id|session_id|trip_id|first_name|last_name|email)"')
-    pid = re.compile(r'"P-\d{4,}"')
+    pid = re.compile(r'"P[0-9a-f]{16}"')
     for p in WEB_DATA.glob("*.json"):
         s = p.read_text(encoding="utf-8")
         assert not pat.search(s), f"{p.name} has a player-level key"
