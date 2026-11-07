@@ -22,3 +22,10 @@ Resume point for a fresh session: read this file, then `python run.py all`.
 - Findings: Sat/Fri peak, Tue/Wed trough, peak/trough 1.64×. Model over-forecasts by +$45k/day in May–Jun (June +$59k): floor demand drifted down after April.
 - Schema G frozen: machine_scorecard.parquet (18 frozen cols first), forecast_holdout.parquet (gaming_date, actual, pred_model, pred_baseline), build_scorecard(start, end).
 - Next: M3.
+
+## M3 · Web export + scaffold + design system — done (~1 h)
+- Built: `export_web.py` (columnar JSON + dictionary encoding for machine-day ids; fails if > 15 MB), `tests/test_exports.py` (5: files present, size cap, frozen cols, no player ids/keys, columnar shape). Web: Vite 8 + React 19 + TS + Tailwind 3 (v3 for the spec's tailwind.config.ts/postcss layout), tokens.ts → Tailwind + ECharts theme (tree-shaken echarts/core, loaded lazily with chart screens), AppShell (nav, period chips, zone/bank selects, filter pills, URL state), KpiCard/ChartCard (Show as table)/VerdictChip/EvidenceLink/AssertionTitle, 9 lazy routes.
+- Metrics: web data 4.09 MB / 15 MB (machine_day_slim 2.4 MB). Entry JS 273 kB (87 kB gzip). typecheck + build clean. 22/22 pytest.
+- Pending stubs ({"pending": "M<n>"}): demand, downtime, players_segments, comps, budget, claims.
+- [assumption] @types/react, @types/react-dom added (types for pre-approved react; needed for TS).
+- Next: M4.

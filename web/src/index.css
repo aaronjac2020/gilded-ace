@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-bg font-sans text-ink antialiased;
+    font-feature-settings: "tnum" 1, "cv11" 1;
+  }
+  :focus-visible {
+    outline: 2px solid theme("colors.gold");
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-card border border-rule bg-surface;
+  }
+  .focus-ring {
+    @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold;
+  }
+  .chip {
+    @apply focus-ring rounded-full border border-rule px-3 py-1 text-xs font-medium text-muted transition-colors hover:border-gold/60 hover:text-ink;
+  }
+  .chip-on {
+    @apply border-gold bg-gold/15 text-gold-soft;
+  }
+  .btn-ghost {
+    @apply focus-ring inline-flex items-center gap-1.5 rounded-lg border border-rule px-2.5 py-1 text-xs text-muted transition-colors hover:border-gold/60 hover:text-ink;
+  }
+  .btn-primary {
+    @apply focus-ring inline-flex items-center gap-1.5 rounded-lg bg-maroon px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-maroon-hover;
+  }
+  .select {
+    @apply focus-ring rounded-lg border border-rule bg-surface-2 px-2 py-1 text-xs text-ink;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
