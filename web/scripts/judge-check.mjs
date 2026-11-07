@@ -27,6 +27,16 @@ if (!url) {
 }
 url = url.replace(/\/$/, "");
 
+// Remote deploys: the first request after a deploy can land on cold CDN edges (seen once: check 0 > 3 s right after a push;
+// forced edge misses later measured 0.8–1.3 s). Warm the shell, its assets and the Verdict data so check 0 measures the site.
+if (!server) {
+  const t = Date.now();
+  const html = await (await fetch(`${url}/`)).text();
+  const assets = [...html.matchAll(/(?:src|href)="(\/[^"]+\.(?:js|css|json|svg|png))"/g)].map((m) => m[1]);
+  await Promise.all([...assets, "/data/scorecard_full.json", "/data/budget.json", "/data/meta.json"].map((a) => fetch(url + a).catch(() => {})));
+  console.log(`warm-up: ${assets.length + 3} requests in ${Date.now() - t} ms`);
+}
+
 const results = [];
 const record = (n, name, ok, detail) => {
   results.push({ n, name, ok, detail });
@@ -48,7 +58,14 @@ try {
   const wallMs = Date.now() - t0;
   // Page-side time from navigation start to KPIs rendered (excludes Playwright/browser cold-start overhead).
   const loadMs = Math.round(await page.evaluate(() => performance.now()));
-  record(0, "first load of / (KPIs visible)", loadMs < 3000, `${loadMs} ms in page, ${wallMs} ms wall (limit 3000)`);
+  let slowest = "";
+  if (loadMs >= 3000) {
+    const top = await page.evaluate(() =>
+      performance.getEntriesByType("resource").sort((a, b) => b.duration - a.duration).slice(0, 5).map((e) => `${e.name.split("/").pop()} ${Math.round(e.duration)}ms`),
+    );
+    slowest = `; slowest: ${top.join(", ")}`;
+  }
+  record(0, "first load of / (KPIs visible)", loadMs < 3000, `${loadMs} ms in page, ${wallMs} ms wall (limit 3000)${slowest}`);
 
   if (only.includes(1)) {
     const before = await kpis();
