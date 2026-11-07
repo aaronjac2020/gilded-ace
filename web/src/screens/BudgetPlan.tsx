@@ -70,22 +70,7 @@ export default function BudgetPlan() {
           </>
         }
         sub={`At most ${data.rules.max_action_types} action types under a ${fmt.usdK(cap)} cap. Keeping budget is a valid choice when the evidence is thin.`}
-      >
-        <KpiStrip testId="plan-kpis">
-          <Kpi
-            focal
-            label="Spend"
-            value={<Num value={data.total_usd} kind="usdCompact" />}
-            note={`${fmt.pct(data.total_usd / cap)} of the cap`}
-          />
-          <Kpi label="Kept" value={<Num value={data.kept_usd} kind="usdCompact" />} note="Unspent, returned" />
-          <Kpi
-            label="Expected theo, mid"
-            value={<Num value={data.effect.mid} kind="usdCompact" />}
-            note={`Range ${fmt.usdK(data.effect.lo)}–${fmt.usdK(data.effect.hi)} within ${data.rules.horizon_days} days`}
-          />
-        </KpiStrip>
-      </HeroBand>
+      />
 
       <section id="plan" aria-label="The bets" className="mt-16 scroll-mt-20">
         <BettingTable
@@ -105,6 +90,21 @@ export default function BudgetPlan() {
         />
         {data.errors.length > 0 && <p className="mt-2 text-xs text-verdict-downtime">{data.errors.join("; ")}</p>}
       </section>
+      <div className="mx-6 mt-10 md:mx-10">
+        <KpiStrip testId="plan-kpis">
+          <Kpi
+            label="Spend"
+            value={<Num value={data.total_usd} kind="usdCompact" />}
+            note={`${fmt.pct(data.total_usd / cap)} of the cap`}
+          />
+          <Kpi label="Kept" value={<Num value={data.kept_usd} kind="usdCompact" />} note="Unspent, returned" />
+          <Kpi
+            label="Expected theo, mid"
+            value={<Num value={data.effect.mid} kind="usdCompact" />}
+            note={`Range ${fmt.usdK(data.effect.lo)}–${fmt.usdK(data.effect.hi)} within ${data.rules.horizon_days} days`}
+          />
+        </KpiStrip>
+      </div>
 
       <div className="mt-16 grid grid-cols-12 gap-8" data-testid="plan-lines">
         {lines.map((l) => (

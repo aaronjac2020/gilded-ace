@@ -85,7 +85,7 @@ export function BettingTable({
                   />
                 </m.span>
               </button>
-              <p className="mt-1 flex h-10 items-start justify-center text-center text-sm leading-5 text-ivory">{s.name}</p>
+              <p className="mt-1 flex min-h-[60px] items-start justify-center text-center text-sm leading-5 text-ivory">{s.name}</p>
               <p className="mono text-xs text-gold-soft">{fmt.usdK(s.cost)}</p>
             </li>
           );

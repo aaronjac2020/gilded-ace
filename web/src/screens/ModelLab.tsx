@@ -643,8 +643,15 @@ function Changed({ children }: { children: ReactNode }) {
 function TimelineSplit(_: { split: Record<string, string> }) {
   const seg = [
     { label: "Train", note: "Model 1 inner fit", from: "Jan 1", to: "Mar 31", cls: "bg-surface-3", w: 90 },
-    { label: "Validate", note: "hyperparameters", from: "Apr 1", to: "Apr 30", cls: "bg-maroon/25 ring-1 ring-inset ring-maroon", w: 30 },
-    { label: "Test", note: "never used to fit", from: "May 1", to: "Jun 30", cls: "bg-gold/20 ring-1 ring-inset ring-gold/40", w: 61 },
+    {
+      label: "Validate",
+      note: "hyperparameters",
+      from: "Apr 1",
+      to: "Apr 30",
+      cls: "bg-maroon/40 ring-1 ring-inset ring-maroon-bright/70",
+      w: 30,
+    },
+    { label: "Test", note: "never used to fit", from: "May 1", to: "Jun 30", cls: "bg-ivory/10 ring-1 ring-inset ring-ivory/30", w: 61 },
   ];
   return (
     <div aria-label="Train, validate and test timeline">

@@ -165,19 +165,7 @@ export default function FloorMap() {
           </>
         }
         sub="Each mark is a machine. Click a bank to filter every screen, a machine for its case file."
-      >
-        <KpiStrip testId="floor-kpis">
-          {(["location", "luck", "truly_weak"] as Verdict[]).map((v, i) => (
-            <Kpi
-              key={v}
-              focal={i === 0}
-              label={verdictLabels[v]}
-              value={<Num value={counts.get(v) ?? 0} />}
-              note={`${fmt.pct((counts.get(v) ?? 0) / Math.max(1, scoped.length))} of machines`}
-            />
-          ))}
-        </KpiStrip>
-      </HeroBand>
+      />
 
       <section
         id="map"
@@ -434,6 +422,18 @@ export default function FloorMap() {
         {/* minimap */}
         <Minimap geo={geo} t={t} />
       </section>
+      <div className="mx-6 mt-10 md:mx-10">
+        <KpiStrip testId="floor-kpis">
+          {(["location", "luck", "truly_weak"] as Verdict[]).map((v) => (
+            <Kpi
+              key={v}
+              label={verdictLabels[v]}
+              value={<Num value={counts.get(v) ?? 0} />}
+              note={`${fmt.pct((counts.get(v) ?? 0) / Math.max(1, scoped.length))} of machines`}
+            />
+          ))}
+        </KpiStrip>
+      </div>
       <Scrubber period={f.period} onChange={(period) => setF({ period })} />
       <p className="mx-6 mt-2 text-2xs text-fg-subtle md:mx-10">
         Drag to pan · {navigator.platform.includes("Mac") ? "⌘" : "Ctrl"} + scroll to zoom · Tab to reach banks, Enter to filter

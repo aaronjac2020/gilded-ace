@@ -198,6 +198,22 @@ function Body({
   );
 }
 
+/** Next step and its falsifier, per verdict. Neutral: a lead to verify, never a finding about intent. */
+const NEXT: Record<ScoreRow["verdict"], [string, string]> = {
+  luck: ["Keep it. Short-run payouts ran against the house; theo is in line.", "House win still below theo after another 60 days of play."],
+  location: ["Keep the machine; test the spot. A candidate for the controlled move test.", "Play stays low after a move to a busier spot."],
+  downtime: ["Fix availability first: open tickets, parts, response time.", "Play per available hour stays low once uptime recovers."],
+  inspect_hold: [
+    "Inspect and verify the paytable and meter readings.",
+    "Verification matches the configured setting; the hold variance then reads as chance.",
+  ],
+  truly_weak: [
+    "A replace or lease-swap candidate in the plan.",
+    "The effect interval moves above zero with more days, or a move test lifts play.",
+  ],
+  ok: ["No action. Performs in line with its spot and game.", "The effect interval drops below zero in a later period."],
+};
+
 /** Numbered evidence with dotted leaders, each line linked to the chart behind it, then the call in one sentence. */
 function TheCall({ row, rules }: { row: ScoreRow; rules?: { low_hold_design: number; floor_median_hold: number } }) {
   const low = !!rules && row.hold_expected <= rules.low_hold_design;
@@ -250,6 +266,16 @@ function TheCall({ row, rules }: { row: ScoreRow; rules?: { low_hold_design: num
           </li>
         ))}
       </ol>
+      <dl className="mt-8 grid gap-6 border-t border-divider pt-6 sm:grid-cols-2">
+        <div>
+          <dt className="label-sc text-fg-muted">What we’d do</dt>
+          <dd className="mt-2 text-sm text-fg">{NEXT[row.verdict][0]}</dd>
+        </div>
+        <div>
+          <dt className="label-sc text-fg-muted">What would change the call</dt>
+          <dd className="mt-2 text-sm text-fg">{NEXT[row.verdict][1]}</dd>
+        </div>
+      </dl>
     </div>
   );
 }
