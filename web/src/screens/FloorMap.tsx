@@ -1,8 +1,9 @@
 import * as d3 from "d3";
-import { Maximize2, Minus, Plus } from "lucide-react";
+import { Maximize2, Minus, Pause, Play, Plus } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { PERIOD_LONG } from "../components/shell/TopBar";
+import { MONTHS } from "../components/shell/nav";
+import { PERIOD_LABELS, PERIOD_LONG } from "../components/shell/TopBar";
 import { HeroBand, Kpi, KpiStrip } from "../components/ui/hero-band";
 import { Num } from "../components/ui/num";
 import { ErrorState, ScreenSkeleton } from "../components/ui/skeleton";
@@ -20,7 +21,14 @@ type Floor = { slots: Columnar; banks: Columnar; zones: Columnar; landmarks: Col
 type Slot = { location_id: string; zone_id: string; bank_id: string; x_m: number; y_m: number };
 type Zone = { zone_id: string; name: string; x_m: number; y_m: number };
 type Walk = { walkway_id: string; zone_a: string; zone_b: string; closed_from_utc: string | null };
-type Metric = "verdict" | "effect";
+type Metric = "verdict" | "effect" | "win" | "downtime";
+
+const METRICS: { id: Metric; label: string; legend: string }[] = [
+  { id: "verdict", label: "Verdict", legend: "" },
+  { id: "effect", label: "Machine effect", legend: "play vs. spot and game expectation" },
+  { id: "win", label: "House win", legend: "house win, period quintiles" },
+  { id: "downtime", label: "Downtime", legend: "theo lost to downtime" },
+];
 
 const W = 1000;
 const H = 640;
@@ -94,8 +102,26 @@ export default function FloorMap() {
   const counts = d3.rollup(scoped, (v) => v.length, (r) => r.verdict);
   const notOk = scoped.length - (counts.get("ok") ?? 0) - (counts.get("truly_weak") ?? 0);
   const scope = f.bank ? `in ${f.bank}` : f.zone ? `in ${f.zone}` : "on the floor";
-  const seq = d3.scaleQuantize<string>().domain([0.8, 1.2]).range([...scales.diverging].reverse());
-  const fill = (r: ScoreRow) => (metric === "verdict" ? verdictColors[r.verdict] : seq(r.machine_effect_shrunk));
+  const div = d3.scaleQuantize<string>().domain([0.8, 1.2]).range([...scales.diverging].reverse());
+  const winQ = d3.scaleQuantile<string>().domain(all.map((r) => r.house_win_usd)).range(scales.sequential.slice(1, 6));
+  const lostMax = d3.max(all, (r) => r.lost_theo_usd) || 1;
+  const lost = d3.scaleSqrt<string>().domain([0, lostMax]).range([scales.sequential[1], scales.sequential[6]]);
+  const fill = (r: ScoreRow) =>
+    metric === "verdict"
+      ? verdictColors[r.verdict]
+      : metric === "effect"
+        ? div(r.machine_effect_shrunk)
+        : metric === "win"
+          ? winQ(r.house_win_usd)
+          : r.lost_theo_usd > 0
+            ? lost(r.lost_theo_usd)
+            : scales.sequential[0];
+  const ramp =
+    metric === "effect"
+      ? { lo: "0.80", hi: "1.20", stops: [...scales.diverging].reverse() }
+      : metric === "win"
+        ? { lo: fmt.usdK(d3.min(all, (r) => r.house_win_usd) ?? 0), hi: fmt.usdK(d3.max(all, (r) => r.house_win_usd) ?? 0), stops: scales.sequential.slice(1, 6) }
+        : { lo: "$0", hi: fmt.usdK(lostMax), stops: scales.sequential.slice(1) };
   const hoverBank = hover && geo.banks.some((b) => b.b === hover) ? hover : null;
 
   const pickBank = (b: string, zone: string) => {
@@ -234,8 +260,10 @@ export default function FloorMap() {
                     setTip(null);
                   }}
                 >
-                  {sel && <circle cx={p[0]} cy={p[1]} r={10} fill={colors.gold} opacity={0.5} filter="url(#glow)" />}
-                  <Glyph v={r.verdict} x={p[0]} y={p[1]} r={(sel ? 6 : 4.5) / Math.sqrt(t.k)} fill={fill(r)} ring={sel} />
+                  <g style={{ transform: `translate(${p[0]}px, ${p[1]}px)` }} className="transition-transform duration-700 ease-out motion-reduce:transition-none">
+                    {sel && <circle r={10} fill={colors.gold} opacity={0.5} filter="url(#glow)" />}
+                    <Glyph v={r.verdict} x={0} y={0} r={(sel ? 6 : 4.5) / Math.sqrt(t.k)} fill={fill(r)} ring={sel} />
+                  </g>
                 </g>
               );
             })}
@@ -259,19 +287,20 @@ export default function FloorMap() {
 
         {/* floating color-by control */}
         <div className="float absolute left-4 top-4 flex items-center gap-0.5 p-0.5" role="radiogroup" aria-label="Color machines by">
-          {(["verdict", "effect"] as Metric[]).map((m) => (
+          {METRICS.map(({ id: m, label }) => (
             <button
               key={m}
               type="button"
               role="radio"
               aria-checked={metric === m}
+              data-metric={m}
               onClick={() => setMetric(m)}
               className={cn(
                 "focus-ring h-7 rounded-sm px-2.5 text-xs font-medium transition-colors duration-hover",
                 metric === m ? "bg-surface-3 text-fg ring-1 ring-inset ring-ring-strong" : "text-fg-muted hover:text-fg",
               )}
             >
-              {m === "verdict" ? "Verdict" : "Machine effect"}
+              {label}
             </button>
           ))}
         </div>
@@ -308,13 +337,13 @@ export default function FloorMap() {
             ))
           ) : (
             <span className="flex items-center gap-2 text-2xs text-fg-muted">
-              0.80
+              <span className="mono">{ramp.lo}</span>
               <span className="flex h-2 w-32 overflow-hidden rounded-full" aria-hidden>
-                {[...scales.diverging].reverse().map((c) => (
+                {ramp.stops.map((c) => (
                   <span key={c} className="flex-1" style={{ background: c }} />
                 ))}
               </span>
-              1.20 · play vs. location expectation (shape = verdict)
+              <span className="mono">{ramp.hi}</span> · {METRICS.find((m) => m.id === metric)?.legend} (shape = verdict)
             </span>
           )}
           <span className="inline-flex items-center gap-1.5 text-2xs text-fg-muted">
@@ -328,7 +357,72 @@ export default function FloorMap() {
         {/* minimap */}
         <Minimap geo={geo} t={t} />
       </section>
+      <Scrubber period={f.period} onChange={(period) => setF({ period })} />
       <p className="mx-6 mt-2 text-2xs text-fg-subtle md:mx-10">Drag to pan · {navigator.platform.includes("Mac") ? "⌘" : "Ctrl"} + scroll to zoom · Tab to reach banks, Enter to filter</p>
+    </div>
+  );
+}
+
+/** Month scrubber: click or arrow keys to step, play to walk Jan to Jun. Machines glide to their new spot when they moved. */
+function Scrubber({ period, onChange }: { period: string; onChange: (p: string) => void }) {
+  const [playing, setPlaying] = useState(false);
+  const i = MONTHS.indexOf(period);
+  const step = useRef(onChange);
+  step.current = onChange;
+  useEffect(() => {
+    if (!playing) return;
+    const id = setTimeout(() => {
+      if (i >= MONTHS.length - 1) setPlaying(false);
+      else step.current(MONTHS[i + 1]);
+    }, 1400);
+    return () => clearTimeout(id);
+  }, [playing, i]);
+  const toggle = () => {
+    if (!playing && (i < 0 || i === MONTHS.length - 1)) onChange(MONTHS[0]);
+    setPlaying(!playing);
+  };
+  return (
+    <div className="mx-6 mt-3 flex items-center gap-3 md:mx-10" data-testid="time-scrubber">
+      <Button variant="ghost" size="icon-sm" aria-label={playing ? "Pause months" : "Play months"} onClick={toggle}>
+        {playing ? <Pause size={14} aria-hidden /> : <Play size={14} aria-hidden />}
+      </Button>
+      <div
+        role="slider"
+        tabIndex={0}
+        aria-label="Month"
+        aria-valuemin={1}
+        aria-valuemax={MONTHS.length}
+        aria-valuenow={Math.max(1, i + 1)}
+        aria-valuetext={i >= 0 ? PERIOD_LABELS[MONTHS[i]] : "Whole period"}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowRight") onChange(MONTHS[Math.min(MONTHS.length - 1, i + 1)]);
+          else if (e.key === "ArrowLeft") onChange(MONTHS[Math.max(0, i - 1)]);
+        }}
+        className="focus-ring relative flex flex-1 items-center rounded-sm py-2"
+      >
+        <div className="absolute inset-x-0 top-[13px] h-px bg-divider" aria-hidden />
+        {i >= 0 && (
+          <div
+            className="absolute left-0 top-[12.5px] h-0.5 rounded-full bg-gold transition-[width] duration-menu"
+            style={{ width: `${(i / (MONTHS.length - 1)) * 100}%` }}
+            aria-hidden
+          />
+        )}
+        <div className="relative flex w-full justify-between">
+          {MONTHS.map((m, j) => (
+            <button key={m} type="button" tabIndex={-1} data-scrub={m} onClick={() => onChange(m)} className="group flex flex-col items-center gap-1.5" aria-label={PERIOD_LABELS[m]}>
+              <span
+                className={cn(
+                  "size-2.5 rounded-full ring-2 ring-surface-1 transition-colors",
+                  j < i ? "bg-gold" : j === i ? "bg-gold-soft" : "bg-surface-3 group-hover:bg-fg-subtle",
+                )}
+              />
+              <span className={cn("text-2xs", j === i ? "text-fg" : "text-fg-subtle")}>{PERIOD_LABELS[m]}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <span className="w-28 text-right text-2xs text-fg-muted">{i >= 0 ? "Month view" : `${PERIOD_LONG[period] ?? period}, press play`}</span>
     </div>
   );
 }

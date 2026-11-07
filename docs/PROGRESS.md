@@ -75,3 +75,9 @@ Resume point for a fresh session: read this file, then `python run.py all`.
   - Jan–Apr house win vs spot's expected coin-in ρ 0.61 (vs our effect 0.10): low house win persists because the spot persists.
 - Model Lab: dot-and-whisker tile (`#ranking-compare`) titled from the result, table toggle, honest "each ranking predicts its own yardstick" note. Verdict: "on our list"/"not on our list" tag per manager row; zero-overlap subtitle copy. New leakage test (28/28 pass), ruff clean.
 - Next: M7.
+
+## M7 · Floor map hero — done (~0.75 h; most of the map shipped in M6.5)
+- Color-by toggle now Verdict / Machine effect / House win (period quintiles) / Downtime (theo lost, sqrt scale); legend ramp + min/max per metric, shape = verdict always.
+- Month scrubber (`data-testid=time-scrubber`): click, ←/→, play walks Jan→Jun at 1.4 s/step; writes the global period so every screen follows. Glyphs translate with a 700 ms transition, so machines that moved spots glide to the new one (off under reduced motion).
+- Bank click → global filter with Undo toast and machine → waterfall drawer unchanged from M6.5. Judge 0–4/9 PASS locally (check 2: bank drill changes Verdict).
+- Next: M8.
