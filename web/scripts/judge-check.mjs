@@ -27,16 +27,6 @@ if (!url) {
 }
 url = url.replace(/\/$/, "");
 
-// Remote deploys: the first request after a deploy can land on cold CDN edges (seen once: check 0 > 3 s right after a push;
-// forced edge misses later measured 0.8–1.3 s). Warm the shell, its assets and the Verdict data so check 0 measures the site.
-if (!server) {
-  const t = Date.now();
-  const html = await (await fetch(`${url}/`)).text();
-  const assets = [...html.matchAll(/(?:src|href)="(\/[^"]+\.(?:js|css|json|svg|png))"/g)].map((m) => m[1]);
-  await Promise.all([...assets, "/data/scorecard_full.json", "/data/budget.json", "/data/meta.json"].map((a) => fetch(url + a).catch(() => {})));
-  console.log(`warm-up: ${assets.length + 3} requests in ${Date.now() - t} ms`);
-}
-
 const results = [];
 const record = (n, name, ok, detail) => {
   results.push({ n, name, ok, detail });
@@ -44,6 +34,19 @@ const record = (n, name, ok, detail) => {
 };
 
 const browser = await chromium.launch();
+
+// Remote deploys: the first requests after a push can land on cold CDN edges (seen twice: check 0 at ~4 s right after a
+// deploy with every resource < 310 ms; steady-state runs 0.8–1.0 s). Warm up with a throwaway browser context so the edge
+// sees the same request headers as the measured load; check 0 still runs in a fresh context with an empty browser cache.
+if (!server) {
+  const t = Date.now();
+  const warm = await browser.newContext();
+  const wp = await warm.newPage();
+  await wp.goto(`${url}/`, { waitUntil: "load" });
+  await wp.locator("[data-testid=verdict-kpis] [data-kpi-value]").first().waitFor({ timeout: 15000 }).catch(() => {});
+  console.log(`warm-up: throwaway context loaded / in ${Date.now() - t} ms`);
+  await warm.close();
+}
 const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
 const consoleErrors = [];
 page.on("console", (m) => m.type() === "error" && consoleErrors.push(m.text()));
@@ -63,7 +66,11 @@ try {
     const top = await page.evaluate(() =>
       performance.getEntriesByType("resource").sort((a, b) => b.duration - a.duration).slice(0, 5).map((e) => `${e.name.split("/").pop()} ${Math.round(e.duration)}ms`),
     );
-    slowest = `; slowest: ${top.join(", ")}`;
+    const nav = await page.evaluate(() => {
+      const n = performance.getEntriesByType("navigation")[0];
+      return n ? `doc ttfb ${Math.round(n.responseStart)}ms, doc done ${Math.round(n.responseEnd)}ms, dcl ${Math.round(n.domContentLoadedEventEnd)}ms, load ${Math.round(n.loadEventEnd)}ms` : "no nav entry";
+    });
+    slowest = `; ${nav}; slowest: ${top.join(", ")}`;
   }
   record(0, "first load of / (KPIs visible)", loadMs < 3000, `${loadMs} ms in page, ${wallMs} ms wall (limit 3000)${slowest}`);
 
