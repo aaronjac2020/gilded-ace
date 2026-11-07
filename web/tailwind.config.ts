@@ -2,7 +2,7 @@ import type { Config } from "tailwindcss";
 
 /** Every color resolves to an OKLCH custom property in index.css, so opacity modifiers (bg-gold/10) work. */
 const v = (name: string) => `oklch(var(--${name}) / <alpha-value>)`;
-const names = ["bg", "surface-1", "surface-2", "surface-3", "fg", "fg-muted", "fg-subtle", "maroon", "maroon-bright", "gold", "gold-soft"];
+const names = ["bg", "surface-1", "surface-2", "surface-3", "fg", "fg-muted", "fg-subtle", "maroon", "maroon-bright", "gold", "gold-soft", "ivory", "ink", "lacquer", "suit-red"];
 const verdicts = ["luck", "location", "downtime", "inspect_hold", "truly_weak", "ok"];
 
 export default {
@@ -31,10 +31,11 @@ export default {
       },
       fontFamily: {
         sans: ["'Inter Variable'", "Inter", "system-ui", "sans-serif"],
+        serif: ["'Bodoni Moda Variable'", "'Bodoni Moda'", "Didot", "Georgia", "serif"],
         mono: ["'JetBrains Mono Variable'", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
       },
       letterSpacing: { tightest: "-0.025em", eyebrow: "0.06em" },
-      maxWidth: { content: "1200px", prose: "60ch" },
+      maxWidth: { content: "1180px", prose: "56ch" },
       spacing: { sidebar: "232px", rail: "56px", topbar: "48px", row: "36px", "row-compact": "32px" },
       boxShadow: {
         float: "0 8px 24px -8px rgb(0 0 0 / 0.6), 0 0 0 1px rgb(255 255 255 / 0.08)",

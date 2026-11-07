@@ -6,6 +6,7 @@ import { commandStore } from "../../lib/uiStore";
 import { Kbd } from "../ui/kbd";
 import { Tip } from "../ui/tooltip";
 import { Monogram } from "./Monogram";
+import { CardIndex } from "../theme/Deco";
 import { NAV } from "./nav";
 
 export function Sidebar() {
@@ -26,7 +27,7 @@ export function Sidebar() {
     <nav
       aria-label="Screens"
       className={cn(
-        "sticky top-0 hidden h-screen shrink-0 flex-col border-r border-divider bg-surface-1 transition-[width] duration-menu ease-out md:flex",
+        "felt-faint sticky top-0 hidden h-screen shrink-0 flex-col border-r border-gold/10 transition-[width] duration-menu ease-out md:flex",
         rail ? "w-rail" : "w-sidebar",
       )}
     >
@@ -62,7 +63,7 @@ export function Sidebar() {
         <div key={sec} className={cn("mt-4", rail ? "px-2" : "px-3")}>
           {!rail && <p className="eyebrow mb-1 px-2">{sec}</p>}
           <ul className="flex flex-col gap-px">
-            {NAV.filter((n) => n.section === sec).map(({ to, label, icon: Icon, q, key }) => (
+            {NAV.filter((n) => n.section === sec).map(({ to, label, icon: Icon, key, card }) => (
               <li key={to}>
                 <Tip label={label} keys={["G", key.toUpperCase()]} side="right">
                   <NavLink
@@ -71,9 +72,11 @@ export function Sidebar() {
                     aria-label={label}
                     className={({ isActive }) =>
                       cn(
-                        "focus-ring flex h-8 items-center gap-2.5 rounded-sm text-sm transition-colors duration-hover",
+                        "focus-ring relative flex h-8 items-center gap-2.5 rounded-sm text-sm transition-colors duration-hover",
                         rail ? "justify-center" : "px-2",
-                        isActive ? "bg-surface-3 text-fg shadow-highlight" : "text-fg-muted hover:bg-surface-2 hover:text-fg",
+                        isActive
+                          ? "bg-white/[0.04] text-ivory before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-[image:var(--brushed)]"
+                          : "text-fg-muted hover:bg-white/[0.03] hover:text-fg",
                       )
                     }
                   >
@@ -81,7 +84,7 @@ export function Sidebar() {
                     {!rail && (
                       <>
                         <span className="flex-1">{label}</span>
-                        {q && <span className="mono text-2xs text-fg-subtle">{q}</span>}
+                        <CardIndex card={card} className="text-2xs opacity-70" />
                       </>
                     )}
                   </NavLink>

@@ -1,15 +1,10 @@
 import type { ReactNode } from "react";
+import { useLocation } from "react-router-dom";
 import { cn } from "../../lib/cn";
+import { navFor } from "../shell/nav";
+import { CardIndex, DecoRule } from "../theme/Deco";
 
-function Plus({ className }: { className: string }) {
-  return (
-    <svg viewBox="0 0 11 11" className={cn("absolute h-[11px] w-[11px] text-fg-subtle", className)} aria-hidden>
-      <path d="M5.5 0v11M0 5.5h11" stroke="currentColor" strokeWidth="1" />
-    </svg>
-  );
-}
-
-/** Screen header: grid backdrop + maroon spotlight + plus marks, eyebrow, assertion title, subtitle, KPI strip. */
+/** Screen header: maroon spotlight, card-index eyebrow, Bodoni assertion title, subtitle, KPI strip, deco rule. */
 export function HeroBand({
   eyebrow,
   title,
@@ -23,23 +18,32 @@ export function HeroBand({
   children?: ReactNode;
   className?: string;
 }) {
+  const card = navFor(useLocation().pathname)?.card;
   return (
     <header className={cn("relative isolate", className)}>
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden>
-        <div className="grid-backdrop absolute inset-0" />
         <div className="spotlight absolute -left-24 -top-40 h-[420px] w-[620px]" />
       </div>
-      <div className="relative px-6 pb-8 pt-10 md:px-10">
-        <Plus className="left-[14px] top-[14px] hidden md:block" />
-        <Plus className="right-[14px] top-[14px] hidden md:block" />
-        <p className="eyebrow">{eyebrow}</p>
-        <h1 className="display mt-3 max-w-[22ch] text-3xl text-fg md:text-4xl" data-testid="assertion-title">
+      <div className="relative px-6 pb-10 pt-[72px] md:px-10">
+        <p className="label-sc flex items-center gap-2">
+          {card && (
+            <>
+              <CardIndex card={card} className="text-sm" />
+              <span aria-hidden>·</span>
+            </>
+          )}
+          <span>{eyebrow}</span>
+        </p>
+        <h1
+          className="serif mt-4 max-w-[24ch] text-3xl font-medium leading-[1.08] tracking-[-0.01em] text-ivory md:text-[46px]"
+          data-testid="assertion-title"
+        >
           {title}
         </h1>
-        {sub && <p className="mt-3 max-w-prose text-lg text-fg-muted">{sub}</p>}
-        {children && <div className="mt-8">{children}</div>}
+        {sub && <p className="mt-4 max-w-prose text-lg text-fg-muted">{sub}</p>}
+        {children && <div className="mt-10">{children}</div>}
       </div>
-      <div className="hairline-dashed mx-6 md:mx-10" aria-hidden />
+      <DecoRule className="mx-6 md:mx-10" />
     </header>
   );
 }

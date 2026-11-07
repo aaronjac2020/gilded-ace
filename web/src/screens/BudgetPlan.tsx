@@ -112,7 +112,7 @@ export default function BudgetPlan() {
         {data.errors.length > 0 && <p className="mt-2 text-xs text-verdict-downtime">{data.errors.join("; ")}</p>}
       </section>
 
-      <div className="mt-6 grid grid-cols-12 gap-6" data-testid="plan-lines">
+      <div className="mt-16 grid grid-cols-12 gap-8" data-testid="plan-lines">
         {lines.map((l) => (
           <Tile
             key={l.action_type_id}

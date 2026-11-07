@@ -3,6 +3,7 @@ import { BarChart3, Download, Link2, MoreHorizontal, Table2 } from "lucide-react
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { cn } from "../../lib/cn";
+import { Chip } from "../theme/Chip";
 import { Button } from "./button";
 
 export type TableData = { columns: string[]; rows: (string | number)[][] };
@@ -21,7 +22,7 @@ export function copyLink(focus?: string) {
   const u = new URL(window.location.href);
   if (focus) u.searchParams.set("focus", focus);
   navigator.clipboard?.writeText(u.toString()).then(
-    () => toast("Link copied", { description: u.pathname + u.search }),
+    () => toast("Link copied", { description: u.pathname + u.search, icon: <Chip size={16} tone="gold" /> }),
     () => toast("Could not copy link"),
   );
 }
@@ -62,16 +63,12 @@ export function Tile({
   return (
     <section
       id={id}
-      className={cn("card flex min-w-0 scroll-mt-20 flex-col p-5", hero && "gradient-ring", className)}
+      className={cn("card flex min-w-0 scroll-mt-20 flex-col", hero && "gradient-ring", className)}
       aria-label={typeof title === "string" ? title : label}
       data-testid={testId}
     >
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          {label && <p className="eyebrow mb-1">{label}</p>}
-          <h2 className="display text-xl text-fg">{title}</h2>
-          {sub && <p className="mt-1 text-sm text-fg-muted">{sub}</p>}
-        </div>
+      <div className="flex h-8 items-center justify-between gap-3 border-b border-gold/25 pl-7 pr-2">
+        <p className="label-sc truncate">{label ?? ""}</p>
         <div className="flex shrink-0 items-center gap-1">
           {actions}
           {table && (
@@ -106,8 +103,14 @@ export function Tile({
           </DM.Root>
         </div>
       </div>
-      <div className="min-w-0 flex-1">{asTable && table ? <DataTable t={table} /> : children}</div>
-      {footer && <div className="mt-4 flex items-center justify-between gap-3 border-t border-divider pt-3">{footer}</div>}
+      <div className="flex min-w-0 flex-1 flex-col p-7">
+        <div className="mb-5 min-w-0">
+          <h2 className="display text-xl text-fg">{title}</h2>
+          {sub && <p className="mt-1 max-w-prose text-sm text-fg-muted">{sub}</p>}
+        </div>
+        <div className="min-w-0 flex-1">{asTable && table ? <DataTable t={table} /> : children}</div>
+        {footer && <div className="mt-5 flex items-center justify-between gap-3 border-t border-divider pt-3">{footer}</div>}
+      </div>
     </section>
   );
 }

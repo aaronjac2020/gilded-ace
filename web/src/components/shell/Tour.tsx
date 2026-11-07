@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { tourStore, useTour } from "../../lib/uiStore";
 import { Button } from "../ui/button";
+import { DealerButton } from "../theme/DealerButton";
 
 type Step = { path: string; sel: string; title: string; body: string };
 
@@ -92,15 +93,29 @@ export function Tour() {
         <div
           aria-hidden
           className="pointer-events-none fixed z-[60] rounded-lg ring-2 ring-gold transition-all duration-route ease-out"
-          style={{ left: box.left - 6, top: box.top - 6, width: box.width + 12, height: box.height + 12, boxShadow: "0 0 0 9999px rgb(10 9 9 / 0.55)" }}
+          style={{
+            left: box.left - 6,
+            top: box.top - 6,
+            width: box.width + 12,
+            height: box.height + 12,
+            boxShadow: "0 0 0 9999px rgb(10 9 9 / 0.55)",
+          }}
         />
       )}
       <div role="dialog" aria-label="Judge tour" className="float fixed bottom-6 right-6 z-[61] w-[340px] p-4 animate-fade-up">
         <div className="flex items-center justify-between">
-          <p className="eyebrow">
-            Tour · {step + 1} of {STEPS.length}
+          <p className="label-sc flex items-center gap-2">
+            <DealerButton label={`Step ${step + 1} of ${STEPS.length}`}>
+              {step + 1}/{STEPS.length}
+            </DealerButton>
+            Tour
           </p>
-          <button type="button" aria-label="End tour" className="focus-ring rounded-sm p-1 text-fg-subtle hover:text-fg" onClick={() => tourStore.set(null)}>
+          <button
+            type="button"
+            aria-label="End tour"
+            className="focus-ring rounded-sm p-1 text-fg-subtle hover:text-fg"
+            onClick={() => tourStore.set(null)}
+          >
             <X size={14} aria-hidden />
           </button>
         </div>

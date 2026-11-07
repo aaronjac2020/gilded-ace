@@ -154,15 +154,14 @@ export default function ModelLab() {
         eyebrow="Model lab · validation"
         title={
           m1 && p
-            ? `Location + game model cuts machine-day error ${fmt.pct(m1.improvement_pct, 0)}, and weak machines stay weak`
+            ? `Spot + game model cuts error ${fmt.pct(m1.improvement_pct, 0)}; weak machines stay weak`
             : `A weekday + event forecast cuts daily coin-in error ${fmt.pct(m.improvement_pct, 0)} vs. a flat average`
         }
-        sub="Fit on January to April, scored on unseen May and June days. Every model is measured against a simple baseline."
+        sub="Fit on Jan–Apr, scored on unseen May–Jun days, each against a simple baseline."
       >
         <KpiStrip testId="model-kpis">
           {m1 && (
             <Kpi
-              focal
               label="Model 1 MAE / machine-day"
               value={<Num value={m1.mae_model} kind="usd" />}
               note={`Baseline ${fmt.usd(m1.mae_baseline)} · ${fmt.pct(m1.improvement_pct)} lower`}
@@ -173,6 +172,7 @@ export default function ModelLab() {
           )}
           {p && (
             <Kpi
+              focal
               label="Rank persistence, Spearman"
               value={<Num value={p.spearman} kind="dec" />}
               note={`90% CI ${p.spearman_lo.toFixed(2)}–${p.spearman_hi.toFixed(2)}, ${p.n} machines`}
@@ -186,14 +186,14 @@ export default function ModelLab() {
         </KpiStrip>
       </HeroBand>
 
-      <div className="mt-8">
+      <div className="mt-16">
         <TimelineSplit split={data.split} />
       </div>
 
       {m1 && (
-        <div className="mt-6 grid grid-cols-12 gap-6">
+        <div className="mt-16 grid grid-cols-12 gap-8">
           <Tile
-            className="col-span-12 lg:col-span-4"
+            className="col-span-12 lg:col-span-6"
             label="Model 1"
             title="Expected coin-in per available hour"
             sub={`LightGBM on location, game and calendar. No machine ID, theme or lags. ${m1.best_iteration} rounds chosen on April.`}
@@ -217,7 +217,7 @@ export default function ModelLab() {
 
           <Tile
             id="importance"
-            className="col-span-12 lg:col-span-4"
+            className="col-span-12 lg:col-span-6"
             label="Model 1"
             title="What sets expected play"
             sub="Share of LightGBM gain, top 10 features"
@@ -269,7 +269,7 @@ export default function ModelLab() {
           {p && (
             <Tile
               id="persistence"
-              className="col-span-12 lg:col-span-4"
+              className="col-span-12"
               label="Stability"
               title="Do weak machines stay weak?"
               sub={`Shrunk effect, Jan–Apr vs. May–Jun. ${p.n} machines with 14+ days in each window.`}
@@ -313,7 +313,7 @@ export default function ModelLab() {
         <RankingCompare c={data.persistence_compare} moved={data.alternatives?.moved} test={data.move_test_pick} />
       )}
 
-      <div className="mt-6 grid grid-cols-12 gap-6">
+      <div className="mt-16 grid grid-cols-12 gap-8">
         <Tile
           id="model2"
           className="col-span-12 lg:col-span-8"
@@ -644,7 +644,7 @@ function Changed({ children }: { children: ReactNode }) {
 function TimelineSplit(_: { split: Record<string, string> }) {
   const seg = [
     { label: "Train", note: "Model 1 inner fit", from: "Jan 1", to: "Mar 31", cls: "bg-surface-3", w: 90 },
-    { label: "Validate", note: "hyperparameters", from: "Apr 1", to: "Apr 30", cls: "bg-maroon", w: 30 },
+    { label: "Validate", note: "hyperparameters", from: "Apr 1", to: "Apr 30", cls: "bg-maroon/25 ring-1 ring-inset ring-maroon", w: 30 },
     { label: "Test", note: "never used to fit", from: "May 1", to: "Jun 30", cls: "bg-gold/20 ring-1 ring-inset ring-gold/40", w: 61 },
   ];
   return (
@@ -657,7 +657,7 @@ function TimelineSplit(_: { split: Record<string, string> }) {
           </div>
         ))}
       </div>
-      <div className="mono mt-1.5 flex gap-1 text-2xs text-fg-subtle">
+      <div className="mono mt-1.5 flex gap-1 text-2xs text-fg-muted">
         {seg.map((s) => (
           <div key={s.label} className="px-3" style={{ flex: s.w }}>
             {s.from} – {s.to}

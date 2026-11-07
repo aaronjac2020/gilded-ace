@@ -24,10 +24,14 @@ export const dot: Record<Verdict, string> = {
 export function StatusPill({ verdict, className }: { verdict: Verdict; className?: string }) {
   return (
     <span
-      className={cn("inline-flex h-5 items-center gap-1.5 whitespace-nowrap rounded-full px-2 text-xs font-medium ring-1 ring-inset", tint[verdict], className)}
+      className={cn(
+        "inline-flex h-5 items-center gap-1.5 whitespace-nowrap rounded-full px-2 text-xs font-medium ring-1 ring-inset",
+        tint[verdict],
+        className,
+      )}
       data-verdict={verdict}
     >
-      <span className={cn("h-1.5 w-1.5 rounded-full", dot[verdict])} aria-hidden />
+      <span className={cn("h-1.5 w-1.5 rotate-45 rounded-[1px]", dot[verdict])} aria-hidden />
       {verdictLabels[verdict]}
     </span>
   );

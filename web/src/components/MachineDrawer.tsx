@@ -1,6 +1,6 @@
 import { m } from "framer-motion";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 import { Drawer } from "vaul";
 import type { ScoreRow } from "../lib/data";
 import { fmt } from "../lib/format";
@@ -10,7 +10,8 @@ import { GameSettingChip } from "./ui/game-setting-chip";
 import { useFilters } from "../lib/urlState";
 import { Button } from "./ui/button";
 import { Kbd } from "./ui/kbd";
-import { StatusPill } from "./ui/status-pill";
+import { EvidenceLink } from "./EvidenceLink";
+import { VerdictStamp } from "./theme/VerdictStamp";
 import { Tabs, TabsContent, TabsList } from "./ui/tabs";
 import { Tip } from "./ui/tooltip";
 
@@ -92,16 +93,7 @@ function Body({
     <>
       <div className="sticky top-0 border-b border-divider px-5 pb-0 pt-4">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Drawer.Title asChild>
-              <m.h2 layoutId={`id-${row.machine_id}`} className="mono text-xl font-semibold text-fg">
-                {row.machine_id}
-              </m.h2>
-            </Drawer.Title>
-            <m.span layoutId={`pill-${row.machine_id}`}>
-              <StatusPill verdict={row.verdict} />
-            </m.span>
-          </div>
+          <p className="label-sc text-gold-soft/80">Case file</p>
           <div className="flex items-center gap-1">
             {pos >= 0 && (
               <span className="mono mr-1 text-2xs text-fg-subtle">
@@ -125,24 +117,41 @@ function Body({
             </Tip>
           </div>
         </div>
-        <p className="mt-1 text-sm text-fg-muted">
-          <span className="mono text-xs">{row.zone_id}</span> › <span className="mono text-xs">{row.bank_id}</span> ›{" "}
-          <span className="mono text-xs">{row.location_id}</span> · {row.theme} · {String(row.volatility_class ?? "")} volatility
+        <div className="mt-1 flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <Drawer.Title asChild>
+              <m.h2 layoutId={`id-${row.machine_id}`} className="mono text-3xl font-semibold tracking-tight text-ivory">
+                {row.machine_id}
+              </m.h2>
+            </Drawer.Title>
+            <p className="mono mt-1 text-xs text-fg-muted">
+              {row.zone_id} › {row.bank_id} › {row.location_id}
+            </p>
+          </div>
+          <VerdictStamp key={row.machine_id} verdict={row.verdict} surface="dark" animate className="mt-2 text-[13px]" />
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          <span className="rounded-sm border border-divider px-1.5 py-0.5 text-2xs text-fg-muted">{row.theme}</span>
+          <span className="rounded-sm border border-divider px-1.5 py-0.5 text-2xs text-fg-muted">
+            {String(row.volatility_class ?? "")} volatility
+          </span>
           {rules && row.hold_expected <= rules.low_hold_design && (
-            <span className="ml-2 inline-block align-middle">
-              <GameSettingChip hold={row.hold_expected} median={rules.floor_median_hold} />
-            </span>
+            <GameSettingChip hold={row.hold_expected} median={rules.floor_median_hold} />
           )}
-        </p>
-        <Tabs defaultValue="breakdown" className="mt-3">
+        </div>
+        <Tabs defaultValue="call" className="mt-4">
           <TabsList
             tabs={[
+              { value: "call", label: "The call" },
               { value: "breakdown", label: "Breakdown" },
               { value: "hold", label: "Hold & luck" },
               { value: "location", label: "Location" },
             ]}
           />
-          <div className="-mx-5 max-h-[calc(100vh-170px)] overflow-y-auto px-5 py-5">
+          <div className="-mx-5 max-h-[calc(100vh-230px)] overflow-y-auto px-5 py-5">
+            <TabsContent value="call">
+              <TheCall row={row} rules={rules} />
+            </TabsContent>
             <TabsContent value="breakdown">
               <p className="max-w-prose text-base text-fg">{row.verdict_reason}</p>
               <Waterfall row={row} />
@@ -186,6 +195,62 @@ function Body({
         <Kbd>→</Kbd> step through list · <Kbd>Esc</Kbd> close
       </p>
     </>
+  );
+}
+
+/** Numbered evidence with dotted leaders, each line linked to the chart behind it, then the call in one sentence. */
+function TheCall({ row, rules }: { row: ScoreRow; rules?: { low_hold_design: number; floor_median_hold: number } }) {
+  const low = !!rules && row.hold_expected <= rules.low_hold_design;
+  const items: { k: string; v: string; link: ReactNode; note?: string }[] = [
+    {
+      k: "Expected play at this spot",
+      v: `${fmt.usd(row.location_expected_per_hr)}/hr`,
+      link: <EvidenceLink to="/floor" focus="map" filters={{ bank: row.bank_id }} label="Floor" />,
+    },
+    {
+      k: "Actual play · effect",
+      v: `${fmt.usd(row.coin_in_per_avail_hr)}/hr · ${fmt.num(row.machine_effect_shrunk)} [${fmt.num(row.effect_shrunk_lo)}–${fmt.num(row.effect_shrunk_hi)}]`,
+      link: <EvidenceLink to="/model" focus="persistence" label="Model" />,
+    },
+    {
+      k: "Availability · lost theo",
+      v: `${fmt.pct(row.availability)} · ${fmt.usd(row.lost_theo_usd)}`,
+      link: <EvidenceLink to="/downtime" focus="lost" label="Downtime" />,
+    },
+    {
+      k: "Luck · z",
+      v: `${fmt.usd(row.luck_resid_usd)} · ${fmt.num(row.luck_z, 2)}`,
+      link: <EvidenceLink to="/floor" focus="map" label="Floor" />,
+    },
+    {
+      k: "Hold vs. configured",
+      v: `${fmt.pct(row.hold_obs)} vs. ${fmt.pct(row.hold_expected)}`,
+      link: <EvidenceLink to="/model" focus="ranking-compare" label="Model" />,
+      note: low ? "Game setting: pays back more by design. Low win here is partly game math." : undefined,
+    },
+  ];
+  return (
+    <div data-testid="the-call">
+      <p className="mb-6 border-b border-gold/25 pb-5 text-base leading-relaxed text-ivory">
+        <span className="label-sc mb-1.5 block text-gold-soft">The call</span>
+        {row.verdict_reason}
+      </p>
+      <p className="label-sc mb-3 text-fg-muted">Evidence</p>
+      <ol className="space-y-3">
+        {items.map((it, i) => (
+          <li key={it.k} className="text-sm">
+            <div className="flex items-baseline gap-2">
+              <span className="serif w-4 shrink-0 text-gold-soft">{i + 1}</span>
+              <span className="shrink-0 text-fg-muted">{it.k}</span>
+              <span className="mb-1 min-w-4 flex-1 border-b border-dotted border-fg-subtle/60" aria-hidden />
+              <span className="mono shrink-0 text-xs text-fg">{it.v}</span>
+              <span className="w-[72px] shrink-0 text-right [&_a]:text-fg-muted [&_a:hover]:text-gold">{it.link}</span>
+            </div>
+            {it.note && <p className="ml-6 mt-1 text-xs text-gold-soft">{it.note}</p>}
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }
 
