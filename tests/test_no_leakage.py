@@ -84,3 +84,44 @@ def test_forecast_holdout_schema():
     assert list(df.columns) == ["gaming_date", "actual", "pred_model", "pred_baseline"]
     assert pd.to_datetime(df.gaming_date).min() >= TEST_START
     assert date(2025, 6, 30) == pd.to_datetime(df.gaming_date).max().date()
+
+
+# ---- Model 1 (machine expectation) ----
+from pipeline import model_machine  # noqa: E402
+
+
+def test_model1_no_identity_features():
+    assert not set(model_machine.FEATURES) & model_machine.FORBIDDEN
+    assert not any(f.startswith("lag_") for f in model_machine.FEATURES)
+
+
+def test_model1_split_windows():
+    sp = model_machine.split(model_machine.dataset())
+    assert sp["inner"].gaming_date.max() < sp["valid"].gaming_date.min()
+    assert sp["valid"].gaming_date.max() <= TRAIN_END
+    assert sp["fit"].gaming_date.max() <= TRAIN_END < TEST_START <= sp["test"].gaming_date.min()
+
+
+def test_model1_predictions_ignore_test_outcomes():
+    """Scrambling May-Jun targets must not change the final model's test predictions."""
+    d = model_machine.dataset()
+    rounds = model_machine.run()["best_iteration"]
+    test = model_machine.split(d)["test"]
+    p1 = model_machine._fit(model_machine.split(d)["fit"], rounds).predict(test[model_machine.FEATURES])
+    d2 = d.copy()
+    d2.loc[d2.gaming_date >= TEST_START, "rate"] *= 10
+    p2 = model_machine._fit(model_machine.split(d2)["fit"], rounds).predict(test[model_machine.FEATURES])
+    assert (p1 == p2).all()
+
+
+def test_model1_oof_folds_exclude_own_machine():
+    from sklearn.model_selection import GroupKFold
+
+    d = model_machine.dataset()
+    for tr, te in GroupKFold(n_splits=5).split(d, groups=d["machine_id"]):
+        assert not set(d.machine_id.iloc[tr]) & set(d.machine_id.iloc[te])
+
+
+def test_model1_beats_baseline():
+    m = model_machine.run()["metrics"]
+    assert m["mae_model"] < m["mae_baseline"]

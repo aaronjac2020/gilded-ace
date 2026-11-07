@@ -7,7 +7,7 @@ import time
 
 import pandas as pd
 
-from pipeline import model_floor, verdicts
+from pipeline import model_floor, model_machine, verdicts
 from pipeline.config import OUTPUTS, cfg, period, periods
 from pipeline.load import path
 from pipeline.scorecard import FROZEN_COLUMNS, build_scorecard
@@ -38,6 +38,30 @@ def build_all_scorecards() -> pd.DataFrame:
         a, b = period(name)
         frames.append(build_scorecard(a, b))
     return pd.concat(frames, ignore_index=True)
+
+
+def expectation_change(full: pd.DataFrame, mgr: pd.DataFrame) -> dict:
+    """Full-period verdicts under the provisional zone x weekday expectation vs the current (Model 1) one."""
+    c = cfg()
+    saved = (c.get("location_expectation"), c.get("location_calibration"))
+    c["location_expectation"], c["location_calibration"] = "zone_weekday", None
+    try:
+        a, b = period("full")
+        before = build_scorecard(a, b).set_index("machine_id")
+    finally:
+        c["location_expectation"], c["location_calibration"] = saved
+    ours_b, _ = verdicts.truly_weak_list(before)
+    ours_a, _ = verdicts.truly_weak_list(full)
+    return {
+        "truly_weak_before": int((before.verdict == "truly_weak").sum()),
+        "truly_weak_after": int((full.verdict == "truly_weak").sum()),
+        "themes_before": int(ours_b.theme.nunique()),
+        "themes_after": int(ours_a.theme.nunique()),
+        "overlap_before": len(set(ours_b.index) & set(mgr.index)),
+        "overlap_after": len(set(ours_a.index) & set(mgr.index)),
+        "our10_kept": len(set(ours_b.index) & set(ours_a.index)),
+        "verdicts_before": before.verdict.value_counts().to_dict(),
+    }
 
 
 def main() -> dict:
@@ -102,6 +126,30 @@ def main() -> dict:
         f"model bias {mm['bias_model']:+,.0f}/day"
     )
     metrics["model2"] = mm
+
+    m1 = model_machine.run()["metrics"]
+    print("\n=== Model 1: coin-in / avail hr per machine-day, fit Jan-Apr (rounds from Apr validation) -> test May-Jun ===")
+    print(
+        f"  MAE ${m1['mae_model']:,.0f} vs zone x weekday ${m1['mae_baseline']:,.0f} ({m1['improvement_pct']:.1%} better); "
+        f"WMAPE {m1['wmape_model']:.1%} vs {m1['wmape_baseline']:.1%}; rounds {m1['best_iteration']}"
+    )
+    print("  top features: " + ", ".join(f"{k} {v:.0%}" for k, v in list(m1["importance"].items())[:6]))
+    sc = scs.set_index("period")
+    pers = model_machine.persistence(sc.loc["train"].reset_index(), sc.loc["test"].reset_index())
+    print(
+        f"  rank persistence Jan-Apr -> May-Jun (n={pers['n']}): Spearman {pers['spearman']:.2f} "
+        f"[{pers['spearman_lo']:.2f}, {pers['spearman_hi']:.2f}]; precision@10 {pers['precision_at_k']:.0%} "
+        f"[{pers['precision_lo']:.0%}, {pers['precision_hi']:.0%}] vs random {pers['random_precision']:.0%}"
+    )
+    metrics["model1"] = m1
+    metrics["persistence"] = pers
+    metrics["model1_change"] = expectation_change(full, mgr)
+    ch = metrics["model1_change"]
+    print(
+        f"  what changed vs zone x weekday expectation: truly_weak {ch['truly_weak_before']} -> {ch['truly_weak_after']}; "
+        f"our-10 themes {ch['themes_before']} -> {ch['themes_after']}; overlap with manager {ch['overlap_before']} -> {ch['overlap_after']}; "
+        f"our-10 kept {ch['our10_kept']}/10"
+    )
 
     (OUTPUTS / "metrics.json").write_text(json.dumps(metrics, indent=2, default=str), encoding="utf-8")
     print(f"\nwrote outputs/machine_scorecard.parquet, outputs/metrics.json in {time.time() - t0:.0f}s")

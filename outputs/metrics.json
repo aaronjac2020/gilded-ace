@@ -5,10 +5,10 @@
   "verdicts_full": {
     "inspect_hold": 1,
     "downtime": 0,
-    "location": 34,
-    "luck": 19,
-    "truly_weak": 136,
-    "ok": 120
+    "location": 43,
+    "luck": 18,
+    "truly_weak": 60,
+    "ok": 188
   },
   "manager_10": [
     "M-5076",
@@ -23,21 +23,18 @@
     "M-1265"
   ],
   "our_10": [
-    "M-1262",
-    "M-1265",
-    "M-1086",
-    "M-1181",
-    "M-1190",
-    "M-1139",
-    "M-1124",
-    "M-1145",
-    "M-1050",
-    "M-1274"
+    "M-1154",
+    "M-1048",
+    "M-1006",
+    "M-1184",
+    "M-1008",
+    "M-1066",
+    "M-1162",
+    "M-1274",
+    "M-1286",
+    "M-1045"
   ],
-  "overlap": [
-    "M-1181",
-    "M-1265"
-  ],
+  "overlap": [],
   "frozen_columns": [
     "machine_id",
     "period",
@@ -95,5 +92,89 @@
       "Wed"
     ],
     "peak_to_trough": 1.635840202891191
+  },
+  "model1": {
+    "best_iteration": 196,
+    "n_train": 36304,
+    "n_test": 18788,
+    "mae_model": 890.1203837461363,
+    "mae_baseline": 1106.3245517434623,
+    "wmape_model": 0.2021833438406449,
+    "wmape_baseline": 0.25129229858001967,
+    "bias_model": 176.95412883449904,
+    "improvement_pct": 0.1954256259219853,
+    "importance": {
+      "local_weekday": 0.2865,
+      "zone_id": 0.2645,
+      "max_bet_usd": 0.0928,
+      "hit_probability": 0.0727,
+      "configured_rtp": 0.0647,
+      "entrance_path_m": 0.0475,
+      "min_bet_usd": 0.0312,
+      "is_weekend": 0.0309,
+      "day_index": 0.0285,
+      "event": 0.0262,
+      "bank_y": 0.0203,
+      "bank_x": 0.0112,
+      "dist_entrance_m": 0.0109,
+      "max_multiplier": 0.0056,
+      "volatility_class": 0.003,
+      "lease_class": 0.0012,
+      "end_cap": 0.0009,
+      "manufacturer": 0.0007,
+      "bank_capacity": 0.0005,
+      "holiday": 0.0
+    }
+  },
+  "persistence": {
+    "n": 307,
+    "spearman": 0.5797058533214885,
+    "spearman_lo": 0.5136539647060485,
+    "spearman_hi": 0.6389269677631607,
+    "precision_at_k": 0.4,
+    "precision_lo": 0.1942269918768033,
+    "precision_hi": 0.6483614021398783,
+    "k": 10,
+    "random_precision": 0.03257328990228013,
+    "bottom_train": [
+      "M-1154",
+      "M-1048",
+      "M-1066",
+      "M-1274",
+      "M-1006",
+      "M-1184",
+      "M-1286",
+      "M-1162",
+      "M-1171",
+      "M-1008"
+    ],
+    "bottom_test": [
+      "M-1008",
+      "M-1006",
+      "M-1154",
+      "M-1173",
+      "M-1143",
+      "M-1184",
+      "M-1089",
+      "M-1262",
+      "M-1108",
+      "M-1297"
+    ]
+  },
+  "model1_change": {
+    "truly_weak_before": 136,
+    "truly_weak_after": 60,
+    "themes_before": 2,
+    "themes_after": 7,
+    "overlap_before": 2,
+    "overlap_after": 0,
+    "our10_kept": 1,
+    "verdicts_before": {
+      "truly_weak": 136,
+      "ok": 120,
+      "location": 34,
+      "luck": 19,
+      "inspect_hold": 1
+    }
   }
 }

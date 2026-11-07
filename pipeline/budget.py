@@ -126,33 +126,54 @@ def recommend(full: pd.DataFrame) -> list[Line]:
         live = cat.loc["A-INSPECT", "live_days"]
         gap = ((insp["hold_expected"] - insp["hold_obs"]).clip(lower=0) * insp["coin_in_usd"] / days * live).sum()
         lines.append(
-            Line("A-INSPECT", len(insp), list(insp.index), 0.0, 0.5 * gap, gap,
-                 rationale="Hold far below configured setting in both halves of the period (survives 10% FDR).",
-                 measurement="Technician verifies the paytable/config against game_math; then compare 30-day hold to configured.",
-                 uncertainty="Inspection is information: it may confirm a config difference or find nothing (low = $0).",
-                 evidence="/floor?machine=" + insp.index[0])
+            Line(
+                "A-INSPECT",
+                len(insp),
+                list(insp.index),
+                0.0,
+                0.5 * gap,
+                gap,
+                rationale="Hold far below configured setting in both halves of the period (survives 10% FDR).",
+                measurement="Technician verifies the paytable/config against game_math; then compare 30-day hold to configured.",
+                uncertainty="Inspection is information: it may confirm a config difference or find nothing (low = $0).",
+                evidence="/floor?machine=" + insp.index[0],
+            )
         )
 
     ours, _ = verdicts.truly_weak_list(full)
     live = cat.loc["A-REPLACE-LEASE", "live_days"]
     per = (full.loc[ours.index, "theo_usd"] / days.loc[ours.index]) * (1 / ours["machine_effect_shrunk"] - 1) * live
     lines.append(
-        Line("A-REPLACE-LEASE", len(ours), list(ours.index), 0.25 * per.sum(), 0.5 * per.sum(), per.sum(),
-             rationale="Lowest shrunk machine effect: draws less play than its spot and game predict, upper 90% bound < 1.",
-             measurement="Compare coin-in/available hr of each replacement to its location expectation for 16 live days vs. the other bank machines.",
-             uncertainty="Assumes a new title closes 25-100% of the gap to its location's expectation.",
-             evidence="/?focus=ours")
+        Line(
+            "A-REPLACE-LEASE",
+            len(ours),
+            list(ours.index),
+            0.25 * per.sum(),
+            0.5 * per.sum(),
+            per.sum(),
+            rationale="Lowest shrunk machine effect: draws less play than its spot and game predict, upper 90% bound < 1.",
+            measurement="Compare coin-in/available hr of each replacement to its location expectation for 16 live days vs. the other bank machines.",
+            uncertainty="Assumes a new title closes 25-100% of the gap to its location's expectation.",
+            evidence="/?focus=ours",
+        )
     )
 
     z = full[full["zone_id"] == "Z-B40"]
     live = cat.loc["A-WAYFINDING", "live_days"]
     base = z["theo_usd"].sum() / 181 * live
     lines.append(
-        Line("A-WAYFINDING", 1, ["Z-B40"], 0.02 * base, 0.05 * base, 0.10 * base,
-             rationale="Z-B40 has the lowest coin-in/hr on the floor and fell further while walkway W-ENT-B40 was closed (Mar 3 - Apr 7).",
-             measurement="Z-B40 share of floor coin-in and zone traffic, 20 live days vs. the prior 30 (difference-in-differences vs. Z-BAR).",
-             uncertainty="Signage lift of 2-10% of zone theo is an assumption, not estimated from this data.",
-             evidence="/demand?zone=Z-B40")
+        Line(
+            "A-WAYFINDING",
+            1,
+            ["Z-B40"],
+            0.02 * base,
+            0.05 * base,
+            0.10 * base,
+            rationale="Z-B40 has the lowest coin-in/hr on the floor and fell further while walkway W-ENT-B40 was closed (Mar 3 - Apr 7).",
+            measurement="Z-B40 share of floor coin-in and zone traffic, 20 live days vs. the prior 30 (difference-in-differences vs. Z-BAR).",
+            uncertainty="Signage lift of 2-10% of zone theo is an assumption, not estimated from this data.",
+            evidence="/demand?zone=Z-B40",
+        )
     )
     return lines
 

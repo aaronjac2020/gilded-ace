@@ -160,15 +160,28 @@ def model_lab() -> dict:
             )
         },
         "model2_holdout": columnar(fh),
-        "model1": None,
-        "persistence": None,
+        "model1": m.get("model1"),
+        "persistence": m.get("persistence"),
+        "model1_change": m.get("model1_change"),
     }
 
 
 def budget_json(full: pd.DataFrame) -> dict:
     cat = budget.catalog().reset_index()
-    keep = ["action_type_id", "name", "unit", "unit_cost_usd", "recurring_usd_per_day", "lead_days", "live_days",
-            "unit_total_usd", "downtime_minutes", "quantity_limit", "incompatibility_group", "notes"]
+    keep = [
+        "action_type_id",
+        "name",
+        "unit",
+        "unit_cost_usd",
+        "recurring_usd_per_day",
+        "lead_days",
+        "live_days",
+        "unit_total_usd",
+        "downtime_minutes",
+        "quantity_limit",
+        "incompatibility_group",
+        "notes",
+    ]
     s = budget.plan_summary(full)
     return {
         "rules": {k: cfg()["budget"][k] for k in ("total_usd", "horizon_days", "max_action_types")},

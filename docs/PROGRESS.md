@@ -41,3 +41,15 @@ Resume point for a fresh session: read this file, then `python run.py all`.
 - `web/vercel.json` (vite framework, build `npm run build`, output `dist`, SPA rewrite for everything except /data and /assets, cache headers); `postbuild` copies dist/index.html → dist/404.html.
 - `web/public/data/` (22 files, 4.2 MB, derived aggregates; 0 player-id matches) now committed — root `data/` ignore previously hid it, so a host build would have shipped with no data.
 - Next: Aaron imports the repo on Vercel; then `npm run judge -- --url <URL>`; then M6.
+
+## Deploy check · Netlify — blocked
+- https://gildedaces.netlify.app returns 401 on every path (Visitor access protection → edge-access login); judge cannot run against it. Netlify SPA fallback (`web/public/_redirects`, `web/netlify.toml`) committed locally in 1d96a95, not pushed.
+
+## M6 · Model 1 + rank persistence — done (~1.5 h)
+- `pipeline/model_machine.py`: LightGBM coin-in/avail-hr per machine-day (weight = avail hrs), seed 42; rounds by early stopping on April (196), final fit Jan–Apr, test May–Jun. Features: zone, weekday, calendar, bank geometry, game config, `entrance_path_m` (daily Dijkstra over walkways honoring closures). No machine_id/location/bank/theme/lags (asserted + tested).
+- Metrics: test MAE $890 vs zone×weekday $1,106 per machine-day (−19.5%); WMAPE 20.2% vs 25.1%. Top gain: weekday 29%, zone 26%, max bet 9%, hit prob 7%, RTP 6%, entrance path 5%.
+- `location_expectation: model` — scorecard expectation = out-of-fold (GroupKFold 5 by machine) prediction × leave-one-machine-out zone×day calibration.
+- What changed: truly_weak 136 → 60; our-10 themes 2 → 7; our-10 ∩ manager 2 → 0; 1/10 of old list kept. Manager's 10: 7 not truly weak (unchanged headline).
+- Rank persistence Jan–Apr → May–Jun (n=307, ≥14 days each): Spearman 0.58 [0.51, 0.64]; precision@10 40% [19%, 65%] vs random 3%.
+- Model Lab: Model 1 table, feature-importance chart (+table), persistence card with CIs, "What this changed". 5 new leakage tests (27/27 pass), ruff clean, judge 0–4/9 PASS on preview.
+- Next: M7.

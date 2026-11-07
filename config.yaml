@@ -1,6 +1,8 @@
 # All thresholds live here. DATA_DIR env var overrides data_dir.
 data_dir: ../dashboard-royale
 seed: 42
+location_expectation: model   # zone_weekday (M1 provisional) | model (Model 1, M6)
+location_calibration: zone_day_loo   # none | zone_day_loo (peers in same zone + day, machine excluded)
 bootstrap:
   resamples: 1000
   block_days: 7
