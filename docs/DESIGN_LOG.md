@@ -67,3 +67,7 @@ Not building: boot screens, logs, terminal styling, LED dots, pixel/neon/CRT, ma
 - Inspect caveat 8 → 9px semibold.
 - Critic #3 (before these fixes): Verdict 9/9/8/8/9/8 · Case file 8/6/8/7/7/6 · Floor 7/8/7/6/8/6 ·
   Plan 8/8/7/7/8/6 · Model 7/6/7/7/5/7 · stubs 8/9/8/8/6/8.
+- Critic #4 (final shots): Verdict 9/9/8/8/9/8 · Case file 9/8/8/7/7/6 · Floor 7/8/7/6/8/5 · Plan 8/9/8/7/9/7 ·
+  Model 8/7/7/7/6/8 · stubs 7/8/7/7/6/7 · Comps/Method 7/8/7/7/5/7. Applied after: drawer shrinks to content,
+  5% tags muted to grey (gold only in headline), Model sub matches the Train/Validate bands, Floor map fits the fold
+  with legend, KPI strips pushed fully below the fold (no orphan labels).

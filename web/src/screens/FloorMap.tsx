@@ -172,12 +172,12 @@ export default function FloorMap() {
       <section
         id="map"
         aria-label="Floor map"
-        className="felt relative mx-6 mt-10 overflow-hidden rounded-xl ring-1 ring-inset ring-gold/20 md:mx-10"
+        className="felt relative mx-6 mt-6 overflow-hidden rounded-xl ring-1 ring-inset ring-gold/20 md:mx-10"
       >
         <svg
           ref={svg}
           viewBox={`0 0 ${W} ${H}`}
-          className="relative block h-[min(60vh,560px)] w-full cursor-grab active:cursor-grabbing"
+          className="relative block h-[min(56vh,540px)] w-full cursor-grab active:cursor-grabbing"
           role="img"
           aria-label="Casino floor with machines colored by verdict"
           onClick={() => setTip(null)}

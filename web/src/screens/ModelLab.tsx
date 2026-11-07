@@ -156,7 +156,7 @@ export default function ModelLab() {
             ? `Spot + game model cuts error ${fmt.pct(m1.improvement_pct, 0)}; weak machines stay weak`
             : `A weekday + event forecast cuts daily coin-in error ${fmt.pct(m.improvement_pct, 0)} vs. a flat average`
         }
-        sub="Fit on Jan–Apr, scored on unseen May–Jun days, each against a simple baseline."
+        sub="Trained Jan–Mar, tuned on April, scored on unseen May–Jun days against a simple baseline."
       >
         <KpiStrip testId="model-kpis">
           {m1 && (

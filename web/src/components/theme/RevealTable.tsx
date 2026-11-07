@@ -109,7 +109,7 @@ export function RevealTable({
                     <span className="serif mt-2 text-[20px] font-semibold leading-none">{fmt.usdK(r.house_win_usd)}</span>
                     <span className="mt-1 text-[10px] uppercase tracking-[0.12em] text-ink/70">house win</span>
                     {lowHold(r) && (
-                      <span className="absolute right-1.5 top-1 font-mono text-[10.5px] font-semibold text-[#7a5a1e]" title="Game setting">
+                      <span className="absolute right-1.5 top-1 font-mono text-[10.5px] font-semibold text-[#5c5350]" title="Game setting">
                         {fmt.pct(r.hold_expected, 0)}
                       </span>
                     )}

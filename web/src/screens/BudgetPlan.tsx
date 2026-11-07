@@ -90,7 +90,7 @@ export default function BudgetPlan() {
         />
         {data.errors.length > 0 && <p className="mt-2 text-xs text-verdict-downtime">{data.errors.join("; ")}</p>}
       </section>
-      <div className="mx-6 mt-10 md:mx-10">
+      <div className="mx-6 mt-14 md:mx-10">
         <KpiStrip testId="plan-kpis">
           <Kpi
             label="Spend"

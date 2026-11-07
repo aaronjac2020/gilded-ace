@@ -50,7 +50,7 @@ export function MachineDrawer() {
         <Drawer.Content
           data-testid="machine-drawer"
           aria-describedby={undefined}
-          className="fixed bottom-2 right-2 top-2 z-50 flex w-[520px] max-w-[calc(100vw-16px)] flex-col overflow-hidden rounded-xl border-l border-gold/50 bg-lacquer shadow-float outline-none ring-1 ring-gold/15"
+          className="fixed right-2 top-2 z-50 flex max-h-[calc(100vh-16px)] w-[520px] max-w-[calc(100vw-16px)] flex-col overflow-hidden rounded-xl border-l border-gold/50 bg-lacquer shadow-float outline-none ring-1 ring-gold/15"
         >
           {row && (
             <Body

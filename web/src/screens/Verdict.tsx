@@ -145,7 +145,7 @@ export default function Verdict() {
             </div>
           }
         />
-        <div className="mt-12">
+        <div className="mt-16">
           <KpiStrip testId="verdict-kpis">
             <Kpi
               testId="kpi-theo"
