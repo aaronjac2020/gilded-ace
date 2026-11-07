@@ -236,39 +236,87 @@ def zone_day_loo_factor(md: pd.DataFrame, rate: pd.Series) -> pd.Series:
     return (a / e.where(e > 0)).fillna(1.0)
 
 
-def persistence(train_sc: pd.DataFrame, test_sc: pd.DataFrame, k: int = 10) -> dict:
-    """Do Jan-Apr machine effects predict May-Jun? Spearman (Fisher CI) and precision@k (Wilson CI)."""
+def _rank_agreement(x: pd.Series, y: pd.Series, k: int) -> dict:
+    """Spearman of x vs y (Fisher CI) and precision@k of x's bottom k within y's bottom k (Wilson CI)."""
     from scipy import stats
 
-    n_min = cfg()["persistence"]["min_days_each_window"]
-    a = train_sc.set_index("machine_id")
-    b = test_sc.set_index("machine_id")
-    ids = a.index[(a.days_on_floor >= n_min)].intersection(b.index[b.days_on_floor >= n_min])
-    x, y = a.loc[ids, "machine_effect_shrunk"], b.loc[ids, "machine_effect_shrunk"]
-    ok = x.notna() & y.notna()
-    x, y = x[ok], y[ok]
     n = len(x)
+    zc = stats.norm.ppf(0.5 + cfg()["bootstrap"]["ci"] / 2)
     rho = float(stats.spearmanr(x, y).statistic)
     z, se = np.arctanh(rho), 1 / np.sqrt(n - 3)
-    zc = stats.norm.ppf(0.5 + cfg()["bootstrap"]["ci"] / 2)
     hits = len(set(x.nsmallest(k).index) & set(y.nsmallest(k).index))
     p = hits / k
     den = 1 + zc**2 / k
     c = (p + zc**2 / (2 * k)) / den
     h = zc * np.sqrt(p * (1 - p) / k + zc**2 / (4 * k**2)) / den
     return {
-        "n": n,
         "spearman": rho,
         "spearman_lo": float(np.tanh(z - zc * se)),
         "spearman_hi": float(np.tanh(z + zc * se)),
         "precision_at_k": p,
         "precision_lo": float(max(0, c - h)),
         "precision_hi": float(min(1, c + h)),
+    }
+
+
+def _paired_windows(train_sc: pd.DataFrame, test_sc: pd.DataFrame, cols: list[str]) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Machines with min days in both windows and non-null values for every column in cols."""
+    n_min = cfg()["persistence"]["min_days_each_window"]
+    a = train_sc.set_index("machine_id")
+    b = test_sc.set_index("machine_id")
+    ids = a.index[(a.days_on_floor >= n_min)].intersection(b.index[b.days_on_floor >= n_min])
+    a, b = a.loc[ids], b.loc[ids]
+    ok = a[cols].notna().all(axis=1) & b[cols].notna().all(axis=1)
+    return a[ok], b[ok]
+
+
+def persistence(train_sc: pd.DataFrame, test_sc: pd.DataFrame, k: int = 10) -> dict:
+    """Do Jan-Apr machine effects predict May-Jun? Spearman (Fisher CI) and precision@k (Wilson CI)."""
+    a, b = _paired_windows(train_sc, test_sc, ["machine_effect_shrunk"])
+    x, y = a["machine_effect_shrunk"], b["machine_effect_shrunk"]
+    n = len(x)
+    return {
+        "n": n,
+        **_rank_agreement(x, y, k),
         "k": k,
         "random_precision": k / n,
         "bottom_train": list(x.nsmallest(k).index),
         "bottom_test": list(y.nsmallest(k).index),
     }
+
+
+RANKINGS = {"manager": "house_win_usd", "ours": "machine_effect_shrunk"}
+OUTCOMES = {"effect": "machine_effect_shrunk", "house_win": "house_win_usd"}
+
+
+def persistence_compare(train_sc: pd.DataFrame, test_sc: pd.DataFrame, k: int = 10, seed: int = 42) -> dict:
+    """Manager's Jan-Apr raw house win vs our Jan-Apr shrunk effect, scored on the same machines and May-Jun outcomes.
+
+    Both rankings read only Jan-Apr columns. For each outcome, delta_rho = ours - manager with a paired bootstrap CI
+    (resampling machines).
+    """
+    from scipy import stats
+
+    cols = sorted(set(RANKINGS.values()) | set(OUTCOMES.values()))
+    a, b = _paired_windows(train_sc, test_sc, cols)
+    n = len(a)
+    rng = np.random.default_rng(seed)
+    reps = cfg()["bootstrap"]["resamples"]
+    q = (1 - cfg()["bootstrap"]["ci"]) / 2
+    ranks = {r: a[c].rank().to_numpy() for r, c in RANKINGS.items()}
+    out: dict = {"n": n, "k": k, "random_precision": k / n, "outcomes": {}}
+    for o, oc in OUTCOMES.items():
+        y = b[oc]
+        res = {r: _rank_agreement(a[c], y, k) for r, c in RANKINGS.items()}
+        yr = y.rank().to_numpy()
+        d = np.empty(reps)
+        for i in range(reps):
+            ix = rng.integers(0, n, n)
+            d[i] = stats.spearmanr(ranks["ours"][ix], yr[ix]).statistic - stats.spearmanr(ranks["manager"][ix], yr[ix]).statistic
+        res["delta_rho"] = res["ours"]["spearman"] - res["manager"]["spearman"]
+        res["delta_rho_lo"], res["delta_rho_hi"] = (float(v) for v in np.quantile(d, [q, 1 - q]))
+        out["outcomes"][o] = res
+    return out
 
 
 def as_of_split() -> tuple[date, date]:

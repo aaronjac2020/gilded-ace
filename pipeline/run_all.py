@@ -141,8 +141,17 @@ def main() -> dict:
         f"[{pers['spearman_lo']:.2f}, {pers['spearman_hi']:.2f}]; precision@10 {pers['precision_at_k']:.0%} "
         f"[{pers['precision_lo']:.0%}, {pers['precision_hi']:.0%}] vs random {pers['random_precision']:.0%}"
     )
+    pc = model_machine.persistence_compare(sc.loc["train"].reset_index(), sc.loc["test"].reset_index())
+    for o, res in pc["outcomes"].items():
+        mg, ou = res["manager"], res["ours"]
+        print(
+            f"  vs May-Jun {o} (n={pc['n']}): manager rho {mg['spearman']:.2f} [{mg['spearman_lo']:.2f}, {mg['spearman_hi']:.2f}] "
+            f"P@10 {mg['precision_at_k']:.0%} | ours rho {ou['spearman']:.2f} [{ou['spearman_lo']:.2f}, {ou['spearman_hi']:.2f}] "
+            f"P@10 {ou['precision_at_k']:.0%} | delta rho {res['delta_rho']:+.2f} [{res['delta_rho_lo']:+.2f}, {res['delta_rho_hi']:+.2f}]"
+        )
     metrics["model1"] = m1
     metrics["persistence"] = pers
+    metrics["persistence_compare"] = pc
     metrics["model1_change"] = expectation_change(full, mgr)
     ch = metrics["model1_change"]
     print(

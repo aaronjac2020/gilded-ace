@@ -125,3 +125,39 @@ def test_model1_oof_folds_exclude_own_machine():
 def test_model1_beats_baseline():
     m = model_machine.run()["metrics"]
     assert m["mae_model"] < m["mae_baseline"]
+
+
+def test_persistence_compare_reads_only_train_window():
+    """Both rankings use Jan-Apr columns only: scrambling every May-Jun ranking column leaves scores unchanged,
+    and scrambling Jan-Apr outcome-free columns does not touch May-Jun outcomes."""
+    import numpy as np
+    import pandas as pd
+
+    from pipeline import model_machine as mm
+
+    rng = np.random.default_rng(0)
+    n = 60
+    ids = [f"M-{i}" for i in range(n)]
+    tr = pd.DataFrame(
+        {
+            "machine_id": ids,
+            "days_on_floor": 100,
+            "house_win_usd": rng.normal(size=n),
+            "machine_effect_shrunk": rng.normal(size=n),
+        }
+    )
+    te = pd.DataFrame(
+        {"machine_id": ids, "days_on_floor": 50, "house_win_usd": rng.normal(size=n), "machine_effect_shrunk": rng.normal(size=n)}
+    )
+    base = mm.persistence_compare(tr, te)
+    assert base["n"] == n
+    # Shuffling train rows' order must not matter; replacing train scores must change the result.
+    again = mm.persistence_compare(tr.sample(frac=1, random_state=1), te)
+    for o in base["outcomes"]:
+        for r in ("manager", "ours"):
+            assert np.isclose(base["outcomes"][o][r]["spearman"], again["outcomes"][o][r]["spearman"])
+    # Our ranking reads train effect, manager reads train house win: perfect train=test copy -> rho 1 for the matching pair.
+    te2 = te.assign(machine_effect_shrunk=tr["machine_effect_shrunk"], house_win_usd=tr["house_win_usd"])
+    perf = mm.persistence_compare(tr, te2)
+    assert np.isclose(perf["outcomes"]["effect"]["ours"]["spearman"], 1)
+    assert np.isclose(perf["outcomes"]["house_win"]["manager"]["spearman"], 1)

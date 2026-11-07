@@ -162,6 +162,7 @@ def model_lab() -> dict:
         "model2_holdout": columnar(fh),
         "model1": m.get("model1"),
         "persistence": m.get("persistence"),
+        "persistence_compare": m.get("persistence_compare"),
         "model1_change": m.get("model1_change"),
     }
 

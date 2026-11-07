@@ -161,6 +161,55 @@
       "M-1297"
     ]
   },
+  "persistence_compare": {
+    "n": 307,
+    "k": 10,
+    "random_precision": 0.03257328990228013,
+    "outcomes": {
+      "effect": {
+        "manager": {
+          "spearman": 0.04864054506143342,
+          "spearman_lo": -0.04562816179976992,
+          "spearman_hi": 0.14205059769817516,
+          "precision_at_k": 0.0,
+          "precision_lo": 0.0,
+          "precision_hi": 0.21294197008340698
+        },
+        "ours": {
+          "spearman": 0.5797058533214885,
+          "spearman_lo": 0.5136539647060485,
+          "spearman_hi": 0.6389269677631607,
+          "precision_at_k": 0.4,
+          "precision_lo": 0.1942269918768033,
+          "precision_hi": 0.6483614021398783
+        },
+        "delta_rho": 0.531065308260055,
+        "delta_rho_lo": 0.40681903716131607,
+        "delta_rho_hi": 0.6371151862653015
+      },
+      "house_win": {
+        "manager": {
+          "spearman": 0.6713065845104157,
+          "spearman_lo": 0.6161523823898091,
+          "spearman_hi": 0.7199092593765211,
+          "precision_at_k": 0.4,
+          "precision_lo": 0.1942269918768033,
+          "precision_hi": 0.6483614021398783
+        },
+        "ours": {
+          "spearman": -0.010324414041601244,
+          "spearman_lo": -0.1042830954894361,
+          "spearman_hi": 0.083816933957794,
+          "precision_at_k": 0.0,
+          "precision_lo": 0.0,
+          "precision_hi": 0.21294197008340698
+        },
+        "delta_rho": -0.6816309985520169,
+        "delta_rho_lo": -0.7996543309570543,
+        "delta_rho_hi": -0.5633245959493282
+      }
+    }
+  },
   "model1_change": {
     "truly_weak_before": 136,
     "truly_weak_after": 60,
