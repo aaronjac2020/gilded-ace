@@ -28,7 +28,8 @@ export default function Verdict() {
   const [machine, open] = useMachineParam();
 
   if (error) return <ErrorState what="scorecard" error={error} />;
-  if (!rows.length && (f.zone || f.bank)) return <EmptyState text="No machines match these filters." onClear={() => setF({ zone: null, bank: null })} />;
+  if (!rows.length && (f.zone || f.bank))
+    return <EmptyState text="No machines match these filters." onClear={() => setF({ zone: null, bank: null })} />;
   if (!rows.length) return <ScreenSkeleton />;
 
   const notWeak = mgr.filter((r) => r.verdict !== "truly_weak");
@@ -93,7 +94,9 @@ export default function Verdict() {
         }
         sub={
           <>
-            We test the {mgr.length} lowest earners for luck, location, downtime and hold variance before cutting any.{" "}
+            We test the {mgr.length} lowest earners for luck, location, downtime and hold variance before cutting any. A moved
+            machine&rsquo;s play mostly tracked its new spot (1 of 4 moves is informative), so the plan tests moves before replacing
+            machines in quiet spots.{" "}
             {overlap.size === 0
               ? "None also make our list of machines that draw less play than their spot and game predict."
               : `Only ${overlap.size} also ${overlap.size === 1 ? "makes" : "make"} our list of machines that draw less play than their spot and game predict.`}
@@ -128,7 +131,13 @@ export default function Verdict() {
             label="Theo lost to downtime"
             value={<Num value={lost} kind="usdCompact" />}
             delta={hasPrior ? <Delta now={lost} prior={sum(prior, (r) => r.lost_theo_usd)} label={priorLabel} goodUp={false} /> : undefined}
-            note={`Range ${fmt.usdK(lostLo)}–${fmt.usdK(lostHi)} · ${fmt.pct(lost / Math.max(1, sum(rows, (r) => r.theo_usd)))} of theo`}
+            note={`Range ${fmt.usdK(lostLo)}–${fmt.usdK(lostHi)} · ${fmt.pct(
+              lost /
+                Math.max(
+                  1,
+                  sum(rows, (r) => r.theo_usd),
+                ),
+            )} of theo`}
             footer={<EvidenceLink to="/downtime" focus="lost" filters={f} />}
           />
           <Kpi
@@ -182,7 +191,14 @@ export default function Verdict() {
           testId="ours-list-tile"
           table={{
             columns: ["Machine", "Zone", "Theme", "Effect", "CI low", "CI high"],
-            rows: ours.map((r) => [r.machine_id, r.zone_id, r.theme, fmt.num(r.machine_effect_shrunk), fmt.num(r.effect_shrunk_lo), fmt.num(r.effect_shrunk_hi)]),
+            rows: ours.map((r) => [
+              r.machine_id,
+              r.zone_id,
+              r.theme,
+              fmt.num(r.machine_effect_shrunk),
+              fmt.num(r.effect_shrunk_lo),
+              fmt.num(r.effect_shrunk_hi),
+            ]),
           }}
           footer={
             <p className="flex items-center gap-2 text-2xs text-fg-subtle">
@@ -199,4 +215,3 @@ export default function Verdict() {
     </div>
   );
 }
-

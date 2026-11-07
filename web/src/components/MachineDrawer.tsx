@@ -5,7 +5,7 @@ import { Drawer } from "vaul";
 import type { ScoreRow } from "../lib/data";
 import { fmt } from "../lib/format";
 import { useDrawerList, useMachineParam } from "../lib/uiStore";
-import { useScorecard } from "../lib/useData";
+import { useJson, useScorecard } from "../lib/useData";
 import { useFilters } from "../lib/urlState";
 import { Button } from "./ui/button";
 import { Kbd } from "./ui/kbd";
@@ -17,6 +17,11 @@ import { Tip } from "./ui/tooltip";
 export function MachineDrawer() {
   const [f] = useFilters();
   const { all } = useScorecard(f);
+  const lab = useJson<{ alternatives: { moved: { moves: Move[] } } | null }>("model_lab.json");
+  const floorCarded = useMemo(() => {
+    const ci = (all ?? []).reduce((t, r) => t + r.coin_in_usd, 0);
+    return ci ? (all ?? []).reduce((t, r) => t + r.carded_coin_in_usd, 0) / ci : null;
+  }, [all]);
   const [id, setId] = useMachineParam();
   const list = useDrawerList();
   const row = useMemo(() => all?.find((r) => r.machine_id === id) ?? null, [all, id]);
@@ -44,14 +49,40 @@ export function MachineDrawer() {
           aria-describedby={undefined}
           className="fixed bottom-2 right-2 top-2 z-50 flex w-[520px] max-w-[calc(100vw-16px)] flex-col overflow-hidden rounded-xl bg-surface-3 shadow-float outline-none"
         >
-          {row && <Body row={row} pos={i} n={seq.length} step={step} close={() => setId(null)} />}
+          {row && (
+            <Body
+              row={row}
+              pos={i}
+              n={seq.length}
+              step={step}
+              close={() => setId(null)}
+              floorCarded={floorCarded}
+              moves={(lab.data?.alternatives?.moved.moves ?? []).filter((mv) => mv.machine_id === row.machine_id)}
+            />
+          )}
         </Drawer.Content>
       </Drawer.Portal>
     </Drawer.Root>
   );
 }
 
-function Body({ row, pos, n, step, close }: { row: ScoreRow; pos: number; n: number; step: (d: number) => void; close: () => void }) {
+function Body({
+  row,
+  pos,
+  n,
+  step,
+  close,
+  floorCarded,
+  moves,
+}: {
+  row: ScoreRow;
+  pos: number;
+  n: number;
+  step: (d: number) => void;
+  close: () => void;
+  floorCarded: number | null;
+  moves: Move[];
+}) {
   return (
     <>
       <div className="sticky top-0 border-b border-divider px-5 pb-0 pt-4">
@@ -67,7 +98,11 @@ function Body({ row, pos, n, step, close }: { row: ScoreRow; pos: number; n: num
             </m.span>
           </div>
           <div className="flex items-center gap-1">
-            {pos >= 0 && <span className="mono mr-1 text-2xs text-fg-subtle">{pos + 1} / {n}</span>}
+            {pos >= 0 && (
+              <span className="mono mr-1 text-2xs text-fg-subtle">
+                {pos + 1} / {n}
+              </span>
+            )}
             <Tip label="Previous" keys={["←"]}>
               <Button variant="ghost" size="icon-sm" aria-label="Previous machine" onClick={() => step(-1)}>
                 <ChevronLeft size={16} strokeWidth={1.5} aria-hidden />
@@ -123,8 +158,15 @@ function Body({ row, pos, n, step, close }: { row: ScoreRow; pos: number; n: num
                   ["90% CI", `${fmt.num(row.effect_shrunk_lo)} – ${fmt.num(row.effect_shrunk_hi)}`],
                   ["Availability", fmt.pct(row.availability)],
                   ["Days on floor", String(row.days_on_floor)],
+                  ["Carded share of coin-in", `${fmt.pct(row.carded_share)} (floor ${fmt.pct(floorCarded)})`],
                 ]}
               />
+              {moves.map((mv) => (
+                <p key={mv.moved_on} className="mt-3 text-xs text-fg-muted" data-testid="drawer-move">
+                  Moved {mv.moved_on}, {mv.from_zone} → {mv.to_zone}: spot expected {fmt.usd(mv.spot_before)} → {fmt.usd(mv.spot_after)}
+                  /hr, actual {fmt.usd(mv.rate_before)} → {fmt.usd(mv.rate_after)}/hr.
+                </p>
+              ))}
             </TabsContent>
           </div>
         </Tabs>
@@ -136,6 +178,17 @@ function Body({ row, pos, n, step, close }: { row: ScoreRow; pos: number; n: num
     </>
   );
 }
+
+type Move = {
+  machine_id: string;
+  moved_on: string;
+  from_zone: string;
+  to_zone: string;
+  spot_before: number;
+  spot_after: number;
+  rate_before: number;
+  rate_after: number;
+};
 
 /** Theo → downtime → luck → house win, as horizontal bars from a common zero. */
 function Waterfall({ row }: { row: ScoreRow }) {

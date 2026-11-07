@@ -208,6 +208,337 @@
         "delta_rho_lo": -0.7996543309570543,
         "delta_rho_hi": -0.5633245959493282
       }
+    },
+    "train_house_win_rho": {
+      "spot": 0.6134558361692041,
+      "effect": 0.10174632228640647,
+      "n": 309
+    }
+  },
+  "alternatives": {
+    "moved": {
+      "n_moves": 4,
+      "n_machines": 4,
+      "min_days": 14,
+      "moves": [
+        {
+          "machine_id": "M-1113",
+          "from_location": "L-12-1",
+          "to_location": "L-09-7",
+          "from_zone": "Z-PIT",
+          "to_zone": "Z-PIT",
+          "moved_on": "2025-02-18",
+          "days_before": 48,
+          "days_after": 133,
+          "rate_before": 192.68784722222225,
+          "rate_after": 200.4401464213285,
+          "spot_before": 196.81303465331342,
+          "spot_after": 196.07507783057795,
+          "peer_before": 196.60520566363846,
+          "peer_after": 220.09688371602016,
+          "effect_before": 0.9790400699915139,
+          "effect_after": 1.0222622305651832
+        },
+        {
+          "machine_id": "M-1126",
+          "from_location": "L-40-6",
+          "to_location": "L-21-7",
+          "from_zone": "Z-HTL",
+          "to_zone": "Z-BAR",
+          "moved_on": "2025-05-06",
+          "days_before": 125,
+          "days_after": 56,
+          "rate_before": 154.45687007077814,
+          "rate_after": 151.68541633175863,
+          "spot_before": 159.10350433590565,
+          "spot_after": 158.55356906011855,
+          "peer_before": 160.41277449929873,
+          "peer_after": 176.6782429221612,
+          "effect_before": 0.9707948967904731,
+          "effect_after": 0.9566824463865853
+        },
+        {
+          "machine_id": "M-1152",
+          "from_location": "L-33-4",
+          "to_location": "L-03-7",
+          "from_zone": "Z-B40",
+          "to_zone": "Z-ENT",
+          "moved_on": "2025-02-04",
+          "days_before": 34,
+          "days_after": 147,
+          "rate_before": 118.82352941176471,
+          "rate_after": 244.605561861521,
+          "spot_before": 109.34790915707289,
+          "spot_after": 243.4947026330812,
+          "peer_before": 116.89153523097298,
+          "peer_after": 204.2548696016634,
+          "effect_before": 1.0866557058816786,
+          "effect_after": 1.0045621494694845
+        },
+        {
+          "machine_id": "M-1299",
+          "from_location": "L-07-3",
+          "to_location": "L-44-7",
+          "from_zone": "Z-PIT",
+          "to_zone": "Z-HTL",
+          "moved_on": "2025-06-10",
+          "days_before": 160,
+          "days_after": 21,
+          "rate_before": 182.05547247826786,
+          "rate_after": 157.51033187226048,
+          "spot_before": 187.4020143164102,
+          "spot_after": 155.44960170051075,
+          "peer_before": 204.16389632519446,
+          "peer_after": 186.7254266698848,
+          "effect_before": 0.9714702007998952,
+          "effect_after": 1.0132565805843616
+        }
+      ],
+      "beta_model": 0.8951412647097193,
+      "beta_model_lo": 0.44022606359278466,
+      "beta_model_hi": 1.067685363280214,
+      "beta_peer": 1.2256332453506276,
+      "beta_peer_lo": 0.10228019023716747,
+      "beta_peer_hi": 1.3839432226461692,
+      "follows_spot": false,
+      "decision": "inconclusive",
+      "rejects_machine_only": true,
+      "leave_one_out": {
+        "M-1113": {
+          "model": 0.8953791968165974,
+          "peer": 1.2595812593150075
+        },
+        "M-1126": {
+          "model": 0.895064384129591,
+          "peer": 1.2653097783234988
+        },
+        "M-1152": {
+          "model": 0.7716890565066745,
+          "peer": 0.5204408974195752
+        },
+        "M-1299": {
+          "model": 0.9017073446113146,
+          "peer": 1.2161603375189924
+        }
+      }
+    },
+    "noise": {
+      "window_days": 28,
+      "sd": 0.07110051158294971,
+      "sd_vs_control": 0.10549766424641069,
+      "n": 2682
+    },
+    "carded": {
+      "floor": 0.6581013855136345,
+      "groups": {
+        "manager_10": {
+          "n": 10,
+          "share": 0.6598384797247445,
+          "rest": 0.6580701020462969,
+          "diff": 0.001768377678447619,
+          "diff_lo": -0.0050137942265841735,
+          "diff_hi": 0.007786269742897545
+        },
+        "truly_weak": {
+          "n": 60,
+          "share": 0.6642059364454364,
+          "rest": 0.6567553231173893,
+          "diff": 0.007450613328047084,
+          "diff_lo": 0.0021144247767745142,
+          "diff_hi": 0.012771498076770338
+        },
+        "not_ok": {
+          "n": 122,
+          "share": 0.6639253371863308,
+          "rest": 0.6550621500128487,
+          "diff": 0.008863187173482112,
+          "diff_lo": 0.004525676026368474,
+          "diff_hi": 0.013632273180592302
+        }
+      }
+    },
+    "volatility": {
+      "table": [
+        [
+          4,
+          6
+        ],
+        [
+          104,
+          196
+        ]
+      ],
+      "odds_ratio": 1.2564102564102564,
+      "p_value": 0.4823916031296318,
+      "manager_high": 4,
+      "manager_n": 10,
+      "floor_high_share": 0.34838709677419355
+    }
+  },
+  "move_test": {
+    "pairs": [
+      {
+        "ours": "M-1252",
+        "manager": "M-1265",
+        "spot_ours": 195.4669116984842,
+        "spot_manager": 92.95111332457992
+      },
+      {
+        "ours": "M-1009",
+        "manager": "M-1181",
+        "spot_ours": 225.8118160703428,
+        "spot_manager": 95.64901263867691
+      },
+      {
+        "ours": "M-1006",
+        "manager": "M-1238",
+        "spot_ours": 269.2492854088807,
+        "spot_manager": 141.06651510143493
+      }
+    ],
+    "controls": {
+      "M-1252": "M-1218",
+      "M-1265": "M-1014",
+      "M-1009": "M-1020",
+      "M-1181": "M-1230",
+      "M-1006": "M-1107",
+      "M-1238": "M-1232"
+    },
+    "sizing": [
+      {
+        "swaps": 1,
+        "moves": 2,
+        "cost_usd": 3600.0,
+        "halfwidth": 0.4270423048752422,
+        "halfwidth_vs_control": 0.6336377150561229,
+        "se_vs_control": 0.10035835486768213,
+        "theo_lo_usd": 1084.229182442084,
+        "theo_mid_usd": 1975.760241328471,
+        "theo_hi_usd": 2251.4523443034523
+      },
+      {
+        "swaps": 2,
+        "moves": 4,
+        "cost_usd": 7200.0,
+        "halfwidth": 0.10415483833811352,
+        "halfwidth_vs_control": 0.1545430816178331,
+        "se_vs_control": 0.06566902473813917,
+        "theo_lo_usd": 2325.2084343449114,
+        "theo_mid_usd": 4332.300300395708,
+        "theo_hi_usd": 4982.967153975655
+      },
+      {
+        "swaps": 3,
+        "moves": 6,
+        "cost_usd": 10800.0,
+        "halfwidth": 0.07751125898650302,
+        "halfwidth_vs_control": 0.11500981629836303,
+        "se_vs_control": 0.05707546172111451,
+        "theo_lo_usd": 1844.9302900669982,
+        "theo_mid_usd": 3399.7587167372635,
+        "theo_hi_usd": 3870.3975142723743
+      },
+      {
+        "swaps": 4,
+        "moves": 8,
+        "cost_usd": 14400.0,
+        "halfwidth": 0.06559560985957061,
+        "halfwidth_vs_control": 0.09732958977278335,
+        "se_vs_control": 0.05137268493969902,
+        "theo_lo_usd": 1165.4894384223471,
+        "theo_mid_usd": 2053.4116195907163,
+        "theo_hi_usd": 2259.2429902509157
+      },
+      {
+        "swaps": 5,
+        "moves": 10,
+        "cost_usd": 18000.0,
+        "halfwidth": 0.057318252201292434,
+        "halfwidth_vs_control": 0.08504779489340734,
+        "se_vs_control": 0.04639528387930278,
+        "theo_lo_usd": 407.5407914426618,
+        "theo_mid_usd": 568.5477172426731,
+        "theo_hi_usd": 491.86569850993004
+      }
+    ],
+    "pick": {
+      "swaps": 3,
+      "moves": 6,
+      "cost_usd": 10800.0,
+      "halfwidth": 0.07751125898650302,
+      "halfwidth_vs_control": 0.11500981629836303,
+      "se_vs_control": 0.05707546172111451,
+      "theo_lo_usd": 1844.9302900669982,
+      "theo_mid_usd": 3399.7587167372635,
+      "theo_hi_usd": 3870.3975142723743
+    },
+    "voi_usd": 9176.101323117568,
+    "prior_beta": {
+      "mean": 0.8951412647097193,
+      "sd": 0.38959789838090386
+    },
+    "posterior_sd": 0.05647267679341927,
+    "followon": {
+      "days": 90,
+      "cost_per_machine_usd": 6680.0,
+      "candidates": [
+        "M-1008",
+        "M-1017",
+        "M-1045",
+        "M-1048",
+        "M-1050",
+        "M-1053",
+        "M-1056",
+        "M-1064",
+        "M-1065",
+        "M-1066",
+        "M-1068",
+        "M-1078",
+        "M-1084",
+        "M-1086",
+        "M-1126",
+        "M-1127",
+        "M-1139",
+        "M-1143",
+        "M-1145",
+        "M-1154",
+        "M-1162",
+        "M-1164",
+        "M-1173",
+        "M-1179",
+        "M-1184",
+        "M-1211",
+        "M-1227",
+        "M-1228",
+        "M-1231",
+        "M-1239",
+        "M-1241",
+        "M-1244",
+        "M-1262",
+        "M-1263",
+        "M-1274",
+        "M-1286"
+      ],
+      "value_at_prior_mean_usd": -98166.19435157973,
+      "value_at_beta0_usd": 84996.70987961568
+    },
+    "comparison": {
+      "move_test": {
+        "cost_usd": 10800.0,
+        "theo_mid_usd": 3399.7587167372635,
+        "voi_usd": 9176.101323117568,
+        "value_usd": 12575.860039854831
+      },
+      "lowest": {
+        "action_type_id": "A-REPLACE-LEASE",
+        "cost_usd": 33800.0,
+        "theo_mid_usd": 2019.026887567165,
+        "voi_usd": 0.0,
+        "value_usd": 2019.026887567165
+      },
+      "replaces": "A-REPLACE-LEASE",
+      "errors": [],
+      "included": true
     }
   },
   "model1_change": {

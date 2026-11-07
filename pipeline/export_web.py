@@ -163,6 +163,8 @@ def model_lab() -> dict:
         "model1": m.get("model1"),
         "persistence": m.get("persistence"),
         "persistence_compare": m.get("persistence_compare"),
+        "alternatives": m.get("alternatives"),
+        "move_test_pick": (m.get("move_test") or {}).get("pick"),
         "model1_change": m.get("model1_change"),
     }
 
@@ -183,7 +185,8 @@ def budget_json(full: pd.DataFrame) -> dict:
         "incompatibility_group",
         "notes",
     ]
-    s = budget.plan_summary(full)
+    m = json.loads((OUTPUTS / "metrics.json").read_text(encoding="utf-8"))
+    s = budget.plan_summary(full, m.get("alternatives"))
     return {
         "rules": {k: cfg()["budget"][k] for k in ("total_usd", "horizon_days", "max_action_types")},
         "formula": "cost = quantity x (unit_cost + recurring_per_day x max(0, horizon_days - lead_days))",
@@ -193,6 +196,7 @@ def budget_json(full: pd.DataFrame) -> dict:
         "kept_usd": s["kept_usd"],
         "effect": s["effect"],
         "errors": s["errors"],
+        "move_test": m.get("move_test"),
         "version": "v0",
     }
 

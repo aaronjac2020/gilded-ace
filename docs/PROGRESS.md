@@ -81,3 +81,13 @@ Resume point for a fresh session: read this file, then `python run.py all`.
 - Month scrubber (`data-testid=time-scrubber`): click, ←/→, play walks Jan→Jun at 1.4 s/step; writes the global period so every screen follows. Glyphs translate with a 700 ms transition, so machines that moved spots glide to the new one (off under reduced motion).
 - Bank click → global filter with Undo toast and machine → waterfall drawer unchanged from M6.5. Judge 0–4/9 PASS locally (check 2: bank drill changes Verdict).
 - Next: M8.
+
+## M8 · Competing explanations + move test — done
+- Approved claim (verbatim, Model Lab subtitle; reuse in claims appendix + write-up): "The manager's ranking is consistent, but it tracks the spot, not the machine. Jan–Apr house win follows the spot's expected play (ρ 0.61), not machine effect (ρ 0.10). Our ranking is the one that predicts which machines underperform their spot (ρ 0.58 vs. 0.05)." ρ 0.61/0.10 now computed in run_all (`persistence_compare.train_house_win_rho`).
+- Moved machines (4 moves, ≥14 d each side): β model 0.90 [0.44, 1.07], peers 1.23 [0.10, 1.38] → inconclusive. Without M-1152 (Z-B40→Z-ENT, the one informative move): 0.77 / 0.52.
+- **Disclosure:** the 0.5 decision threshold was set after seeing the estimates; not pre-registered. Stated in the tile; must also appear in the M12 claims appendix.
+- Carded share: manager's 10 +0.2 pp [−0.5, +0.8] vs rest (no gap). Volatility: 4/10 high vs floor 35%, Fisher one-sided p 0.48.
+- Move test (A-MOVE-MACHINE): 3 swaps / 6 moves, $10.8k, matched same-bank controls, planned 90% CI ±0.12. Theo $1.8k/$3.4k/$3.9k + VOI $9.2k (prior sd sensitivity $2.6k–$19.7k) = $12.6k vs REPLACE-LEASE $33.8k at $2.0k → included, replaces REPLACE-LEASE. Plan: INSPECT + WAYFINDING + MOVE = $19.5k.
+- Follow-on: replacing 36 quiet-spot weak machines is −$98k at β 0.9, +$85k at β 0. VOI counted $0 for other lines [assumption].
+- UI: Model Lab "Does performance follow the spot?" section; Verdict softened line; drawer carded share vs floor + move history; Plan choice tile with sizing table. Tests 34 pass; judge PASS.
+- Next: pause for M8.5.

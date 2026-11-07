@@ -142,6 +142,17 @@ def main() -> dict:
         f"[{pers['precision_lo']:.0%}, {pers['precision_hi']:.0%}] vs random {pers['random_precision']:.0%}"
     )
     pc = model_machine.persistence_compare(sc.loc["train"].reset_index(), sc.loc["test"].reset_index())
+    # What the manager's Jan-Apr ranking tracks: the spot's expected play vs. machine effect (Spearman, all train rows)
+    tr = sc.loc["train"]
+    pc["train_house_win_rho"] = {
+        "spot": float(tr["house_win_usd"].corr(tr["loc_expected_coin_in_usd"], method="spearman")),
+        "effect": float(tr["house_win_usd"].corr(tr["machine_effect_shrunk"], method="spearman")),
+        "n": len(tr),
+    }
+    print(
+        f"  Jan-Apr house win vs spot expectation rho {pc['train_house_win_rho']['spot']:.2f}, "
+        f"vs machine effect {pc['train_house_win_rho']['effect']:.2f}"
+    )
     for o, res in pc["outcomes"].items():
         mg, ou = res["manager"], res["ours"]
         print(
@@ -152,6 +163,41 @@ def main() -> dict:
     metrics["model1"] = m1
     metrics["persistence"] = pers
     metrics["persistence_compare"] = pc
+    from pipeline import alternatives
+
+    alt = alternatives.run(full, list(mgr.index), *period("full"))
+    mv, vol = alt["moved"], alt["volatility"]
+    print("\n=== Competing explanations ===")
+    print(
+        f"  moved machines ({mv['n_moves']} moves, >= {mv['min_days']} days each side): pooled slope of play change on spot change "
+        f"model {mv['beta_model']:.2f} [{mv['beta_model_lo']:.2f}, {mv['beta_model_hi']:.2f}], "
+        f"bank peers {mv['beta_peer']:.2f} [{mv['beta_peer_lo']:.2f}, {mv['beta_peer_hi']:.2f}] (1 = follows spot, 0 = stays with machine) "
+        f"-> {mv['decision']}"
+    )
+    for g, c in alt["carded"]["groups"].items():
+        print(
+            f"  carded share {g} (n={c['n']}): {c['share']:.1%} vs rest {c['rest']:.1%}, diff {c['diff']:+.1%} [{c['diff_lo']:+.1%}, {c['diff_hi']:+.1%}]"
+        )
+    print(
+        f"  volatility: manager's 10 high/very-high {vol['manager_high']}/{vol['manager_n']} vs floor {vol['floor_high_share']:.0%}; "
+        f"Fisher one-sided p = {vol['p_value']:.2f} (OR {vol['odds_ratio']:.2f})"
+    )
+    metrics["alternatives"] = alt
+    from pipeline import budget
+
+    mt = budget.move_test(full, alt)
+    _, cmp = budget.with_move_test(budget.recommend(full), mt, budget.catalog())
+    pk, a, b = mt["pick"], cmp["move_test"], cmp["lowest"]
+    print(
+        f"  move test sizing: {pk['swaps']} swaps / {pk['moves']} moves (${pk['cost_usd']:,.0f}), planned 90% CI on beta "
+        f"+/-{pk['halfwidth']:.2f} (+/-{pk['halfwidth_vs_control']:.2f} vs matched controls); "
+        f"theo ${pk['theo_lo_usd']:,.0f} / ${pk['theo_mid_usd']:,.0f} / ${pk['theo_hi_usd']:,.0f}; VOI ${mt['voi_usd']:,.0f}"
+    )
+    print(
+        f"  move test vs lowest-value line {b['action_type_id']} (${b['cost_usd']:,.0f}): theo+VOI ${a['value_usd']:,.0f} vs "
+        f"${b['value_usd']:,.0f} -> {'included' if cmp['included'] else 'not included'}"
+    )
+    metrics["move_test"] = {**mt, "comparison": cmp}
     metrics["model1_change"] = expectation_change(full, mgr)
     ch = metrics["model1_change"]
     print(

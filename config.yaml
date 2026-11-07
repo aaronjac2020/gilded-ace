@@ -45,6 +45,12 @@ budget:
   tech_reduction: [0.20, 0.35, 0.50]
   preventive_reduction: [0.20, 0.35, 0.50]
   sensitivity_scale: 0.5
+  move_test:               # controlled location test (A-MOVE-MACHINE swaps); sizing + value of information
+    target_halfwidth: 0.2  # usable = 90% CI on beta within +/-0.2 (separates 0.5 from 0.9), with-control noise
+    min_swaps: 3           # so no single swap carries the estimate (cf. M-1152 in the natural experiment)
+    followon_days: 90      # decision the test informs: lease-replace quiet-spot weak machines for 90 days
+    new_title_effect: 1.0  # a new title plays at its spot's expectation, at floor median hold
+    sims: 4000
 checks:
   machines_total: 310
   on_floor_min: 300
