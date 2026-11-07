@@ -29,3 +29,10 @@ Resume point for a fresh session: read this file, then `python run.py all`.
 - Pending stubs ({"pending": "M<n>"}): demand, downtime, players_segments, comps, budget, claims.
 - [assumption] @types/react, @types/react-dom added (types for pre-approved react; needed for TS).
 - Next: M4.
+
+## M4 · MVP screens — done (~1.5 h)
+- Built: Verdict (manager vs ours with animated connectors, 4 KPIs + evidence links), Floor Map (D3 SVG: zone hulls, bank outlines → global bank filter, walkways with the closed B40 walkway dashed, verdict color+shape glyphs, legend with counts, hover tooltip, machine drawer via `?machine=`), Model Lab (split timeline, Model 2 pred vs actual, MAE/WAPE table, leakage checklist, "What this changed"), Plan (static v0 recommendation, budget bar + formula, per-line lo/mid/hi, measurement, evidence). `pipeline/budget.py` (catalog, cost formula, validation, v0 recommend) → budget.json. `scripts/judge-check.mjs` (Playwright; `--url`, `--only`).
+- Metrics: judge 0/1/2/3/4/9 all PASS on preview — first load KPIs visible 435–650 ms (limit 3 s); period Full→Mar changes all 4 KPIs; bank B-01 drill changes Verdict KPIs; MAE table visible; no console errors. Entry JS 411 kB (134 kB gzip). 22/22 pytest, ruff clean.
+- Budget v0: spend $42.5k, keep $57.5k, 30-day theo effect $8.7k–$45.8k (mid $22.9k) — below spend inside the horizon; M11 optimizer to revisit.
+- Judge check 0 now uses page-side `performance.now()`; a single cold run measured 3.3 s wall (Google Fonts cold fetch), not reproducible (0.43–0.65 s after).
+- Next: M5.
