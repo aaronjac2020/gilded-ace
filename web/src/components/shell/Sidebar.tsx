@@ -10,7 +10,7 @@ import { CardIndex } from "../theme/Deco";
 import { NAV } from "./nav";
 
 export function Sidebar() {
-  const { search } = useLocation();
+  const { search, pathname } = useLocation();
   const [rail, setRail] = useState(() => store.get("ga.rail") === "1");
   const toggle = () => {
     setRail((r) => {
@@ -70,15 +70,14 @@ export function Sidebar() {
                     to={{ pathname: to, search: qs }}
                     end={to === "/"}
                     aria-label={label}
-                    className={({ isActive }) =>
-                      cn(
-                        "focus-ring relative flex h-8 items-center gap-2.5 rounded-sm text-sm transition-colors duration-hover",
-                        rail ? "justify-center" : "px-2",
-                        isActive
-                          ? "bg-white/[0.04] text-ivory before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-[image:var(--brushed)]"
-                          : "text-fg-muted hover:bg-white/[0.03] hover:text-fg",
-                      )
-                    }
+                    aria-current={(to === "/" ? pathname === "/" : pathname.startsWith(to)) ? "page" : undefined}
+                    className={cn(
+                      "focus-ring relative flex h-8 items-center gap-2.5 rounded-sm text-sm transition-colors duration-hover",
+                      rail ? "justify-center" : "px-2",
+                      (to === "/" ? pathname === "/" : pathname.startsWith(to))
+                        ? "bg-maroon/45 text-gold-soft ring-1 ring-inset ring-gold/20 before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-[image:var(--brushed)]"
+                        : "text-fg-muted hover:bg-white/[0.03] hover:text-fg",
+                    )}
                   >
                     <Icon size={16} strokeWidth={1.5} aria-hidden />
                     {!rail && (

@@ -56,3 +56,14 @@ Not building: boot screens, logs, terminal styling, LED dots, pixel/neon/CRT, ma
   location. [deviation] readouts show from 1360px, not 1280px, to stop top-bar wrapping at 1280.
 - Squint: Verdict = card grid; Plan = chip table below the fold, gold Spend above; stubs = felt panel. Floor and
   Model still split focus (gold KPI vs. hero visual) — next pass.
+
+## Round 3 / final (outputs/figures/ui_v6/r3, final + reveal.webm)
+- Floor + Plan: KPI strips moved below the hero visual (testids unchanged) so the map and the chip table sit
+  above the fold; gold "62" on Floor; map fits with top padding (no clipped labels).
+- Case file: lacquer drawer with gold edge; "What we'd do / What would change the call" per verdict.
+- Model: Test band ivory (one gold accent = persistence ρ); Validate maroon outline. KPI numerals → Bodoni.
+- Bug: sidebar active state applied to every item — Radix Slot (Tip asChild) stringified NavLink's function
+  className. Now computed from the pathname; active = maroon + gold bar + gold text.
+- Inspect caveat 8 → 9px semibold.
+- Critic #3 (before these fixes): Verdict 9/9/8/8/9/8 · Case file 8/6/8/7/7/6 · Floor 7/8/7/6/8/6 ·
+  Plan 8/8/7/7/8/6 · Model 7/6/7/7/5/7 · stubs 8/9/8/8/6/8.

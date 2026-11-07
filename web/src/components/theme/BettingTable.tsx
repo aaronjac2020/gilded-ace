@@ -81,7 +81,7 @@ export function BettingTable({
                     n={Math.min(n, 22)}
                     tone={s.tone}
                     width={48}
-                    className={s.id === "held" ? "drop-shadow-[0_0_1.5px_oklch(var(--gold))]" : undefined}
+                    className={s.id === "held" ? "drop-shadow-[0_0_2px_oklch(var(--gold-soft))]" : undefined}
                   />
                 </m.span>
               </button>

@@ -51,7 +51,7 @@ export function VerdictStamp({
         {verdictLabels[verdict]}
       </span>
       {verdict === "inspect_hold" && (
-        <span className="mt-0.5 whitespace-nowrap text-[8px] normal-case tracking-normal">lead, not a finding</span>
+        <span className="mt-0.5 whitespace-nowrap text-[9px] font-semibold normal-case tracking-normal">lead, not a finding</span>
       )}
     </m.span>
   );

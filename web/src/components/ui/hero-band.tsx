@@ -79,7 +79,13 @@ export function Kpi({
   return (
     <div className="flex min-w-0 flex-col gap-1.5 pr-6 lg:px-8 lg:first:pl-0" data-testid={testId}>
       <dt className="eyebrow">{label}</dt>
-      <dd className={cn("display flex items-baseline gap-1.5 text-3xl lg:text-4xl", focal ? "text-gold-soft" : "text-fg")} data-kpi-value>
+      <dd
+        className={cn(
+          "serif flex items-baseline gap-1.5 text-3xl font-medium tabular-nums lg:text-[42px]",
+          focal ? "text-gold-soft" : "text-fg",
+        )}
+        data-kpi-value
+      >
         {value}
         {unit && <span className="text-xl font-medium text-fg-muted lg:text-2xl">{unit}</span>}
       </dd>

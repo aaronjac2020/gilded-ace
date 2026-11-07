@@ -10,6 +10,7 @@ import { ErrorState, ScreenSkeleton } from "../components/ui/skeleton";
 import { Button } from "../components/ui/button";
 import { Tip } from "../components/ui/tooltip";
 import { Chip } from "../components/theme/Chip";
+import { GoldNumber } from "../components/theme/GoldNumber";
 import { CardIndex } from "../components/theme/Deco";
 import { cn } from "../lib/cn";
 import { rows as decode, type Columnar, type ScoreRow } from "../lib/data";
@@ -55,9 +56,9 @@ export default function FloorMap() {
     const walks = decode<Walk>(floor.data.walkways);
     const xs = d3.extent(slots, (s) => s.x_m) as [number, number];
     const ys = d3.extent(slots, (s) => s.y_m) as [number, number];
-    const k = Math.min((W - 2 * PAD) / (xs[1] - xs[0]), (H - 2 * PAD) / (ys[1] - ys[0]));
+    const k = Math.min((W - 2 * PAD) / (xs[1] - xs[0]), (H - 2 * PAD - 48) / (ys[1] - ys[0]));
     const ox = (W - (xs[1] - xs[0]) * k) / 2;
-    const oy = (H - (ys[1] - ys[0]) * k) / 2;
+    const oy = (H - (ys[1] - ys[0]) * k) / 2 + 12;
     const sx = (x: number) => ox + (x - xs[0]) * k;
     const sy = (y: number) => oy + (y - ys[0]) * k;
     const hulls = [...d3.group(slots, (s) => s.zone_id)].map(([z, ss]) => {
@@ -161,7 +162,8 @@ export default function FloorMap() {
         eyebrow={`Floor map · ${PERIOD_LONG[f.period] ?? f.period}`}
         title={
           <>
-            {notOk} of {scoped.length} machines{f.zone || f.bank ? ` ${scope}` : ""} have a reason besides weak play
+            <GoldNumber className="font-semibold">{String(notOk)}</GoldNumber> of {scoped.length} machines{f.zone || f.bank ? ` ${scope}` : ""} have
+            a reason besides weak play
           </>
         }
         sub="Each mark is a machine. Click a bank to filter every screen, a machine for its case file."
@@ -175,7 +177,7 @@ export default function FloorMap() {
         <svg
           ref={svg}
           viewBox={`0 0 ${W} ${H}`}
-          className="relative block h-[min(68vh,640px)] w-full cursor-grab active:cursor-grabbing"
+          className="relative block h-[min(60vh,560px)] w-full cursor-grab active:cursor-grabbing"
           role="img"
           aria-label="Casino floor with machines colored by verdict"
           onClick={() => setTip(null)}
