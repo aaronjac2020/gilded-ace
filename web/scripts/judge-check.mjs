@@ -210,6 +210,24 @@ try {
       ok,
       `start ${t0} = plan ${rec}; 4th type: "${types}"; combo: "${incompat}"; budget: "${over}"; end ${tEnd}`,
     );
+
+    // Verdict's game-setting EvidenceLink lands on the /method claim anchor.
+    await page.goto(`${url}/`);
+    const gs = page.locator("[data-evidence='claim-game-setting']").first();
+    await gs.waitFor({ timeout: 8000 }).catch(() => {});
+    let cOk = false;
+    let cDetail = "no game-setting evidence link on /";
+    if (await gs.count()) {
+      await gs.click();
+      const anchor = page.locator("#claim-game-setting");
+      await anchor.waitFor({ timeout: 8000 }).catch(() => {});
+      await page.waitForTimeout(800);
+      const n = await page.locator("[id^='claim-']").count();
+      cOk = (await anchor.count()) > 0 && (await anchor.isVisible()) && n >= 12;
+      const u = new URL(page.url());
+      cDetail = `${u.pathname}${u.search}; ${n} claims rendered`;
+    }
+    record("4c", "game-setting EvidenceLink lands on /method claim", cOk, cDetail);
   }
 
   record(9, "no console errors", consoleErrors.length === 0, consoleErrors.slice(0, 3).join(" || ") || "none");

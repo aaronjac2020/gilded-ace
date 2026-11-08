@@ -128,3 +128,11 @@ Resume point for a fresh session: read this file, then `python run.py all`.
 - web/src/lib/budget.ts mirrors `line_cost`/`validate`. The /plan allocator starts at the recommendation (prints $19,500 = plan total) and refuses a 4th type, incompatible combos (targets fill from ranked candidates, e.g. M-1006 moved + replaced) and >$100k. The sensitivity tile shows the value range per line and lists the flips.
 - tests/test_budget.py (7): $3,380 lease, over budget, ≤3 types (A-HOLD exempt), comp-policy + same-machine incompatibility, quantity limit, optimizer, exported plan valid + totals match + optimizer agrees.
 - Judge check 4b added. Local judge: all passed (outputs/judge_m11_local.txt).
+
+## M12 · Claims appendix + /method (2026-11-07) · FEATURE FREEZE
+- pipeline/claims.py: one claim list (17) built from metrics.json, machine_scorecard, players_segments and the web exports → web/public/data/claims.json (export_web, last step) and docs/claims_appendix.md (claim | table/query | result | alternative tested | limitation | dashboard deep link + /method anchor).
+- Claim 1 = approved wording verbatim. Claim 3 (follows-spot) carries the post-hoc 0.5 threshold note and the leave-out-M-1152 slopes 0.77 / 0.52.
+- /method: approved claim hero, verdict decision order, 16 claim tiles; each `id="claim-<id>"` (incl. `claim-game-setting`) with an EvidenceLink to the chart.
+- Fixed while writing: downtime claim had the shift codes decoded wrong (grave, not swing, waits 1.96 h vs 0.87 h); concentration alternative now states within-tier shares (Base 63%, Gold 30%, Platinum 33%) instead of overclaiming.
+- tests/test_claims.py (4): ≥12 complete unique claims, approved text verbatim + notes in the appendix, every link's route + focus anchor exists in the screen source, vocabulary grep. 50 tests pass.
+- Judge check 4c added (Verdict game-setting link → /method#claim-game-setting, ≥12 claims). Local judge: all passed (outputs/judge_m12_local.txt).

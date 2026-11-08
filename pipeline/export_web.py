@@ -14,7 +14,7 @@ from datetime import UTC, datetime
 import numpy as np
 import pandas as pd
 
-from pipeline import budget, comps, demand, downtime, players, verdicts
+from pipeline import budget, claims, comps, demand, downtime, players, verdicts
 from pipeline.config import OUTPUTS, WEB_DATA, cfg, periods
 from pipeline.load import machine_days, table
 
@@ -39,9 +39,7 @@ RATE_COLS = (
     "pct",
     "uplift",
 )
-PENDING = {
-    "claims.json": "M12",
-}
+PENDING: dict[str, str] = {}
 
 
 def _round(col: str, s: pd.Series) -> pd.Series:
@@ -452,6 +450,9 @@ def run() -> dict[str, int]:
     sizes["downtime.json"] = write("downtime.json", downtime_json(full))
     sizes["players_segments.json"] = write("players_segments.json", players_json())
     sizes["comps.json"] = write("comps.json", comps_json())
+    cl = claims.build()  # reads the exports above; keep last
+    (claims.ROOT / "docs" / "claims_appendix.md").write_text(claims.markdown(cl), encoding="utf-8")
+    sizes["claims.json"] = write("claims.json", {"claims": cl, "approved": claims.APPROVED})
     for f, ms in PENDING.items():
         if not (WEB_DATA / f).exists() or json.loads((WEB_DATA / f).read_text(encoding="utf-8")).get("pending"):
             sizes[f] = write(f, {"pending": ms})
