@@ -14,7 +14,7 @@ SCREENS = {
     "/why": ["Why", "ModelLab"],
     "/floor": ["Floor", "FloorMap", "Demand", "Downtime", "ModelLab"],
     "/guests": ["Guests", "Players", "Comps"],
-    "/plan": ["BudgetPlan"],
+    "/plan": ["Plan", "BudgetPlan"],
     "/evidence": ["Evidence", "Methodology", "ModelLab"],
 }
 # Old routes redirect (web/src/components/shell/nav.ts REDIRECTS); focus overrides move single anchors.

@@ -25,7 +25,7 @@ export const REASON: Record<Reason, { label: string; sub?: string; color: string
   downtime: { label: "Often down", color: "#A3434F", short: "Downtime" },
   location: { label: "Quiet spot", color: "#8A5A1E", short: "Location" },
   luck: { label: "Unlucky stretch", color: "#2F6EA3", short: "Luck" },
-  none: { label: "No clear problem", sub: "earned less, but within normal range", color: "#8C817B", short: "None" },
+  none: { label: "No clear problem", sub: "earned less, but within normal range", color: "#6F655F", short: "None" },
 };
 
 /** Ch 2 section anchor each reason chip links to. */

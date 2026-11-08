@@ -1,12 +1,12 @@
 import * as DM from "@radix-ui/react-dropdown-menu";
 import { ArrowRight, Check, ChevronDown, Command as CommandIcon, X } from "lucide-react";
 import type { ReactNode } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { cn, MOD } from "../../lib/cn";
 import { commandStore } from "../../lib/uiStore";
 import { useFilters } from "../../lib/urlState";
 import { Monogram } from "./Monogram";
-import { NAV, nextFor, PERIOD_MENU } from "./nav";
+import { NAV, navFor, nextFor, PERIOD_MENU } from "./nav";
 
 const red = (card: string) => /[♥♦]/.test(card);
 
@@ -20,7 +20,11 @@ export function Stepper() {
   return (
     <header className="sticky top-0 z-30 border-b border-divider bg-bg/95 backdrop-blur-sm" data-testid="stepper">
       <div className="mx-auto flex h-[72px] max-w-[1280px] items-center gap-6 px-6">
-        <Link to={{ pathname: "/", search: qs }} className="focus-ring flex shrink-0 items-center gap-2.5 rounded-md" aria-label="The Gilded Ace, home">
+        <Link
+          to={{ pathname: "/", search: qs }}
+          className="focus-ring flex shrink-0 items-center gap-2.5 rounded-md"
+          aria-label="The Gilded Ace, home"
+        >
           <Monogram size={30} />
           <span className="display hidden text-[17px] text-fg min-[1600px]:inline">The Gilded Ace</span>
         </Link>
@@ -35,7 +39,9 @@ export function Stepper() {
                 data-chapter={n.to}
                 className={cn(
                   "focus-ring group flex h-12 shrink-0 items-center gap-2 rounded-[10px] border px-2.5 transition-[background-color,border-color,transform] duration-hover ease-out",
-                  on ? "border-maroon/40 bg-surface-1 shadow-card" : "border-transparent hover:-translate-y-0.5 hover:border-divider hover:bg-surface-1/60",
+                  on
+                    ? "border-maroon/40 bg-surface-1 shadow-card"
+                    : "border-transparent hover:-translate-y-0.5 hover:border-divider hover:bg-surface-1/60",
                 )}
               >
                 <span
@@ -109,7 +115,10 @@ export function PeriodMenu() {
 /** Active bank/zone filter: "Showing bank B-01 ✕". */
 export function FilterPill() {
   const [f, set] = useFilters();
-  const items = [f.bank && (["bank", f.bank] as const), f.zone && (["zone", f.zone] as const)].filter(Boolean) as (readonly ["bank" | "zone", string])[];
+  const items = [f.bank && (["bank", f.bank] as const), f.zone && (["zone", f.zone] as const)].filter(Boolean) as (readonly [
+    "bank" | "zone",
+    string,
+  ])[];
   if (!items.length) return null;
   return (
     <div className="flex flex-wrap gap-2" data-testid="filter-pill">
@@ -129,33 +138,29 @@ export function FilterPill() {
   );
 }
 
-/**
- * Every chapter's skeleton: eyebrow → headline → sentence → dominant visual → sections → Next.
- * `data-copy` marks what scripts/copy-budget.mjs counts.
- */
-export function Chapter({
+/** Eyebrow ("Chapter 3 · The floor · Jan–Jun 2025") → headline → sentence, with the period menu on chapters 1-4. */
+export function ChapterHeader({
   eyebrow,
   title,
   sentence,
-  visual,
   children,
-  period = true,
-  testId,
 }: {
-  eyebrow: string;
+  eyebrow?: string;
   title: ReactNode;
   sentence?: ReactNode;
-  visual?: ReactNode;
   children?: ReactNode;
-  period?: boolean;
-  testId?: string;
 }) {
   const { pathname } = useLocation();
+  const [params] = useSearchParams();
+  const n = navFor(pathname);
+  const period = params.get("period") ?? "full";
+  const per = PERIOD_MENU.find(([k]) => k === period)?.[1] ?? period;
+  const auto = n ? [n.n ? `Chapter ${n.n}` : null, n.label, n.period ? per : null].filter(Boolean).join(" · ") : "";
   return (
-    <article className="mx-auto max-w-content px-6 pb-24 pt-10" data-testid={testId} data-chapter-page={pathname}>
-      <header className="flex flex-wrap items-start justify-between gap-6">
+    <header>
+      <div className="flex flex-wrap items-start justify-between gap-6">
         <div className="min-w-0 max-w-[820px]">
-          <p className="chapter-eyebrow">{eyebrow}</p>
+          <p className="chapter-eyebrow">{eyebrow ?? auto}</p>
           <h1 className="display mt-3 text-[48px] leading-[1.05] text-fg" data-copy="headline" data-testid="assertion-title">
             {title}
           </h1>
@@ -165,13 +170,42 @@ export function Chapter({
             </p>
           )}
         </div>
-        {period && (
+        {n?.period && (
           <div className="flex flex-col items-end gap-3 pt-1">
             <PeriodMenu />
             <FilterPill />
           </div>
         )}
-      </header>
+      </div>
+      {children}
+    </header>
+  );
+}
+
+/**
+ * Every chapter's skeleton: eyebrow → headline → sentence → dominant visual → sections → Next.
+ * Without `title`, the first embedded screen supplies the header (see ChapterPart in ui/hero-band).
+ * `data-copy` marks what scripts/copy-budget.mjs counts.
+ */
+export function Chapter({
+  eyebrow,
+  title,
+  sentence,
+  visual,
+  children,
+  testId,
+}: {
+  eyebrow?: string;
+  title?: ReactNode;
+  sentence?: ReactNode;
+  visual?: ReactNode;
+  children?: ReactNode;
+  testId?: string;
+}) {
+  const { pathname } = useLocation();
+  return (
+    <article className="mx-auto max-w-content px-6 pb-24 pt-10" data-testid={testId} data-chapter-page={pathname}>
+      {title && <ChapterHeader eyebrow={eyebrow} title={title} sentence={sentence} />}
       {visual && <div className="mt-8">{visual}</div>}
       {children}
       <NextChapter />
@@ -179,7 +213,45 @@ export function Chapter({
   );
 }
 
-/** Section: title (≤6 words) + "Answers Q2" tag + one sentence (≤15 words). */
+/** Section heading block: title (≤6 words) + "Answers Q2" tag + one sentence (≤15 words). */
+export function SectionHeader({
+  id,
+  title,
+  answers,
+  sentence,
+  aside,
+  children,
+  className,
+}: {
+  id?: string;
+  title: ReactNode;
+  answers?: string;
+  sentence?: ReactNode;
+  aside?: ReactNode;
+  children?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <header id={id} className={cn("mt-24 scroll-mt-28", className)}>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="max-w-[760px]">
+          <h2 className="display flex flex-wrap items-baseline gap-x-3 text-[28px] leading-tight text-fg">
+            <span data-copy="section-title">{title}</span>
+            {answers && <span className="answers-tag">Answers {answers}</span>}
+          </h2>
+          {sentence && (
+            <p className="mt-2 text-base text-fg-muted" data-copy="section-sentence">
+              {sentence}
+            </p>
+          )}
+        </div>
+        {aside}
+      </div>
+      {children && <div className="mt-8">{children}</div>}
+    </header>
+  );
+}
+
 export function Section({
   id,
   title,
@@ -199,20 +271,7 @@ export function Section({
 }) {
   return (
     <section id={id} className={cn("mt-24 scroll-mt-28", className)} aria-label={typeof title === "string" ? title : undefined}>
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-        <div className="max-w-[720px]">
-          <h2 className="display flex flex-wrap items-baseline gap-x-3 text-[28px] leading-tight text-fg">
-            <span data-copy="section-title">{title}</span>
-            {answers && <span className="answers-tag">Answers {answers}</span>}
-          </h2>
-          {sentence && (
-            <p className="mt-2 text-base text-fg-muted" data-copy="section-sentence">
-              {sentence}
-            </p>
-          )}
-        </div>
-        {aside}
-      </div>
+      <SectionHeader className="mb-8 mt-0" title={title} answers={answers} sentence={sentence} aside={aside} />
       {children}
     </section>
   );
@@ -235,12 +294,9 @@ export function NextChapter() {
         <span className={cn("serif text-xl font-semibold", red(n.card) ? "text-suit-red" : "text-ink")} aria-hidden>
           {n.card}
         </span>
-        <span className="text-base font-semibold text-fg">
-          Next: {n.label}
-        </span>
+        <span className="text-base font-semibold text-fg">Next: {n.label}</span>
         <ArrowRight size={18} className="text-maroon transition-transform duration-hover group-hover:translate-x-0.5" aria-hidden />
       </Link>
     </div>
   );
 }
-

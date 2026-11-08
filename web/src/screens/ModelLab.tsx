@@ -135,7 +135,8 @@ const LEAKAGE = [
   "Machine location joined by date from placements, not a fixed snapshot",
 ];
 
-export default function ModelLab() {
+/** `part`: "why" = do weak machines stay weak (Ch 2); "evidence" = how the models were checked. Omitted = everything. */
+export default function ModelLab({ part }: { part?: "why" | "evidence" } = {}) {
   const { data, error } = useJson<Lab>("model_lab.json");
   if (error) return <ErrorState what="model results" error={error} />;
   if (!data) return <ScreenSkeleton />;
@@ -145,132 +146,146 @@ export default function ModelLab() {
   const p = data.persistence;
   const ch = data.model1_change;
   const imp = m1 ? Object.entries(m1.importance).slice(0, 10).reverse() : [];
+  const why = part !== "evidence";
+  const ev = part !== "why";
 
   return (
     <div>
-      <HeroBand
-        className="-mx-6"
-        eyebrow="Model lab · validation"
-        title={
-          m1 && p
-            ? `Spot + game model cuts error ${fmt.pct(m1.improvement_pct, 0)}; weak machines stay weak`
-            : `A weekday + event forecast cuts daily coin-in error ${fmt.pct(m.improvement_pct, 0)} vs. a flat average`
-        }
-        sub="Trained Jan–Mar, tuned on April, scored on unseen May–Jun days against a simple baseline."
-      >
-        <KpiStrip testId="model-kpis">
-          {m1 && (
+      {ev && (
+        <HeroBand
+          className="-mx-6"
+          eyebrow="Model lab · validation"
+          title={
+            m1 && p
+              ? `Spot + game model cuts error ${fmt.pct(m1.improvement_pct, 0)}; weak machines stay weak`
+              : `A weekday + event forecast cuts daily coin-in error ${fmt.pct(m.improvement_pct, 0)} vs. a flat average`
+          }
+          sub="Trained Jan–Mar, tuned on April, scored on unseen May–Jun days against a simple baseline."
+        >
+          <KpiStrip testId="model-kpis">
+            {m1 && (
+              <Kpi
+                label="Model 1 MAE / machine-day"
+                value={<Num value={m1.mae_model} kind="usd" />}
+                note={`Baseline ${fmt.usd(m1.mae_baseline)} · ${fmt.pct(m1.improvement_pct)} lower`}
+              />
+            )}
+            {m1 && (
+              <Kpi
+                label="Model 1 WMAPE"
+                value={<Num value={m1.wmape_model} kind="pct" />}
+                note={`Baseline ${fmt.pct(m1.wmape_baseline)}`}
+              />
+            )}
+            {p && (
+              <Kpi
+                focal
+                label="Rank persistence, Spearman"
+                value={<Num value={p.spearman} kind="dec" />}
+                note={`90% CI ${p.spearman_lo.toFixed(2)}–${p.spearman_hi.toFixed(2)}, ${p.n} machines`}
+              />
+            )}
             <Kpi
-              label="Model 1 MAE / machine-day"
-              value={<Num value={m1.mae_model} kind="usd" />}
-              note={`Baseline ${fmt.usd(m1.mae_baseline)} · ${fmt.pct(m1.improvement_pct)} lower`}
+              label="Model 2 MAE / day"
+              value={<Num value={m.mae_model} kind="usdCompact" />}
+              note={`Baseline ${fmt.usdK(m.mae_baseline)} · ${fmt.pct(m.improvement_pct)} lower`}
             />
-          )}
-          {m1 && (
-            <Kpi label="Model 1 WMAPE" value={<Num value={m1.wmape_model} kind="pct" />} note={`Baseline ${fmt.pct(m1.wmape_baseline)}`} />
-          )}
-          {p && (
-            <Kpi
-              focal
-              label="Rank persistence, Spearman"
-              value={<Num value={p.spearman} kind="dec" />}
-              note={`90% CI ${p.spearman_lo.toFixed(2)}–${p.spearman_hi.toFixed(2)}, ${p.n} machines`}
-            />
-          )}
-          <Kpi
-            label="Model 2 MAE / day"
-            value={<Num value={m.mae_model} kind="usdCompact" />}
-            note={`Baseline ${fmt.usdK(m.mae_baseline)} · ${fmt.pct(m.improvement_pct)} lower`}
-          />
-        </KpiStrip>
-      </HeroBand>
+          </KpiStrip>
+        </HeroBand>
+      )}
 
-      <div className="mt-16">
-        <TimelineSplit split={data.split} />
-      </div>
+      {ev && (
+        <div className="mt-16">
+          <TimelineSplit split={data.split} />
+        </div>
+      )}
 
       {m1 && (
         <div className="mt-16 grid grid-cols-12 gap-8">
-          <Tile
-            className="col-span-12 lg:col-span-6"
-            label="Model 1"
-            title="Expected coin-in per available hour"
-            sub={`LightGBM on location, game and calendar. No machine ID, theme or lags. ${m1.best_iteration} rounds chosen on April.`}
-            testId="mae-table-model1"
-            footer={<p className="text-2xs text-fg-subtle">Test: {m1.n_test.toLocaleString()} machine-days, May–Jun</p>}
-          >
-            <DataTable
-              t={{
-                columns: ["Per machine-day", "MAE", "WMAPE"],
-                rows: [
-                  ["Model 1", fmt.usd(m1.mae_model), fmt.pct(m1.wmape_model)],
-                  ["Baseline (zone × weekday)", fmt.usd(m1.mae_baseline), fmt.pct(m1.wmape_baseline)],
-                ],
-              }}
-            />
-            <p className="mt-3 text-xs text-fg-muted">
-              Runs {fmt.usd(m1.bias_model)}/machine-day high in May–Jun, the same post-April drift Model 2 sees. Scorecard expectations use
-              out-of-fold predictions, so a machine never sets its own baseline.
-            </p>
-          </Tile>
-
-          <Tile
-            id="importance"
-            className="col-span-12 lg:col-span-6"
-            label="Model 1"
-            title="What sets expected play"
-            sub="Share of LightGBM gain, top 10 features"
-            table={{
-              columns: ["Feature", "Gain share"],
-              rows: imp
-                .slice()
-                .reverse()
-                .map(([k, v]) => [FEATURE_LABELS[k] ?? k, fmt.pct(v)]),
-            }}
-          >
-            <Suspense fallback={<Skeleton className="h-[260px] w-full" />}>
-              <Chart
-                height={260}
-                label="Bar chart of Model 1 feature importance"
-                option={{
-                  grid: { left: 4, right: 40, top: 0, bottom: 0, containLabel: true },
-                  xAxis: { type: "value", show: false },
-                  yAxis: { type: "category", data: imp.map(([k]) => FEATURE_LABELS[k] ?? k), axisLabel: { color: colors["fg-muted"] } },
-                  tooltip: {
-                    trigger: "item",
-                    formatter: (q: unknown) => {
-                      const d = q as { name: string; value: number };
-                      return tipHtml(d.name, [["Gain share", fmt.pct(d.value)]]);
-                    },
-                  },
-                  series: [
-                    {
-                      type: "bar",
-                      barWidth: 10,
-                      data: imp.map(([, v], i) => ({
-                        value: v,
-                        itemStyle: { color: i === imp.length - 1 ? colors.gold : colors["fg-subtle"], borderRadius: [0, 3, 3, 0] },
-                      })),
-                      label: {
-                        show: true,
-                        position: "right",
-                        color: colors["fg-muted"],
-                        fontSize: 11,
-                        formatter: (q: { value?: unknown }) => fmt.pct(Number(q.value), 0),
-                      },
-                    },
+          {ev && (
+            <Tile
+              className="col-span-12 lg:col-span-6"
+              label="Model 1"
+              title="Expected coin-in per available hour"
+              sub={`LightGBM on location, game and calendar. No machine ID, theme or lags. ${m1.best_iteration} rounds chosen on April.`}
+              testId="mae-table-model1"
+              footer={<p className="text-2xs text-fg-subtle">Test: {m1.n_test.toLocaleString()} machine-days, May–Jun</p>}
+            >
+              <DataTable
+                t={{
+                  columns: ["Per machine-day", "MAE", "WMAPE"],
+                  rows: [
+                    ["Model 1", fmt.usd(m1.mae_model), fmt.pct(m1.wmape_model)],
+                    ["Baseline (zone × weekday)", fmt.usd(m1.mae_baseline), fmt.pct(m1.wmape_baseline)],
                   ],
                 }}
               />
-            </Suspense>
-          </Tile>
+              <p className="mt-3 text-xs text-fg-muted">
+                Runs {fmt.usd(m1.bias_model)}/machine-day high in May–Jun, the same post-April drift Model 2 sees. Scorecard expectations
+                use out-of-fold predictions, so a machine never sets its own baseline.
+              </p>
+            </Tile>
+          )}
 
-          {p && (
+          {ev && (
+            <Tile
+              id="importance"
+              className="col-span-12 lg:col-span-6"
+              label="Model 1"
+              title="What sets expected play"
+              sub="Share of LightGBM gain, top 10 features"
+              table={{
+                columns: ["Feature", "Gain share"],
+                rows: imp
+                  .slice()
+                  .reverse()
+                  .map(([k, v]) => [FEATURE_LABELS[k] ?? k, fmt.pct(v)]),
+              }}
+            >
+              <Suspense fallback={<Skeleton className="h-[260px] w-full" />}>
+                <Chart
+                  height={260}
+                  label="Bar chart of Model 1 feature importance"
+                  option={{
+                    grid: { left: 4, right: 40, top: 0, bottom: 0, containLabel: true },
+                    xAxis: { type: "value", show: false },
+                    yAxis: { type: "category", data: imp.map(([k]) => FEATURE_LABELS[k] ?? k), axisLabel: { color: colors["fg-muted"] } },
+                    tooltip: {
+                      trigger: "item",
+                      formatter: (q: unknown) => {
+                        const d = q as { name: string; value: number };
+                        return tipHtml(d.name, [["Gain share", fmt.pct(d.value)]]);
+                      },
+                    },
+                    series: [
+                      {
+                        type: "bar",
+                        barWidth: 10,
+                        data: imp.map(([, v], i) => ({
+                          value: v,
+                          itemStyle: { color: i === imp.length - 1 ? colors.gold : colors["fg-subtle"], borderRadius: [0, 3, 3, 0] },
+                        })),
+                        label: {
+                          show: true,
+                          position: "right",
+                          color: colors["fg-muted"],
+                          fontSize: 11,
+                          formatter: (q: { value?: unknown }) => fmt.pct(Number(q.value), 0),
+                        },
+                      },
+                    ],
+                  }}
+                />
+              </Suspense>
+            </Tile>
+          )}
+
+          {why && p && (
             <Tile
               id="persistence"
               className="col-span-12"
               label="Stability"
-              title="Do weak machines stay weak?"
+              title="Same machines, two windows"
               sub={`Shrunk effect, Jan–Apr vs. May–Jun. ${p.n} machines with 14+ days in each window.`}
               testId="persistence"
             >
@@ -308,22 +323,29 @@ export default function ModelLab() {
         </div>
       )}
 
-      {data.persistence_compare && (
+      {why && data.persistence_compare && (
         <RankingCompare c={data.persistence_compare} moved={data.alternatives?.moved} test={data.move_test_pick} />
       )}
 
-      <Forecast m={m} h={h} />
+      {!part && <Forecast m={m} h={h} />}
 
-      <Tile className="mt-6" label="Guardrails" title="Leakage checklist" sub="Each line is an automated test in tests/test_no_leakage.py">
-        <ul className="grid gap-x-8 md:grid-cols-2">
-          {LEAKAGE.map((t) => (
-            <li key={t} className="flex h-row items-center gap-2.5 border-b border-divider text-sm text-fg-muted">
-              <span className="size-2 shrink-0 rotate-45 bg-gold" role="img" aria-label="passes" />
-              {t}
-            </li>
-          ))}
-        </ul>
-      </Tile>
+      {ev && (
+        <Tile
+          className="mt-6"
+          label="Guardrails"
+          title="Leakage checklist"
+          sub="Each line is an automated test in tests/test_no_leakage.py"
+        >
+          <ul className="grid gap-x-8 md:grid-cols-2">
+            {LEAKAGE.map((t) => (
+              <li key={t} className="flex h-row items-center gap-2.5 border-b border-divider text-sm text-fg-muted">
+                <span className="size-2 shrink-0 rotate-45 bg-gold" role="img" aria-label="passes" />
+                {t}
+              </li>
+            ))}
+          </ul>
+        </Tile>
+      )}
     </div>
   );
 }
@@ -359,7 +381,7 @@ export function Forecast({ m, h }: { m: Lab["model2"]; h: H[] }) {
                   );
                 },
               },
-              xAxis: { type: "time", axisLabel: { formatter: "{MMM} {d}" } },
+              xAxis: { type: "time", axisLabel: { formatter: "{MMM} {d}", hideOverlap: true }, minInterval: 7 * 864e5 },
               yAxis: { type: "value", axisLabel: { formatter: (v: number) => fmt.usdK(v) }, scale: true },
               series: [
                 {
@@ -456,7 +478,7 @@ function RankingCompare({ c, moved, test }: { c: NonNullable<Lab["persistence_co
       testId="ranking-compare"
       className="mt-6 outline outline-1 outline-offset-[5px] outline-gold/35 ring-1 ring-gold/60"
       label="Manager vs. ours"
-      title={`Our ranking predicts play vs. the spot (ρ ${e.ours.spearman.toFixed(2)} vs. ${e.manager.spearman.toFixed(2)}); the manager's predicts house win better (ρ ${hw.manager.spearman.toFixed(2)} vs. ${hw.ours.spearman.toFixed(2)})`}
+      title={`Our ranking predicts play vs. the spot (ρ ${e.ours.spearman.toFixed(2)} vs. ${e.manager.spearman.toFixed(2)}); the manager's predicts next house win (ρ ${hw.manager.spearman.toFixed(2)} vs. ${hw.ours.spearman.toFixed(2)}) only because house win follows the spot`}
       sub={
         th
           ? `The manager’s ranking is consistent, but it tracks the spot, not the machine. Jan–Apr house win follows the spot’s expected play (ρ ${th.spot.toFixed(2)}), not machine effect (ρ ${th.effect.toFixed(2)}). Our ranking is the one that predicts which machines underperform their spot (ρ ${e.ours.spearman.toFixed(2)} vs. ${e.manager.spearman.toFixed(2)}).`

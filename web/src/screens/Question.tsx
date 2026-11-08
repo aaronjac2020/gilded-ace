@@ -1,4 +1,4 @@
-import { ArrowRight, LayoutGrid, List, PlayCircle, RotateCcw } from "lucide-react";
+import { LayoutGrid, List, PlayCircle, RotateCcw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Chapter, Section } from "../components/shell/Chapter";
@@ -52,26 +52,32 @@ export default function Question() {
       }
       sentence={
         <>
-          The manager wants to cut the {t.n} lowest earners. Only {t.weak} {t.weak === 1 ? "is" : "are"} truly weak. {supportSentence(ids, flags)}
+          Only {t.weak} {t.weak === 1 ? "is" : "are"} truly weak. {supportSentence(ids, flags)}
         </>
       }
       visual={
         <>
-          <ReasonChips counts={t.counts} />
+          <ReasonChips counts={t.counts} setting={t.setting} />
           <Deal rows={mgr} flags={flags} ours={overlap} low={rules.low_hold_design} onOpen={openRow} />
         </>
       }
     >
-      <p className="mt-4 text-[13px] text-fg-muted">Each card shows its main reason. A &ldquo;+&rdquo; line means a second reason also applies.</p>
+      <p className="mt-4 text-[13px] text-fg-muted">
+        Each card shows its main reason. A &ldquo;+&rdquo; line means a second reason also applies.
+      </p>
 
       {t.setting > 0 && (
         <p id="game-setting" className="mt-6 scroll-mt-28 text-base text-fg-muted" data-testid="game-setting">
           <span className="font-semibold" style={{ color: REASON.setting.color }}>
             {t.setting} of {t.n}
           </span>{" "}
-          are set to pay back more ({fmt.pct(rules.low_hold_design, 0)} hold vs a {fmt.pct(rules.floor_median_hold, 0)} floor median). That is the
-          game&rsquo;s design.{" "}
-          <Link to="/evidence#claim-game-setting" className="focus-ring rounded-sm font-semibold text-maroon underline-offset-4 hover:underline" data-evidence>
+          are set to pay back more ({fmt.pct(rules.low_hold_design, 0)} hold vs a {fmt.pct(rules.floor_median_hold, 0)} floor median). That
+          is the game&rsquo;s design.{" "}
+          <Link
+            to="/evidence#claim-game-setting"
+            className="focus-ring rounded-sm font-semibold text-maroon underline-offset-4 hover:underline"
+            data-evidence
+          >
             Evidence
           </Link>
         </p>
@@ -81,7 +87,7 @@ export default function Question() {
         id="ours"
         title="Our list instead"
         answers="Q1"
-        sentence="Machines that draw less play than their spot should, in our model."
+        sentence="The ten farthest below their spot's expected play; milder truly weak cases miss the cut."
         aside={
           <Link to={{ pathname: "/why", hash: "ours" }} className="focus-ring rounded-sm text-sm font-semibold text-maroon hover:underline">
             How we picked them
@@ -99,7 +105,9 @@ export default function Question() {
               >
                 <span className="flex items-center justify-between gap-2">
                   <span className="font-mono text-[13px] font-semibold text-fg">{r.machine_id}</span>
-                  {overlap.has(r.machine_id) && <span className="rounded-full bg-gold/15 px-2 text-[13px] text-gold-soft">also on theirs</span>}
+                  {overlap.has(r.machine_id) && (
+                    <span className="rounded-full bg-gold/15 px-2 text-[13px] text-gold-soft">also on theirs</span>
+                  )}
                 </span>
                 <span className="text-[15px] leading-snug text-fg">
                   draws <span className="font-semibold">{fmt.pct(1 - r.machine_effect_shrunk, 0)} less play</span> than its spot should
@@ -112,9 +120,6 @@ export default function Question() {
       </Section>
 
       <div className="mt-16 flex flex-wrap gap-3">
-        <Link to={{ pathname: "/why" }} className={buttonVariants({ variant: "primary", size: "lg" })}>
-          See why they&rsquo;re low <ArrowRight size={18} aria-hidden />
-        </Link>
         <button type="button" className={buttonVariants({ variant: "secondary", size: "lg" })} onClick={() => tourStore.set(0)}>
           <PlayCircle size={18} aria-hidden /> Take the 60-second tour
         </button>
@@ -124,7 +129,7 @@ export default function Question() {
 }
 
 /** The key above the table: main reasons grouped so "not the problem" + "truly weak" visibly add up to the list. */
-function ReasonChips({ counts }: { counts: Record<string, number> }) {
+function ReasonChips({ counts, setting }: { counts: Record<string, number>; setting: number }) {
   const chip = (k: (typeof REASON_ORDER)[number]) => {
     const Icon = REASON_ICON[k];
     return (
@@ -160,6 +165,10 @@ function ReasonChips({ counts }: { counts: Record<string, number> }) {
           </ul>
         </div>
       )}
+      <p className="basis-full text-[13px] text-fg-muted" data-testid="chips-note">
+        Each machine counted once, by its main reason.
+        {setting > counts.setting && ` ${setting} in all are set to pay back more.`}
+      </p>
     </div>
   );
 }
@@ -191,7 +200,10 @@ function Deal({
   return (
     <div className="rail px-8 pb-7 pt-5 md:px-12" data-testid="reveal-table">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-[15px] font-semibold text-card/90">The manager&rsquo;s cut list · lowest {n} by house win <span className="font-normal text-card/70">(what each kept after paying out)</span></p>
+        <p className="text-[15px] font-semibold text-card/90">
+          The manager&rsquo;s cut list · lowest {n} by house win{" "}
+          <span className="font-normal text-card/70">(what each kept after paying out)</span>
+        </p>
         <div className="flex items-center gap-2">
           {view === "cards" && (
             <button
@@ -227,7 +239,11 @@ function Deal({
       </div>
 
       {view === "list" ? (
-        <ol className="divide-y divide-divider overflow-hidden rounded-[10px] bg-card" data-testid="manager-list" aria-label="Manager's bottom 10">
+        <ol
+          className="divide-y divide-divider overflow-hidden rounded-[10px] bg-card"
+          data-testid="manager-list"
+          aria-label="Manager's bottom 10"
+        >
           {rows.map((r) => (
             <li key={r.machine_id}>
               <button

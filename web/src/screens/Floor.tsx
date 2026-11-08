@@ -1,16 +1,28 @@
-import FloorMap from "./FloorMap";
+import { Chapter } from "../components/shell/Chapter";
+import { ChapterPart } from "../components/ui/hero-band";
 import Demand from "./Demand";
 import Downtime from "./Downtime";
+import FloorMap from "./FloorMap";
 import { ForecastSection } from "./ModelLab";
 
-/** Round-1 fallback: the earlier screens, stacked in the new theme until this chapter is rebuilt. */
+/** Chapter 3 · The floor: when guests play (lead), where, what's coming, and what breakdowns cost. */
 export default function Floor() {
   return (
-    <div className="mx-auto max-w-content space-y-24 px-6 pb-24 pt-10">
-      <FloorMap />
-      <ForecastSection />
-      <Demand />
-      <Downtime />
-    </div>
+    <Chapter testId="chapter-floor">
+      <ChapterPart lead>
+        <Demand />
+      </ChapterPart>
+      <ChapterPart title="Where the play is" answers="Q2">
+        <FloorMap />
+      </ChapterPart>
+      <ChapterPart title="What the next weeks bring" answers="Q2">
+        <section className="mt-24">
+          <ForecastSection />
+        </section>
+      </ChapterPart>
+      <ChapterPart title="What breakdowns cost" answers="Q3">
+        <Downtime />
+      </ChapterPart>
+    </Chapter>
   );
 }

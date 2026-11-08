@@ -51,7 +51,7 @@ export default function Methodology() {
       <section id={`claim-${lead.id}`} className="mt-16 scroll-mt-20" aria-label="Main claim">
         <Tile hero label="Claim 01 · the main finding" title={lead.title} footer={<Evidence href={lead.link} />}>
           <blockquote
-            className="max-w-4xl border-l-2 border-gold pl-6 font-display text-2xl leading-snug text-ivory"
+            className="max-w-4xl border-l-2 border-gold pl-6 font-display text-xl leading-snug text-fg"
             data-testid="approved-claim"
           >
             {data.approved}
@@ -62,11 +62,11 @@ export default function Methodology() {
 
       <DecoRule className="my-14" />
 
-      <div className="grid grid-cols-12 gap-8">
+      <div className="grid grid-cols-12 items-start gap-8">
         <Tile
           id="decision-order"
           className="col-span-12 scroll-mt-20 lg:col-span-4"
-          label="Verdicts"
+          label="Pipeline verdicts"
           title="Decision order: first match wins"
         >
           <ol className="space-y-3 text-sm">
@@ -79,6 +79,13 @@ export default function Methodology() {
               </li>
             ))}
           </ol>
+          <p className="mt-4 text-sm text-fg-muted">
+            Floor-wide verdicts from the pipeline. The story&rsquo;s reasons add the payback setting and check truly weak first; see{" "}
+            <a href="#method" className="text-maroon hover:underline">
+              how each machine gets one reason
+            </a>
+            .
+          </p>
           <p className="mt-4 text-xs text-fg-subtle">
             Machine effect = coin-in per available hour ÷ what the spot and game predict, shrunk toward 1 by its bootstrap error. Intervals
             are 90%, from 2,000 bootstrap resamples.
@@ -107,21 +114,36 @@ export default function Methodology() {
   );
 }
 
+/** Pipeline counts arrive as a Python dict ("{'truly_weak': 60}"); show them as words. */
+const readable = (s: string) =>
+  s.replace(/\{([^{}]*)\}/g, (_, body: string) =>
+    body.replace(/'(\w+)': (\d+)/g, (_m, k: string, n: string) => `${k.replace("_hold", "").replace("_", " ")} ${n}`),
+  );
+
 function ClaimFacts({ c }: { c: Claim }) {
   const rows: [string, string][] = [
-    ["Result", c.result],
+    ["Result", readable(c.result)],
     ["Alternative tested", c.alternative],
     ["Limitation", c.limitation],
     ["Source", c.source],
   ];
   return (
-    <dl className="mt-5 space-y-3 text-xs">
-      {rows.map(([k, v]) => (
-        <div key={k}>
-          <dt className="eyebrow">{k}</dt>
-          <dd className={k === "Source" ? "mono mt-1 text-2xs text-fg-subtle" : "mt-1 text-fg-muted"}>{v}</dd>
-        </div>
-      ))}
+    <dl className="mt-5 max-w-[720px] space-y-3 text-[15px]">
+      {rows.map(([k, v]) =>
+        k === "Source" ? (
+          <div key={k}>
+            <details>
+              <summary className="eyebrow cursor-pointer">Source query</summary>
+              <p className="mono mt-1 text-[13px] text-fg-muted">{v}</p>
+            </details>
+          </div>
+        ) : (
+          <div key={k}>
+            <dt className="eyebrow">{k}</dt>
+            <dd className="mt-1 text-fg">{v}</dd>
+          </div>
+        ),
+      )}
     </dl>
   );
 }

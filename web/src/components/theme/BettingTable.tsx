@@ -40,7 +40,7 @@ export function BettingTable({
   const [active, setActive] = useState<string | null>(null);
   const spots = [
     ...bets.map((b, i) => ({ ...b, tone: TONES[i % TONES.length] })),
-    { id: "held", name: "Held", cost: held, tone: "lacquer" as ChipTone },
+    { id: "held", name: "Kept in reserve", cost: held, tone: "lacquer" as ChipTone },
   ];
   const cur = spots.find((s) => s.id === active) ?? null;
   const spend = bets.reduce((a, b) => a + b.cost, 0);
@@ -51,7 +51,7 @@ export function BettingTable({
       <DecoCorner at="tr" />
       <DecoCorner at="bl" />
       <DecoCorner at="br" />
-      <p className="label-sc px-2 text-gold-soft/80">The bets · {fmt.usdK(spend + held)} on the table</p>
+      <p className="label-sc px-2 text-[#E3B36A]">The bets · {fmt.usdK(spend + held)} on the table</p>
       <ul className="mt-6 flex flex-wrap items-start justify-around gap-x-6 gap-y-8 px-2" aria-label="Plan spend by action">
         {spots.map((s, i) => {
           const n = Math.max(1, Math.round(s.cost / PER_CHIP));
@@ -86,30 +86,30 @@ export function BettingTable({
                 </m.span>
               </button>
               <p className="mt-1 flex min-h-[60px] items-start justify-center text-center text-sm leading-5 text-ivory">{s.name}</p>
-              <p className="mono text-xs text-gold-soft">{fmt.usdK(s.cost)}</p>
+              <p className="mono text-xs text-[#E3B36A]">{fmt.usdK(s.cost)}</p>
             </li>
           );
         })}
       </ul>
-      <div className="mt-6 min-h-[44px] border-t border-gold/20 px-2 pt-4 text-xs text-fg-muted" aria-live="polite">
+      <div className="mt-6 min-h-[44px] border-t border-gold/20 px-2 pt-4 text-xs text-[#E9DCCB]" aria-live="polite">
         {cur && cur.id !== "held" && "quantity" in cur ? (
           <p>
-            <span className="text-ivory">{cur.name}</span> · qty <span className="mono text-fg">{cur.quantity}</span> · {cur.targets} ·
-            expected theo{" "}
-            <span className="mono text-fg">
+            <span className="text-ivory">{cur.name}</span> · qty <span className="mono text-ivory">{cur.quantity}</span> · {cur.targets} ·
+            expected added theo{" "}
+            <span className="mono text-ivory">
               {fmt.usdK(cur.lo)}–{fmt.usdK(cur.hi)}
             </span>{" "}
             (mid {fmt.usdK(cur.mid)}) · <span className="mono">{formula}</span>
           </p>
         ) : cur ? (
           <p>
-            <span className="text-ivory">Held</span> · {fmt.usdK(cur.cost)} returned unspent. Keeping budget is a valid call when evidence
+            <span className="text-ivory">Kept in reserve</span> · {fmt.usdK(cur.cost)} not spent. Keeping budget is a valid call when evidence
             is thin.
           </p>
         ) : (
           <p>
-            Spend <span className="mono text-ivory">{fmt.usdK(spend)}</span> · held{" "}
-            <span className="mono text-ivory">{fmt.usdK(held)}</span> · expected theo{" "}
+            Spend <span className="mono text-ivory">{fmt.usdK(spend)}</span> · kept{" "}
+            <span className="mono text-ivory">{fmt.usdK(held)}</span> · expected added theo{" "}
             <span className="mono text-ivory">{fmt.usdK(total.mid)}</span> ({fmt.usdK(total.lo)}–{fmt.usdK(total.hi)}). Hover a stack for
             its math.
           </p>

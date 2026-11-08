@@ -95,10 +95,8 @@ export default function Downtime() {
         eyebrow={`Downtime · ${label}`}
         title={
           <>
-            Downtime cost {scope === "the floor" ? "the floor" : scope} {fmt.usdK(lost)} of theo in {label}
-            {g.n > 0 && dayish > 0 && g.wait / dayish >= 1.3
-              ? `; grave-shift faults wait ${(g.wait / dayish).toFixed(1)}× longer for a tech`
-              : ""}
+            Downtime cost {scope === "the floor" ? "the floor" : scope} {fmt.usdK(lost)} of theo
+            {g.n > 0 && dayish > 0 && g.wait / dayish >= 1.3 ? `; grave-shift faults wait ${(g.wait / dayish).toFixed(1)}× longer` : ""}
           </>
         }
         sub={`Range ${fmt.usdK(lo)}–${fmt.usdK(hi)}: ${fmt.int(unavail)} unavailable machine-hours priced at each machine's own same-weekday play. ${fmt.pct(lost / (theo + lost))} of the theo the floor could have earned.`}
@@ -203,7 +201,7 @@ export default function Downtime() {
                     <div className="absolute inset-y-0 left-0 bg-verdict-downtime" style={{ width: `${(x.wait / max) * 100}%` }} />
                   </div>
                   <p className="mono text-right text-xs text-fg-muted">
-                    <span className="text-ivory">{x.wait.toFixed(1)}</span> + {(x.down - x.wait).toFixed(1)} h
+                    <span className="text-fg">{x.wait.toFixed(1)}</span> + {(x.down - x.wait).toFixed(1)} h
                     <span className="block text-2xs text-fg-subtle">
                       {x.actual.toFixed(1)} tech{x.actual >= 1.5 ? "s" : ""} on shift
                     </span>

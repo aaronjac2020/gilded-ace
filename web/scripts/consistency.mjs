@@ -37,7 +37,7 @@ for (const period of Object.keys(meta.periods)) {
 }
 
 if (process.argv.includes("--dom")) {
-  const url = process.argv[process.argv.indexOf("--url") + 1] ?? "http://localhost:4173";
+  const url = process.argv.includes("--url") ? process.argv[process.argv.indexOf("--url") + 1] : "http://localhost:4173";
   const { chromium } = await import("playwright");
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });

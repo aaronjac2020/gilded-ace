@@ -1,9 +1,9 @@
 import { Command } from "cmdk";
-import { CalendarRange, Compass, Keyboard, Link2, Search, X } from "lucide-react";
+import { CalendarRange, Compass, FileCheck2, Keyboard, Link2, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MOD, store } from "../../lib/cn";
-import { loadRows, type ScoreRow } from "../../lib/data";
+import { load, loadRows, type ScoreRow } from "../../lib/data";
 import { commandStore, shortcutsStore, tourStore, useCommandOpen } from "../../lib/uiStore";
 import { useFilters } from "../../lib/urlState";
 import { Keys } from "../ui/kbd";
@@ -17,7 +17,9 @@ const item =
   "flex h-9 cursor-default select-none items-center gap-2.5 rounded-sm px-2 text-sm text-fg-muted data-[selected=true]:bg-surface-2 data-[selected=true]:text-fg";
 const group = "[&_[cmdk-group-heading]]:eyebrow [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:pt-3";
 
-/** ⌘K: screens, machines, periods, actions. Machine IDs are mono; each item shows its shortcut. */
+type Claim = { id: string; title: string; claim: string };
+
+/** ⌘K: chapters, claims, machines, periods, actions. Machine IDs are mono; each item shows its shortcut. */
 export function CommandMenu() {
   const open = useCommandOpen();
   const nav = useNavigate();
@@ -25,10 +27,15 @@ export function CommandMenu() {
   const [, setF] = useFilters();
   const [machines, setMachines] = useState<ScoreRow[]>([]);
   const [recent, setRecent] = useState<string[]>([]);
+  const [claims, setClaims] = useState<Claim[]>([]);
 
   useEffect(() => {
     if (!open) return;
     loadRows<ScoreRow>("scorecard_full.json").then(setMachines, () => {});
+    load<{ claims: Claim[] }>("claims.json").then(
+      (c) => setClaims(c.claims),
+      () => {},
+    );
     try {
       setRecent(JSON.parse(store.get(RECENT) ?? "[]"));
     } catch {
@@ -53,6 +60,13 @@ export function CommandMenu() {
     nav({ pathname: "/floor", search: keep.toString() });
     done(id);
   };
+  const openClaim = (c: Claim) => {
+    const keep = new URLSearchParams(search);
+    keep.delete("machine");
+    keep.delete("focus");
+    nav({ pathname: "/evidence", search: keep.toString(), hash: `#claim-${c.id}` });
+    done();
+  };
   const recentItems = recent.filter((r) => NAV.some((n) => n.label === r) || machines.some((m) => m.machine_id === r));
 
   return (
@@ -65,7 +79,10 @@ export function CommandMenu() {
     >
       <div className="flex h-12 items-center gap-2 border-b border-divider px-4">
         <Search size={16} strokeWidth={1.5} className="text-fg-subtle" aria-hidden />
-        <Command.Input placeholder="Jump to a screen, machine or period…" className="h-full flex-1 bg-transparent text-base text-fg outline-none placeholder:text-fg-subtle" />
+        <Command.Input
+          placeholder="Jump to a chapter, claim, machine or period…"
+          className="h-full flex-1 bg-transparent text-base text-fg outline-none placeholder:text-fg-subtle"
+        />
         <button type="button" onClick={() => done()} aria-label="Close" className="focus-ring rounded-sm p-1 text-fg-subtle hover:text-fg">
           <X size={14} aria-hidden />
         </button>
@@ -77,7 +94,12 @@ export function CommandMenu() {
             {recentItems.map((r) => {
               const n = NAV.find((x) => x.label === r);
               return (
-                <Command.Item key={`r-${r}`} value={`recent ${r}`} className={item} onSelect={() => (n ? go(n.to, n.label) : openMachine(r))}>
+                <Command.Item
+                  key={`r-${r}`}
+                  value={`recent ${r}`}
+                  className={item}
+                  onSelect={() => (n ? go(n.to, n.label) : openMachine(r))}
+                >
                   {n ? <n.icon size={16} strokeWidth={1.5} aria-hidden /> : <Search size={16} strokeWidth={1.5} aria-hidden />}
                   <span className={n ? "" : "mono text-xs"}>{r}</span>
                 </Command.Item>
@@ -87,7 +109,12 @@ export function CommandMenu() {
         )}
         <Command.Group heading="Chapters" className={group}>
           {NAV.map((n) => (
-            <Command.Item key={n.to} value={`screen ${n.label} ${n.answers ?? ""} ${n.n ?? ""}`} className={item} onSelect={() => go(n.to, n.label)}>
+            <Command.Item
+              key={n.to}
+              value={`screen ${n.label} ${n.answers ?? ""} ${n.n ?? ""}`}
+              className={item}
+              onSelect={() => go(n.to, n.label)}
+            >
               <n.icon size={16} strokeWidth={1.5} aria-hidden />
               <span className="flex-1">{n.label}</span>
               <Keys keys={["G", n.key.toUpperCase()]} />
@@ -122,12 +149,28 @@ export function CommandMenu() {
             </Command.Item>
           ))}
         </Command.Group>
+        <Command.Group heading="Claims" className={group}>
+          {claims.map((c) => (
+            <Command.Item key={c.id} value={`claim ${c.title} ${c.claim}`} className={item} onSelect={() => openClaim(c)}>
+              <FileCheck2 size={14} strokeWidth={1.5} aria-hidden />
+              <span className="flex-1 truncate">{c.title}</span>
+            </Command.Item>
+          ))}
+        </Command.Group>
         <Command.Group heading="Machines" className={group}>
           {machines.map((m) => (
-            <Command.Item key={m.machine_id} value={`${m.machine_id} ${m.theme} ${m.zone_id} ${m.bank_id}`} className={item} onSelect={() => openMachine(m.machine_id)}>
+            <Command.Item
+              key={m.machine_id}
+              value={`${m.machine_id} ${m.theme} ${m.zone_id} ${m.bank_id}`}
+              className={item}
+              onSelect={() => openMachine(m.machine_id)}
+            >
               <span className="mono w-[54px] text-xs text-fg">{m.machine_id}</span>
               <span className="flex-1 truncate">
-                {m.theme} <span className="mono text-2xs text-fg-subtle">{m.zone_id} › {m.bank_id}</span>
+                {m.theme}{" "}
+                <span className="mono text-2xs text-fg-subtle">
+                  {m.zone_id} › {m.bank_id}
+                </span>
               </span>
               <StatusPill verdict={m.verdict} />
             </Command.Item>

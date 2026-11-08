@@ -67,6 +67,24 @@ type Line = {
 };
 
 /** Chart anchor to scroll to when an evidence href doesn't name one. */
+/** Plain names for action codes in prose; tables keep the codes. */
+const PLAIN: Record<string, string> = {
+  "A-MOVE-MACHINE": "the move test",
+  "A-MOVE-BANK": "a bank move",
+  "A-REPLACE-LEASE": "lease replacement",
+  "A-REPLACE-BUY": "buying a replacement",
+  "A-TECH-SHIFT": "an extra technician",
+  "A-PREVENTIVE": "preventive maintenance",
+  "A-INSPECT": "inspection",
+  "A-WAYFINDING": "the signage refresh",
+  "A-COMP-PILOT": "a comp pilot",
+  "A-COMP-CHANGE": "a comp rate change",
+  "A-PROMO": "a promotion weekend",
+  "A-SURVEY": "a guest survey",
+  "A-HOLD": "keeping budget",
+};
+const plain = (s: string) => s.replace(/A-[A-Z-]+[A-Z]/g, (id) => PLAIN[id] ?? id);
+
 const DEFAULT_FOCUS: Record<string, string> = { "/": "ours", "/floor": "map", "/demand": "traffic", "/downtime": "lost" };
 
 function Evidence({ href }: { href: string }) {
@@ -139,7 +157,7 @@ export default function BudgetPlan() {
             title={l.name}
             sub={
               <>
-                <span className="mono text-gold-soft">{fmt.usd(l.cost_usd)}</span> · qty {l.quantity} · {l.targets}
+                <span className="mono text-fg">{fmt.usdK(l.cost_usd)}</span> · qty {l.quantity} · {l.targets}
               </>
             }
             footer={<Evidence href={l.evidence} />}
@@ -194,8 +212,8 @@ function MoveTestCompare({ mt }: { mt: MoveTest }) {
       label="Plan choice"
       title={
         c.included
-          ? `The move test replaces ${c.replaces ?? "nothing"}: ${fmt.usdK(c.move_test.value_usd)} theo + information vs. ${fmt.usdK(c.lowest.value_usd)}`
-          : `The move test stays out: ${fmt.usdK(c.move_test.value_usd)} vs. ${fmt.usdK(c.lowest.value_usd)} for ${c.lowest.action_type_id}`
+          ? `The move test replaces ${c.replaces ? plain(c.replaces) : "nothing"}: ${fmt.usdK(c.move_test.value_usd)} theo + information vs. ${fmt.usdK(c.lowest.value_usd)}`
+          : `The move test stays out: ${fmt.usdK(c.move_test.value_usd)} vs. ${fmt.usdK(c.lowest.value_usd)} for ${plain(c.lowest.action_type_id)}`
       }
       sub="Information value = expected gain on the follow-on decision (lease-replace quiet-spot weak machines for 90 days) from knowing whether play follows the spot."
       table={{
@@ -236,7 +254,7 @@ function MoveTestCompare({ mt }: { mt: MoveTest }) {
         to the 4 observed moves.
       </p>
       <p className="mt-2 text-xs text-fg-muted" data-testid="move-test-width">
-        Planned interval at {mt.pick.swaps} swaps: <span className="mono text-ivory">±{mt.pick.halfwidth.toFixed(2)}</span> with
+        Planned interval at {mt.pick.swaps} swaps: <span className="mono text-fg">±{mt.pick.halfwidth.toFixed(2)}</span> with
         machine-to-machine variation (noise alone ±{mt.pick.halfwidth_noise_only.toFixed(2)}). The information value uses this realistic
         width.
         {mt.voi_usd_tau_peer != null && c.move_test.value_usd_tau_peer != null && (
@@ -244,7 +262,7 @@ function MoveTestCompare({ mt }: { mt: MoveTest }) {
             {" "}
             With the wider peer-calibrated variation (±{mt.pick.halfwidth_tau_peer.toFixed(2)}), information value is{" "}
             {fmt.usdK(mt.voi_usd_tau_peer)} and the test {c.included_tau_peer ? "still" : "would no longer"} beat
-            {c.included_tau_peer ? "s" : ""} {c.lowest.action_type_id} ({fmt.usdK(c.move_test.value_usd_tau_peer)} vs.{" "}
+            {c.included_tau_peer ? "s" : ""} {plain(c.lowest.action_type_id)} ({fmt.usdK(c.move_test.value_usd_tau_peer)} vs.{" "}
             {fmt.usdK(c.lowest.value_usd)}).
           </>
         )}
@@ -299,8 +317,8 @@ function Allocator({ data, lines }: { data: Budget; lines: Line[] }) {
       label="Allocator"
       title={
         isRec
-          ? `Starts at the recommendation: ${fmt.usd(total)}, the same as the plan total`
-          : `Your plan: ${fmt.usd(total)} on ${cur.length} action type${cur.length === 1 ? "" : "s"}, ${fmt.usdK(cap - total)} kept`
+          ? `Starts at the recommendation: ${fmt.usdK(total)}, the same as the plan total`
+          : `Your plan: ${fmt.usdK(total)} on ${cur.length} action type${cur.length === 1 ? "" : "s"}, ${fmt.usdK(cap - total)} kept`
       }
       sub={`Cost = quantity × (unit cost + daily cost × live days of ${data.rules.horizon_days}). Over budget, a 4th action type and incompatible combinations are refused.`}
       table={{
@@ -376,7 +394,7 @@ function Allocator({ data, lines }: { data: Budget; lines: Line[] }) {
         </table>
         <div className="self-start">
           <p className="eyebrow">Spend vs. cap</p>
-          <p className="mono mt-1 text-2xl text-ivory" data-testid="alloc-total">
+          <p className="mono mt-1 text-2xl text-fg" data-testid="alloc-total">
             {fmt.usd(total)}
           </p>
           <div className="relative mt-2 h-1.5 rounded-full bg-surface-2">
@@ -405,7 +423,7 @@ function Allocator({ data, lines }: { data: Budget; lines: Line[] }) {
           {!isRec && (
             <button
               type="button"
-              className="mt-3 inline-flex items-center gap-1.5 text-xs text-gold-soft hover:text-ivory"
+              className="mt-3 inline-flex items-center gap-1.5 text-xs text-gold-soft hover:text-maroon"
               onClick={() => {
                 setQty(start);
                 setBlocked(null);
@@ -472,7 +490,7 @@ function Sensitivity({ data }: { data: Budget }) {
       <p className="mt-5 text-sm text-fg" data-testid="sensitivity-flips">
         {flips.length === 0
           ? "No single change flips the plan."
-          : `The pick changes only in ${flips.length}: ${flips.map((f) => `${f.label.charAt(0).toLowerCase()}${f.label.slice(1)} (${f.plan})`).join("; ")}.`}{" "}
+          : `The pick changes only in ${flips.length}: ${flips.map((f) => `${f.label.charAt(0).toLowerCase()}${f.label.slice(1)} (${plain(f.plan)})`).join("; ")}.`}{" "}
         Lease replacement never enters: it targets machines the move test already moves, and at its high end it is still worth less than the
         test once information value counts.
       </p>

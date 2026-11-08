@@ -84,10 +84,10 @@ export default function Players() {
         eyebrow={`Players · ${label}${seg === "all" ? "" : ` · ${seg.replace(":", " ")}`}`}
         title={
           <>
-            The top 10% of {who} produce {fmt.pct(s.top10_theo, 0)} of their theo; the top 1% alone, {fmt.pct(s.top1_theo, 0)}
+            The top 10% of {who} produce {fmt.pct(s.top10_theo, 0)} of their theo
           </>
         }
-        sub={`${label}: ${fmt.int(s.players)} carded players wagered ${fmt.usdK(s.wagered)} and got back ${fmt.usdK(s.returned)}. ${fmt.pct(s.winners_share, 0)} finished ahead; the median player lost ${fmt.usd(-s.median_net)}.`}
+        sub={`The top 1% alone produce ${fmt.pct(s.top1_theo, 0)}. ${label}: ${fmt.int(s.players)} carded players wagered ${fmt.usdK(s.wagered)} and got back ${fmt.usdK(s.returned)}. ${fmt.pct(s.winners_share, 0)} finished ahead; the median player lost ${fmt.usd(-s.median_net)}.`}
       >
         <KpiStrip testId="players-kpis">
           <Kpi label="Carded players" value={<Num value={s.players} kind="int" />} note={`${fmt.usdK(s.theo)} theo`} />
@@ -105,7 +105,6 @@ export default function Players() {
             label="Net per player"
             value={<Num value={s.net / s.players} kind="usd" />}
             note={`Player's view; median ${fmt.usd(s.median_net)}`}
-            focal
           />
         </KpiStrip>
       </HeroBand>
@@ -189,7 +188,7 @@ export default function Players() {
               ).map(([k, x]) => (
                 <div key={k}>
                   <dt className="eyebrow">{k}</dt>
-                  <dd className="mono mt-1 text-xl text-ivory">{fmt.pct(x)}</dd>
+                  <dd className="mono mt-1 text-xl text-fg">{fmt.pct(x)}</dd>
                 </div>
               ))}
               <p className="col-span-2 text-2xs text-fg-subtle md:col-span-1">
@@ -304,7 +303,7 @@ export default function Players() {
           className="col-span-12 scroll-mt-20 lg:col-span-8"
           label="By month"
           title={v.monthTitle}
-          sub={`Active ${who} (bars) and theo per active player (line), by month. Months outside ${label} are dimmed.`}
+          sub={`Active players, ${who} (bars) and theo per active player (line), by month. Months outside ${label} are dimmed.`}
           table={{
             columns: ["Month", "Active players", "Theo", "Theo / player", "Net / player"],
             rows: v.months.map((m) => [

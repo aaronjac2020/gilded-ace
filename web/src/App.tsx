@@ -8,7 +8,7 @@ import Question from "./screens/Question";
 const Why = lazy(() => import("./screens/Why"));
 const Floor = lazy(() => import("./screens/Floor"));
 const Guests = lazy(() => import("./screens/Guests"));
-const BudgetPlan = lazy(() => import("./screens/BudgetPlan"));
+const Plan = lazy(() => import("./screens/Plan"));
 const Evidence = lazy(() => import("./screens/Evidence"));
 const NotFound = lazy(() => import("./screens/NotFound"));
 
@@ -30,7 +30,7 @@ export default function App() {
           <Route path="/why" element={<Why />} />
           <Route path="/floor" element={<Floor />} />
           <Route path="/guests" element={<Guests />} />
-          <Route path="/plan" element={<BudgetPlan />} />
+          <Route path="/plan" element={<Plan />} />
           <Route path="/evidence" element={<Evidence />} />
           {Object.keys(REDIRECTS).map((p) => (
             <Route key={p} path={p} element={<Redirect from={p} />} />

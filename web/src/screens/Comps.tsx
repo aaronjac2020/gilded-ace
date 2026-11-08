@@ -171,9 +171,9 @@ export default function Comps() {
             />
           </Suspense>
           <p className="mt-4 max-w-prose text-sm text-fg" data-testid="change-point">
-            Change point: week of <span className="mono text-ivory">{cp.week}</span> (90% CI {cp.week_lo} to {cp.week_hi};{" "}
+            Change point: week of <span className="mono text-fg">{cp.week}</span> (90% CI {cp.week_lo} to {cp.week_hi};{" "}
             {fmt.pct(cp.within_1wk, 0)} of resamples within a week). Effect:{" "}
-            <span className="mono text-ivory">+{(cp.effect * 100).toFixed(2)} pts</span> (90% CI +{(cp.effect_lo * 100).toFixed(2)} to +
+            <span className="mono text-fg">+{(cp.effect * 100).toFixed(2)} pts</span> (90% CI +{(cp.effect_lo * 100).toFixed(2)} to +
             {(cp.effect_hi * 100).toFixed(2)}), a {fmt.pct(rel, 0)} rise in comp cost per dollar of theo. A split of a series with no break
             finds a shift this large {fmt.pct(cp.p_null, 0)} of the time.
           </p>
@@ -351,7 +351,7 @@ export default function Comps() {
             ).map(([k, x]) => (
               <div key={k}>
                 <dt className="eyebrow">{k}</dt>
-                <dd className="mono mt-1 text-lg text-ivory">{fmt.usdK(x)}</dd>
+                <dd className="mono mt-1 text-lg text-fg">{fmt.usdK(x)}</dd>
               </div>
             ))}
           </dl>
