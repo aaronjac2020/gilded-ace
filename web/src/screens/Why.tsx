@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Link } from "react-router-dom";
 import { Chapter, Section } from "../components/shell/Chapter";
 import { PERIOD_MENU } from "../components/shell/nav";
 import { PlayingCard } from "../components/theme/PlayingCard";
@@ -122,6 +123,23 @@ export default function Why() {
           <MachineRows rows={rest} flags={flags} onOpen={openRow} />
         </Section>
       )}
+      <p className="mt-10 max-w-[760px] text-[15px] text-fg-muted" data-testid="ruled-out">
+        We also ruled out guest mix and high-risk games: the manager&rsquo;s 10 are carded as often as the rest, and volatility does not
+        explain the list.{" "}
+        <Link
+          to={{ pathname: "/evidence", hash: "claim-carded-share" }}
+          className="focus-ring rounded-sm font-semibold text-maroon hover:underline"
+        >
+          Guest mix
+        </Link>{" "}
+        ·{" "}
+        <Link
+          to={{ pathname: "/evidence", hash: "claim-volatility" }}
+          className="focus-ring rounded-sm font-semibold text-maroon hover:underline"
+        >
+          High-risk games
+        </Link>
+      </p>
       <div id="luck" />
       <div id="downtime" />
       <Section

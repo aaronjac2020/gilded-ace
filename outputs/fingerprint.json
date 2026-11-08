@@ -1,7 +1,7 @@
 {
  "about": "Verify these results: run python run.py all; your hashes should match these.",
- "git_commit": "3ee052cdbc5b478a21f845f5773c04d6216818ff",
- "git_dirty": true,
+ "git_commit": "9a6b00c9691f9fe6c47bf57063d37c383aa36f63",
+ "git_dirty": false,
  "data_release": {
   "dataset": "Dashboard Royale \u2014 The Gilded Ace",
   "version": "0.9.0-draft",

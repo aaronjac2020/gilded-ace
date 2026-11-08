@@ -200,6 +200,12 @@ export default function ModelLab({ part }: { part?: "why" | "evidence" } = {}) {
         </div>
       )}
 
+      {!ev && m1 && (
+        <p className="max-w-[760px] text-[15px] text-fg" data-testid="model1-closer">
+          On unseen May–June days, Model 1&rsquo;s estimates are {fmt.pct(m1.improvement_pct, 0)} closer to actual play than a zone ×
+          weekday baseline (error {fmt.usd(m1.mae_model)} vs. {fmt.usd(m1.mae_baseline)} per machine-day).
+        </p>
+      )}
       {m1 && (
         <div className="mt-16 grid grid-cols-12 gap-8">
           {ev && (
