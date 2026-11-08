@@ -220,6 +220,10 @@ def main() -> dict:
         f"  move test vs lowest-value line {b['action_type_id']} (${b['cost_usd']:,.0f}): theo+VOI ${a['value_usd']:,.0f} vs "
         f"${b['value_usd']:,.0f} -> {'included' if cmp['included'] else 'not included'}"
     )
+    print(
+        f"  sensitivity, peer-calibrated tau: VOI ${mt['voi_usd_tau_peer']:,.0f}, theo+VOI ${a['value_usd_tau_peer']:,.0f} -> "
+        f"{'still included' if cmp['included_tau_peer'] else 'would not be included'}"
+    )
     metrics["move_test"] = {**mt, "comparison": cmp}
     metrics["model1_change"] = expectation_change(full, mgr)
     ch = metrics["model1_change"]

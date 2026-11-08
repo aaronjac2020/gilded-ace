@@ -226,12 +226,19 @@ def move_test(full: pd.DataFrame, alt: dict, cat: pd.DataFrame | None = None, se
 
     beta = rng.normal(m0, s0, mt["sims"])
     without = float(np.maximum(v(beta).mean(0), 0).sum())
-    bhat = beta + rng.normal(0, se, len(beta))
-    w = 1 / s0**2 + 1 / se**2
-    pm, ps = (m0 / s0**2 + bhat / se**2) / w, np.sqrt(1 / w)
     grid = stats.norm.ppf(np.linspace(0.01, 0.99, 49))
-    post_v = np.stack([v(pm + ps * g) for g in grid]).mean(0)  # (sims, n_cand) posterior expected value
-    with_info = float((v(beta) * (post_v > 0)).sum(1).mean())
+
+    def voi(se: float) -> tuple[float, float]:  # (value of information, posterior sd) for a test with this slope se
+        bhat = beta + rng.normal(0, se, len(beta))
+        w = 1 / s0**2 + 1 / se**2
+        pm, ps = (m0 / s0**2 + bhat / se**2) / w, np.sqrt(1 / w)
+        post_v = np.stack([v(pm + ps * g) for g in grid]).mean(0)  # (sims, n_cand) posterior expected value
+        return max(0.0, float((v(beta) * (post_v > 0)).sum(1).mean()) - without), float(ps)
+
+    # Realistic se (noise + spot error + model-calibrated tau) drives the plan; peer-calibrated tau is a sensitivity.
+    voi_usd, ps = voi(se)
+    ds_pick = np.repeat([np.log(f.at[m, "spot"] / f.at[w_, "spot"]) for w_, m in P], 2) * np.tile([-1, 1], len(P))
+    voi_peer, _ = voi(float(errs(ds_pick, tau_peer)["full"].std()))
     return {
         "pairs": [
             {"ours": a, "manager": b, "spot_ours": float(f.at[a, "spot"]), "spot_manager": float(f.at[b, "spot"])} for a, b in P
@@ -239,7 +246,8 @@ def move_test(full: pd.DataFrame, alt: dict, cat: pd.DataFrame | None = None, se
         "controls": controls,
         "sizing": rows,
         "pick": pick,
-        "voi_usd": max(0.0, with_info - without),
+        "voi_usd": voi_usd,
+        "voi_usd_tau_peer": voi_peer,
         "power": {
             "post_days": noise["post_days"],
             "noise_sd": noise["sd"],
@@ -373,6 +381,8 @@ def with_move_test(lines: list[Line], mt: dict, cat: pd.DataFrame) -> tuple[list
             "theo_mid_usd": mvl.effect_mid_usd,
             "voi_usd": mt["voi_usd"],
             "value_usd": line_value(mvl, mt["voi_usd"]),
+            "voi_usd_tau_peer": mt.get("voi_usd_tau_peer", mt["voi_usd"]),
+            "value_usd_tau_peer": line_value(mvl, mt.get("voi_usd_tau_peer", mt["voi_usd"])),
         },
         "lowest": {
             "action_type_id": low.action_type_id,
@@ -385,6 +395,7 @@ def with_move_test(lines: list[Line], mt: dict, cat: pd.DataFrame) -> tuple[list
         "errors": validate(cand, cat),
     }
     cmp["included"] = bool(not cmp["errors"] and cmp["move_test"]["value_usd"] > cmp["lowest"]["value_usd"])
+    cmp["included_tau_peer"] = bool(not cmp["errors"] and cmp["move_test"]["value_usd_tau_peer"] > cmp["lowest"]["value_usd"])
     return (cand if cmp["included"] else lines), cmp
 
 

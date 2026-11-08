@@ -162,8 +162,8 @@ export default function FloorMap() {
         eyebrow={`Floor map · ${PERIOD_LONG[f.period] ?? f.period}`}
         title={
           <>
-            <GoldNumber className="font-semibold">{String(notOk)}</GoldNumber> of {scoped.length} machines{f.zone || f.bank ? ` ${scope}` : ""} have
-            a reason besides weak play
+            <GoldNumber className="font-semibold">{String(notOk)}</GoldNumber> of {scoped.length} machines
+            {f.zone || f.bank ? ` ${scope}` : ""} have a reason besides weak play
           </>
         }
         sub="Each mark is a machine. Click a bank to filter every screen, a machine for its case file."
@@ -177,7 +177,7 @@ export default function FloorMap() {
         <svg
           ref={svg}
           viewBox={`0 0 ${W} ${H}`}
-          className="relative block h-[min(56vh,540px)] w-full cursor-grab active:cursor-grabbing"
+          className="relative block h-[min(56vh,540px)] w-full cursor-grab active:cursor-grabbing xl:w-[calc(100%-250px)]"
           role="img"
           aria-label="Casino floor with machines colored by verdict"
           onClick={() => setTip(null)}
@@ -421,6 +421,14 @@ export default function FloorMap() {
           </span>
         </div>
 
+        <ZoneLedger
+          zones={geo.hulls.map((h) => {
+            const zr = all.filter((r) => r.zone_id === h.z);
+            return { z: h.z, name: h.name, n: zr.length, flag: zr.filter((r) => r.verdict !== "ok" && r.verdict !== "truly_weak").length };
+          })}
+          active={f.zone}
+          onPick={(z) => setF({ zone: f.zone === z ? null : z, bank: null })}
+        />
         {/* minimap */}
         <Minimap geo={geo} t={t} />
       </section>
@@ -567,4 +575,50 @@ function Glyph({ v, x, y, r, fill, ring = false }: { v: Verdict; x: number; y: n
     default:
       return <circle cx={x} cy={y} r={r * 0.75} {...common} />;
   }
+}
+
+/** Right rail on wide screens: machines with a reason besides weak play, by zone. Click to filter every screen. */
+function ZoneLedger({
+  zones,
+  active,
+  onPick,
+}: {
+  zones: { z: string; name: string; n: number; flag: number }[];
+  active: string | null;
+  onPick: (z: string) => void;
+}) {
+  const max = Math.max(...zones.map((z) => z.flag), 1);
+  return (
+    <div className="absolute right-6 top-20 hidden w-[218px] xl:block" data-testid="zone-ledger">
+      <p className="label-sc mb-2 text-gold-soft/80">By zone · reason besides weak play</p>
+      <ul className="flex flex-col gap-0.5">
+        {[...zones]
+          .sort((a, b) => b.flag - a.flag)
+          .map((z) => (
+            <li key={z.z}>
+              <button
+                type="button"
+                onClick={() => onPick(z.z)}
+                aria-pressed={active === z.z}
+                className={cn(
+                  "focus-ring grid w-full grid-cols-[1fr_auto] items-center gap-x-2 rounded-sm px-2 py-1 text-left text-xs transition-colors duration-hover",
+                  active === z.z
+                    ? "bg-black/35 text-ivory ring-1 ring-inset ring-gold/30"
+                    : "text-fg-muted hover:bg-black/20 hover:text-fg",
+                )}
+              >
+                <span className="truncate">{z.name}</span>
+                <span className="mono text-ivory">
+                  {z.flag}
+                  <span className="text-fg-subtle">/{z.n}</span>
+                </span>
+                <span className="col-span-2 mt-1 h-[3px] rounded-full bg-black/30" aria-hidden>
+                  <span className="block h-full rounded-full bg-gold-soft/60" style={{ width: `${(z.flag / max) * 100}%` }} />
+                </span>
+              </button>
+            </li>
+          ))}
+      </ul>
+    </div>
+  );
 }

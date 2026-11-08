@@ -105,7 +105,23 @@ export default function Verdict() {
             <GoldNumber className="font-semibold">{`${notWeak.length} of ${mgr.length}`}</GoldNumber> aren&rsquo;t the problem
           </>
         }
-        sub={<>The manager&rsquo;s {mgr.length} lowest earners, tested for luck, location, downtime and hold before any cut.</>}
+        sub={
+          <>
+            The manager&rsquo;s {mgr.length} lowest earners, tested for luck, location, downtime and hold before any cut.
+            {lowN > 0 && rules && (
+              <span className="mt-2 flex flex-wrap items-baseline gap-x-3 text-base" data-testid="game-setting">
+                <span>
+                  <span className="text-gold-soft">
+                    {lowN} of the {mgr.length}
+                  </span>{" "}
+                  are set to pay back more ({fmt.pct(rules.low_hold_design, 0)} hold vs a {fmt.pct(rules.floor_median_hold, 0)} floor
+                  median). Game math, not a fault.
+                </span>
+                <EvidenceLink to="/method" focus="claim-game-setting" label="Evidence" />
+              </span>
+            )}
+          </>
+        }
       >
         <RevealTable
           rows={mgr}
@@ -122,13 +138,6 @@ export default function Verdict() {
                   </span>
                 ))}
               </p>
-              {lowN > 0 && rules && (
-                <p>
-                  <span className="font-medium text-gold-soft">Game setting: pays back more by design.</span> {lowN} of {mgr.length} are
-                  configured at {fmt.pct(rules.low_hold_design, 0)} hold vs. the floor&rsquo;s {fmt.pct(rules.floor_median_hold, 0)} median,
-                  so the same play earns less house win. Game math, not a fault.
-                </p>
-              )}
               <details className="group mt-1 max-w-prose text-sm text-fg-muted">
                 <summary className="focus-ring w-fit cursor-pointer list-none rounded-sm text-xs text-gold-soft hover:text-gold">
                   <span className="group-open:hidden">Show the math</span>

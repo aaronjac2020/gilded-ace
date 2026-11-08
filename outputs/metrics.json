@@ -2551,13 +2551,14 @@
       "theo_hi_usd": 3870.3975142723743
     },
     "voi_usd": 9203.479198940746,
+    "voi_usd_tau_peer": 8317.209975887476,
     "power": {
       "post_days": 16,
       "noise_sd": 0.11815143068213434,
       "spot_sd": 0.023160288888074376,
       "tau": 0.12659242230869228,
       "tau_peer": 0.37946046819976303,
-      "observed_design_halfwidth_noise_only": 0.23744601707745006
+      "observed_design_halfwidth_noise_only": 0.2380435148837442
     },
     "prior_beta": {
       "mean": 0.8951412647097193,
@@ -2613,7 +2614,9 @@
         "cost_usd": 10800.0,
         "theo_mid_usd": 3399.7587167372635,
         "voi_usd": 9203.479198940746,
-        "value_usd": 12603.23791567801
+        "value_usd": 12603.23791567801,
+        "voi_usd_tau_peer": 8317.209975887476,
+        "value_usd_tau_peer": 11716.96869262474
       },
       "lowest": {
         "action_type_id": "A-REPLACE-LEASE",
@@ -2624,7 +2627,8 @@
       },
       "replaces": "A-REPLACE-LEASE",
       "errors": [],
-      "included": true
+      "included": true,
+      "included_tau_peer": true
     }
   },
   "model1_change": {

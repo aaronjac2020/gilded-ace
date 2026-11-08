@@ -12,7 +12,8 @@ import { VerdictStamp } from "./VerdictStamp";
 const STAGGER = 0.06;
 
 /**
- * Verdict Reveal: the manager's list dealt face-down onto the felt (60ms stagger), then flipped to show ID,
+ * Verdict Reveal: the manager's list rests face-down on the felt and flips in turn (60ms stagger); "Replay deal"
+ * deals it in from the shoe first. Flipped to show ID,
  * house win and verdict stamp. Cards are buttons from the first frame. "List view" swaps in the row list.
  */
 export function RevealTable({
@@ -97,10 +98,10 @@ export function RevealTable({
                 data-machine-row={r.machine_id}
               >
                 <PlayingCard
-                  deal
+                  deal={deal > 0}
                   delay={i * STAGGER}
                   faceUp={up}
-                  flipDelay={n * STAGGER + 0.25 + i * STAGGER}
+                  flipDelay={deal > 0 ? n * STAGGER + 0.25 + i * STAGGER : 0.15 + i * STAGGER}
                   suit="♠"
                   className="aspect-[5/6] w-full transition-transform duration-hover ease-out group-hover:-translate-y-1"
                 >

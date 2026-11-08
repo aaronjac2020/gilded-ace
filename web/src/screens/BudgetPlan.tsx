@@ -10,11 +10,27 @@ import { useJson } from "../lib/useData";
 
 type Cmp = { cost_usd: number; theo_mid_usd: number; voi_usd: number; value_usd: number };
 type MoveTest = {
-  sizing: { swaps: number; moves: number; cost_usd: number; halfwidth: number; theo_mid_usd: number }[];
+  sizing: {
+    swaps: number;
+    moves: number;
+    cost_usd: number;
+    halfwidth: number;
+    halfwidth_noise_only: number;
+    halfwidth_tau_peer: number;
+    theo_mid_usd: number;
+  }[];
   power: { post_days: number };
-  pick: { swaps: number };
+  pick: { swaps: number; halfwidth: number; halfwidth_noise_only: number; halfwidth_tau_peer: number };
   voi_usd: number;
-  comparison: { move_test: Cmp; lowest: Cmp & { action_type_id: string }; replaces: string | null; errors: string[]; included: boolean };
+  voi_usd_tau_peer?: number;
+  comparison: {
+    move_test: Cmp & { value_usd_tau_peer?: number };
+    lowest: Cmp & { action_type_id: string };
+    replaces: string | null;
+    errors: string[];
+    included: boolean;
+    included_tau_peer?: boolean;
+  };
 };
 type Budget = {
   rules: { total_usd: number; horizon_days: number; max_action_types: number };
@@ -209,6 +225,20 @@ function MoveTestCompare({ mt }: { mt: MoveTest }) {
         Picked {mt.pick.swaps} swaps: the fewest with ≥ 3 swaps (so no single move carries the estimate) and a planned interval within ±0.2.
         Intervals are simulated from real same-bank play over {mt.power.post_days} operating days, plus machine-to-machine variation fitted
         to the 4 observed moves.
+      </p>
+      <p className="mt-2 text-xs text-fg-muted" data-testid="move-test-width">
+        Planned interval at {mt.pick.swaps} swaps: <span className="mono text-ivory">±{mt.pick.halfwidth.toFixed(2)}</span> with
+        machine-to-machine variation (noise alone ±{mt.pick.halfwidth_noise_only.toFixed(2)}). The information value uses this realistic
+        width.
+        {mt.voi_usd_tau_peer != null && c.move_test.value_usd_tau_peer != null && (
+          <>
+            {" "}
+            With the wider peer-calibrated variation (±{mt.pick.halfwidth_tau_peer.toFixed(2)}), information value is{" "}
+            {fmt.usdK(mt.voi_usd_tau_peer)} and the test {c.included_tau_peer ? "still" : "would no longer"} beat
+            {c.included_tau_peer ? "s" : ""} {c.lowest.action_type_id} ({fmt.usdK(c.move_test.value_usd_tau_peer)} vs.{" "}
+            {fmt.usdK(c.lowest.value_usd)}).
+          </>
+        )}
       </p>
     </Tile>
   );
