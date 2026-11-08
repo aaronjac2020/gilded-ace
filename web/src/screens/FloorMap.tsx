@@ -589,8 +589,8 @@ function ZoneLedger({
 }) {
   const max = Math.max(...zones.map((z) => z.flag), 1);
   return (
-    <div className="absolute right-6 top-20 hidden w-[218px] xl:block" data-testid="zone-ledger">
-      <p className="label-sc mb-2 text-gold-soft/80">By zone · reason besides weak play</p>
+    <div className="absolute right-6 top-36 hidden w-[218px] xl:block" data-testid="zone-ledger">
+      <p className="label-sc mb-2 text-gold-soft">By zone · reason besides weak play</p>
       <ul className="flex flex-col gap-0.5">
         {[...zones]
           .sort((a, b) => b.flag - a.flag)
@@ -604,7 +604,7 @@ function ZoneLedger({
                   "focus-ring grid w-full grid-cols-[1fr_auto] items-center gap-x-2 rounded-sm px-2 py-1 text-left text-xs transition-colors duration-hover",
                   active === z.z
                     ? "bg-black/35 text-ivory ring-1 ring-inset ring-gold/30"
-                    : "text-fg-muted hover:bg-black/20 hover:text-fg",
+                    : "text-ivory/85 hover:bg-black/20 hover:text-ivory",
                 )}
               >
                 <span className="truncate">{z.name}</span>

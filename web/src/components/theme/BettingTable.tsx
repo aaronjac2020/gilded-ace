@@ -16,7 +16,7 @@ export type Bet = {
   hi?: number;
 };
 
-const PER_CHIP = 4000;
+const PER_CHIP = 1000;
 const TONES: ChipTone[] = ["gold", "maroon", "ivory"];
 
 /**

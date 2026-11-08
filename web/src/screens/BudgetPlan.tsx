@@ -160,7 +160,7 @@ export default function BudgetPlan() {
         {lines.map((l) => (
           <Tile
             key={l.action_type_id}
-            className="col-span-12 lg:col-span-6"
+            className="col-span-12 lg:col-span-4"
             label={l.action_type_id}
             title={l.name}
             sub={

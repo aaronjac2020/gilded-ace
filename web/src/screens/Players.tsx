@@ -255,7 +255,17 @@ export default function Players() {
               />
             </Suspense>
           </div>
-          <p className="mt-2 text-2xs text-fg-subtle">{data.notes.unit}</p>
+          <p className="mt-2 flex flex-wrap items-center gap-x-4 text-2xs text-fg-subtle">
+            <span className="flex items-center gap-1.5">
+              <span className="size-2 rounded-sm" style={{ background: colors.gold }} aria-hidden />
+              Lost money
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="size-2 rounded-sm bg-[#6B6261]" aria-hidden />
+              Broke even or won
+            </span>
+            <span>{data.notes.unit}</span>
+          </p>
         </Tile>
       </div>
 
