@@ -86,7 +86,7 @@ export default function Methodology() {
             are 90%, from 2,000 bootstrap resamples.
           </p>
         </Tile>
-        <div className="col-span-12 grid grid-cols-1 gap-8 lg:col-span-8 xl:grid-cols-2" data-testid="claims">
+        <div className="col-span-12 grid grid-cols-1 gap-8 lg:grid-cols-2 xl:grid-cols-3" data-testid="claims">
           {rest.map((c, i) => (
             <section key={c.id} id={`claim-${c.id}`} className="scroll-mt-20">
               <Tile

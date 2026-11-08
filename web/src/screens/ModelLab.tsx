@@ -205,7 +205,7 @@ export default function ModelLab({ part }: { part?: "why" | "evidence" } = {}) {
           {ev && (
             <Tile
               className="col-span-12 lg:col-span-6"
-              label="Model 1"
+              label="Model 1 · accuracy"
               title="Expected coin-in per available hour"
               sub={`LightGBM on location, game and calendar. No machine ID, theme or lags. ${m1.best_iteration} rounds chosen on April.`}
               testId="mae-table-model1"
@@ -231,7 +231,7 @@ export default function ModelLab({ part }: { part?: "why" | "evidence" } = {}) {
             <Tile
               id="importance"
               className="col-span-12 lg:col-span-6"
-              label="Model 1"
+              label="Model 1 · drivers"
               title="What sets expected play"
               sub="Share of LightGBM gain, top 10 features"
               table={{

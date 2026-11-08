@@ -331,7 +331,7 @@ export default function Players() {
                 height={260}
                 label={`Monthly active players and theo per player for ${who}`}
                 option={{
-                  grid: { left: 4, right: 4, top: 24, bottom: 4, containLabel: true },
+                  grid: { left: 4, right: 4, top: 48, bottom: 4, containLabel: true },
                   legend: { top: 0, right: 0, textStyle: { color: colors["fg-muted"], fontSize: 11 } },
                   tooltip: {
                     trigger: "axis",
@@ -347,14 +347,25 @@ export default function Players() {
                   },
                   xAxis: { type: "category", data: v.months.map((m) => m.label) },
                   yAxis: [
-                    { type: "value", axisLabel: { formatter: (x: number) => fmt.int(x) } },
-                    { type: "value", splitLine: { show: false }, axisLabel: { formatter: (x: number) => fmt.usd(x) } },
+                    {
+                      type: "value",
+                      name: "Players",
+                      nameTextStyle: { align: "left" },
+                      axisLabel: { formatter: (x: number) => fmt.int(x) },
+                    },
+                    {
+                      type: "value",
+                      name: "Theo / player",
+                      nameTextStyle: { align: "right" },
+                      splitLine: { show: false },
+                      axisLabel: { formatter: (x: number) => fmt.usd(x) },
+                    },
                   ],
                   series: [
                     {
                       name: "Active players",
                       type: "bar",
-                      data: v.months.map((m) => ({ value: m.players, itemStyle: { color: m.inPeriod ? "#5A5150" : "#2A2525" } })),
+                      data: v.months.map((m) => ({ value: m.players, itemStyle: { color: m.inPeriod ? "#8A7F7E" : "#DDD6D3" } })),
                     },
                     {
                       name: "Theo / player",

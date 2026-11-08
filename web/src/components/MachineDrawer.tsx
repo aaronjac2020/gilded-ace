@@ -98,8 +98,8 @@ function Body({
           <p className="text-[13px] font-semibold text-gold-soft">Case file</p>
           <div className="flex items-center gap-1">
             {pos >= 0 && (
-              <span className="mono mr-1 text-[13px] text-fg-subtle">
-                {pos + 1} / {n}
+              <span className="mr-1 text-[13px] text-fg-subtle" title="Position in the list you opened it from">
+                {pos + 1} of {n} in list
               </span>
             )}
             <Tip label="Previous" keys={["←"]}>
@@ -274,7 +274,10 @@ function TheCall({ row, rules }: { row: ScoreRow; rules?: { low_hold_design: num
       link: <EvidenceLink to="/floor" focus="lost" label="Downtime" />,
     },
     {
-      k: won > 0 ? `Guests won ${fmt.usd(won)} more than the game math expects.` : `The house won ${fmt.usd(-won)} more than the game math expects.`,
+      k:
+        won > 0
+          ? `Guests won ${fmt.usd(won)} more than the game math expects.`
+          : `The house won ${fmt.usd(-won)} more than the game math expects.`,
       tech: `luck z ${fmt.num(row.luck_z, 2)}`,
       link: <EvidenceLink to="/why" focus="luck" label="Luck" />,
     },
