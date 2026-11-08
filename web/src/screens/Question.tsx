@@ -10,6 +10,7 @@ import { buttonVariants } from "../components/ui/button";
 import { EmptyState, ErrorState, ScreenSkeleton } from "../components/ui/skeleton";
 import { cn } from "../lib/cn";
 import type { ScoreRow } from "../lib/data";
+import { useJson } from "../lib/useData";
 import { fmt } from "../lib/format";
 import { REASON, REASON_ANCHOR, REASON_ORDER, supportSentence, tally } from "../lib/reasons";
 import { tourStore, useMachineParam } from "../lib/uiStore";
@@ -25,6 +26,7 @@ export default function Question() {
   const mgr = useMemo(() => managerList(rows), [rows]);
   const ours = useMemo(() => oursList(rows), [rows]);
   const [, open] = useMachineParam();
+  const lab = useJson<{ persistence: { precision_at_k: number; random_precision: number; k: number } }>("model_lab.json").data;
 
   if (error) return <ErrorState what="scorecard" error={error} />;
   if (!rows.length && (f.zone || f.bank))
@@ -117,6 +119,12 @@ export default function Question() {
             </li>
           ))}
         </ol>
+        {lab && (
+          <p className="mt-4 text-sm text-fg-muted" data-testid="ours-persist">
+            Ranked on Jan–Apr, {Math.round(lab.persistence.precision_at_k * lab.persistence.k)} of our {lab.persistence.k} were still in the
+            bottom {lab.persistence.k} on unseen May–Jun play (chance: {fmt.pct(lab.persistence.random_precision, 0)}).
+          </p>
+        )}
       </Section>
 
       <div className="mt-16 flex flex-wrap gap-3">

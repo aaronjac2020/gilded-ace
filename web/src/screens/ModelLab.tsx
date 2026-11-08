@@ -392,6 +392,7 @@ export function Forecast({ m, h }: { m: Lab["model2"]; h: H[] }) {
                   itemStyle: { color: colors["fg-muted"] },
                   areaStyle: { color: areaFill(colors["fg-muted"], 0.12) },
                   endLabel: { show: true, formatter: "Actual", color: colors["fg-muted"], fontSize: 11 },
+                  labelLayout: { moveOverlap: "shiftY" },
                 },
                 {
                   name: "Model 2",
@@ -400,6 +401,7 @@ export function Forecast({ m, h }: { m: Lab["model2"]; h: H[] }) {
                   lineStyle: { color: colors.gold, width: 1.75 },
                   itemStyle: { color: colors.gold },
                   endLabel: { show: true, formatter: "Model 2", color: colors["gold-soft"], fontSize: 11 },
+                  labelLayout: { moveOverlap: "shiftY" },
                 },
                 {
                   name: "Baseline",
@@ -408,6 +410,7 @@ export function Forecast({ m, h }: { m: Lab["model2"]; h: H[] }) {
                   lineStyle: { color: colors["fg-subtle"], type: [4, 4], width: 1 },
                   itemStyle: { color: colors["fg-subtle"] },
                   endLabel: { show: true, formatter: "Baseline", color: colors["fg-subtle"], fontSize: 11 },
+                  labelLayout: { moveOverlap: "shiftY" },
                 },
               ],
             }}

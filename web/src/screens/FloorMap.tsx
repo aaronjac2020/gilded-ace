@@ -172,7 +172,7 @@ export default function FloorMap() {
       <section
         id="map"
         aria-label="Floor map"
-        className="felt relative mx-6 mt-6 overflow-hidden rounded-xl ring-1 ring-inset ring-gold/20 md:mx-10"
+        className="felt relative mx-6 mt-6 scroll-mt-24 overflow-hidden rounded-xl ring-1 ring-inset ring-gold/20 md:mx-10"
       >
         <svg
           ref={svg}
@@ -203,9 +203,9 @@ export default function FloorMap() {
                   strokeLinejoin="round"
                 />
                 <text
-                  x={h.c[0]}
-                  y={h.top - 26 < 60 ? h.top + 22 : h.top - 26}
-                  textAnchor="middle"
+                  x={h.top - 26 < 60 ? Math.max(...h.hull.map((q) => q[0])) + 14 : h.c[0]}
+                  y={h.top - 26 < 60 ? h.top + 10 : h.top - 26}
+                  textAnchor={h.top - 26 < 60 ? "start" : "middle"}
                   fill={colors["fg-muted"]}
                   fontSize={13 / Math.sqrt(t.k)}
                   letterSpacing="0.08em"

@@ -103,6 +103,7 @@ export default function BudgetPlan() {
   if (error) return <ErrorState what="budget" error={error} />;
   if (!data) return <ScreenSkeleton />;
   const lines = rows<Line>(data.recommended);
+  const assumed = lines.find((l) => l.action_type_id === "A-WAYFINDING")?.effect_mid_usd ?? 0;
   const cap = data.rules.total_usd;
   const hiMax = Math.max(...lines.map((l) => l.effect_hi_usd), 1);
 
@@ -148,7 +149,7 @@ export default function BudgetPlan() {
           <Kpi
             label="Expected theo, mid"
             value={<Num value={data.effect.mid} kind="usdCompact" />}
-            note={`Range ${fmt.usdK(data.effect.lo)}–${fmt.usdK(data.effect.hi)} within ${data.rules.horizon_days} days`}
+            note={`Range ${fmt.usdK(data.effect.lo)}–${fmt.usdK(data.effect.hi)} within ${data.rules.horizon_days} days; ${fmt.usdK(assumed)} rests on an assumed signage lift`}
           />
         </KpiStrip>
         <p className="mt-6 max-w-[760px] text-[15px] text-fg" data-testid="plan-payback">
@@ -457,6 +458,19 @@ function Allocator({ data, lines }: { data: Budget; lines: Line[] }) {
   );
 }
 
+/** "Machine inspection…: low end" → "machine inspection… at its low end"; one closing clause when every flip picks the same plan. */
+function flipText(flips: Scenario[]): string {
+  const what = (f: Scenario) => {
+    const t = f.label.replace(/: (low|high) end$/, " at its $1 end");
+    return t.charAt(0).toLowerCase() + t.slice(1);
+  };
+  const plan = (f: Scenario) => plain(f.plan).replace(" + ", " and ");
+  const same = new Set(flips.map((f) => f.plan)).size === 1;
+  return same
+    ? `The pick changes in only ${flips.length}: ${flips.map(what).join(", or ")}. Then the plan drops to ${plan(flips[0])}.`
+    : `The pick changes in only ${flips.length}: ${flips.map((f) => `${what(f)} picks ${plan(f)}`).join("; ")}.`;
+}
+
 /** Does the plan choice survive when one input moves? Exhaustive re-pick per scenario (pipeline/budget.py sensitivity). */
 function Sensitivity({ data }: { data: Budget }) {
   const sc = rows<Scenario>(data.sensitivity!);
@@ -507,11 +521,8 @@ function Sensitivity({ data }: { data: Budget }) {
         ))}
       </div>
       <p className="mt-5 text-sm text-fg" data-testid="sensitivity-flips">
-        {flips.length === 0
-          ? "No single change flips the plan."
-          : `The pick changes only in ${flips.length}: ${flips.map((f) => `${f.label.charAt(0).toLowerCase()}${f.label.slice(1)}${f.label.includes(plain(f.plan)) ? "" : `, which picks ${plain(f.plan)}`}`).join("; ")}.`}{" "}
-        Lease replacement never enters: it targets machines the move test already moves, and at its high end it is still worth less than the
-        test once information value counts.
+        {flips.length === 0 ? "No single change flips the plan." : flipText(flips)} Lease replacement never enters: it targets machines the
+        move test already moves, and at its high end it is still worth less than the test once information value counts.
       </p>
       <p className="mt-2 text-xs text-fg-subtle">
         Inspection's low end is $0 (it may find nothing); at that end it no longer covers its {fmt.usd(1200)} and drops out. That is the

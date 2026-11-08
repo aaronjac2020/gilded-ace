@@ -19,7 +19,7 @@ const ROUTES = [
   ["ch5-plan", "/plan"],
   ["evidence", "/evidence"],
   ["casefile", "/?machine=M-1158"],
-  ["ch3-floor-bank", "/floor?bank=B-01"],
+  ["ch3-floor-bank", "/floor?bank=B-01#map"],
 ];
 if (process.argv.includes("--only")) {
   const keep = process.argv[process.argv.indexOf("--only") + 1].split(",");
