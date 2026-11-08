@@ -91,3 +91,19 @@ Resume point for a fresh session: read this file, then `python run.py all`.
 - Follow-on: replacing 36 quiet-spot weak machines is −$98k at β 0.9, +$85k at β 0. VOI counted $0 for other lines [assumption].
 - UI: Model Lab "Does performance follow the spot?" section; Verdict softened line; drawer carded share vs floor + move history; Plan choice tile with sizing table. Tests 34 pass; judge PASS.
 - Next: pause for M8.5.
+
+## M8.5 Casino polish — 2026-11-07 18:08 (time box 17:07–19:37)
+- Shipped: verdict reveal (deal + flip, reduced-motion safe), case file drawer (lacquer, next step + falsifier), betting
+  table (/plan), floor lighting + legend, month playback (off by default; Space / , .) + top-bar readouts (≥1360px),
+  month_highlights.json (additive), card-back placeholders for pending screens. Design log: docs/DESIGN_LOG.md.
+- Pre-work fixes (c19f4ae): move-test power simulated from same-bank play; pick 3 swaps ($10.8k, ±0.14) → included,
+  replaces REPLACE-LEASE. Low-hold "Game setting: pays back more by design" on Verdict, case file, claims draft.
+- Critic #4 (Cl/Br/Ta/Co/Me/Ba): Verdict 9/9/8/8/9/8 · Case file 9/8/8/7/7/6 · Floor 7/8/7/6/8/5 · Plan 8/9/8/7/9/7 ·
+  Model 8/7/7/7/6/8 · stubs 7/8/7/7/6/7. Gate (≥8 on Verdict/Plan/case file/Floor) met only on Verdict; fixes applied
+  after critic #4 (floor map in fold, drawer fits content, muted tags, orphan KPI labels) not re-scored.
+- Checks: typecheck clean; build entry 76.58 kB gzip (+3.8 vs 72.80); judge all PASS local + Netlify ×2; banned-word
+  grep empty; shots outputs/figures/ui_v6/final/ + reveal.webm.
+- Lighthouse desktop, Netlify: P 69 / 81 / 84 (3 runs) · A11y 100 · BP 100 — below the P ≥ 90 bar. Local preview, same
+  settings: new 90 / 95 vs. pre-M8.5 97 / 97 (speed index 1.0 → 1.4 s from the deal-in). 4×-CPU main-thread task time is
+  unchanged (2.90 s → 2.75 s). Netlify now injects /.netlify/scripts/hud (free-tier HUD) into production; that is the
+  rest of the gap [assumption: not present when M8 measured 96]. Report: outputs/lighthouse_desktop_m85.json.
