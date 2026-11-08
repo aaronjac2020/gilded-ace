@@ -14,14 +14,12 @@ from datetime import UTC, datetime
 import numpy as np
 import pandas as pd
 
-from pipeline import budget, verdicts
+from pipeline import budget, demand, downtime, verdicts
 from pipeline.config import OUTPUTS, WEB_DATA, cfg, periods
 from pipeline.load import machine_days, table
 
 RATE_COLS = ("availability", "hold", "luck_z", "effect", "share", "_z", "weight", "tau", "rtp", "_p", "wape", "pct", "uplift")
 PENDING = {
-    "demand.json": "M9",
-    "downtime.json": "M9",
     "players_segments.json": "M10",
     "comps.json": "M10",
     "claims.json": "M12",
@@ -247,6 +245,120 @@ def month_highlights(sc: pd.DataFrame) -> dict:
     return {"months": out}
 
 
+def demand_json() -> dict:
+    """Daily floor + traffic (offline hours masked, then imputed from zone x weekday x hour), zone shares, events, city context."""
+    d0 = pd.Timestamp(cfg_start())
+    d = demand.daily()
+    z = demand.zone_hourly()
+    zd = demand.zone_daily(z)
+    d.drop(columns=["events"]).assign(events=d["events"].str.join(",")).to_parquet(OUTPUTS / "demand_daily.parquet", index=False)
+    day = pd.DataFrame(
+        {
+            "d": (d["gaming_date"] - d0).dt.days,
+            "weekday": d["local_weekday"],
+            "coin_in": d["coin_in_usd"],
+            "theo": d["theo_usd"],
+            "house_win": d["house_win_usd"],
+            "occupied_hours": d["occupied_machine_hours"],
+            "traffic": d["traffic_est"],
+            "entrance": d["entrance_est"],
+            "masked_hours": d["masked_hours"],
+            "fnb_cash": d["pos_cash_usd"],
+            "fnb_cogs": d["pos_cogs_usd"],
+            "comp_face": d["comp_face_value_usd"],
+            "tmax_c": d["tmax_c"],
+            "prcp_mm": d["prcp_mm"],
+            "holiday": d["federal_holiday"],
+            "events": d["events"].str.join(","),
+        }
+    )
+    zday = pd.DataFrame(
+        {
+            "d": (zd["gaming_date"] - d0).dt.days,
+            "zone": zd["zone_id"],
+            "entries": zd["entries_est"],
+            "masked_hours": zd["masked_hours"],
+        }
+    )
+    w = demand.walkway_closures()
+    closures = []
+    for r in w.itertuples():
+        a = (pd.Timestamp(r.closed_from_utc).normalize() - d0).days
+        b = (pd.Timestamp(r.closed_to_utc).normalize() - d0).days
+        tot = zday.groupby("d")["entries"].sum()
+        share = {k: zday[zday.zone == k].set_index("d")["entries"] / tot for k in (r.zone_a, r.zone_b)}
+        inside = (tot.index >= a) & (tot.index <= b)
+        closures.append(
+            {
+                "walkway_id": r.walkway_id,
+                "zones": [r.zone_a, r.zone_b],
+                "reason": r.closure_reason,
+                "d_from": a,
+                "d_to": b,
+                "share": {k: {"during": float(v[inside].mean()), "outside": float(v[~inside].mean())} for k, v in share.items()},
+            }
+        )
+    zones = table("floor_locations").query("node_type == 'zone'")[["zone_id", "name"]]
+    return {
+        "date0": cfg_start(),
+        "daily": columnar(day, encode=("weekday",)),
+        "zone_daily": columnar(zday, encode=("zone",)),
+        "zone_hour": columnar(demand.zone_hour_profile(z), encode=("month", "zone_id")),
+        "events": columnar(demand.event_uplift(d)),
+        "closures": closures,
+        "city": columnar(demand.city_context()),
+        "zones": columnar(zones),
+        "notes": {
+            "traffic": "Door-counter entries. Offline hours are masked, then filled from the same zone, weekday and hour; partial hours are scaled to 60 minutes.",
+            "city": "LVCVA city visitation and NOAA weather are context only; they are not inputs to any model.",
+            "uplift": "Event days vs same-weekday non-event days within 28 days; ratio of means, bootstrap 90% interval.",
+        },
+    }
+
+
+def downtime_json(full: pd.DataFrame) -> dict:
+    """Machine-day lost theo by bank (lo/mid/hi), fault tickets with wait and down hours, slot-tech staffing by shift."""
+    d0 = pd.Timestamp(cfg_start())
+    md = downtime.machine_day_losses(machine_days())
+    g = md.groupby(["gaming_date", "bank_id", "zone_id"], as_index=False).agg(
+        unavailable_hours=("unavailable_hours", "sum"),
+        faults=("faults_opened", "sum"),
+        lost_lo=("lost_theo_lo_usd", "sum"),
+        lost_mid=("lost_theo_mid_usd", "sum"),
+        lost_hi=("lost_theo_hi_usd", "sum"),
+    )
+    g = g.assign(d=(g["gaming_date"] - d0).dt.days).drop(columns=["gaming_date"])
+    t = downtime.tickets(full["theo_per_avail_hr"])
+    t.to_parquet(OUTPUTS / "downtime_tickets.parquet", index=False)
+    tk = pd.DataFrame(
+        {
+            "machine_id": t["machine_id"],
+            "d": (t["gaming_date"] - d0).dt.days,
+            "opened": t["opened_at_local"].dt.strftime("%Y-%m-%d %H:%M"),
+            "bank": t["bank_id"],
+            "zone": t["zone_id"],
+            "shift": t["shift"],
+            "wait_hours": t["wait_hours"],
+            "down_hours": t["down_hours"],
+            "repair_cost": t["repair_cost_usd"],
+            "lost_theo": t["lost_theo_usd"],
+        }
+    )
+    return {
+        "date0": cfg_start(),
+        "bank_day": columnar(
+            g[["d", "bank_id", "zone_id", "unavailable_hours", "faults", "lost_lo", "lost_mid", "lost_hi"]],
+            encode=("bank_id", "zone_id"),
+        ),
+        "tickets": columnar(tk, encode=("machine_id", "bank", "zone", "shift")),
+        "staffing": columnar(downtime.staffing()),
+        "notes": {
+            "lost": "Lost theo = unavailable hours x the machine's same-weekday coin-in per available hour x (1 - RTP); range from the 25th-75th percentile of its daily rates.",
+            "tickets": "Per-ticket lost theo uses the machine's average theo per available hour, so night (grave) tickets are an upper estimate: night play is lighter.",
+        },
+    }
+
+
 def run() -> dict[str, int]:
     """Write every web JSON; returns {file: bytes}. Raises if the total exceeds web.max_total_mb."""
     sizes: dict[str, int] = {}
@@ -268,6 +380,8 @@ def run() -> dict[str, int]:
     sizes["model_lab.json"] = write("model_lab.json", model_lab())
     sizes["budget.json"] = write("budget.json", budget_json(full))
     sizes["month_highlights.json"] = write("month_highlights.json", month_highlights(sc))
+    sizes["demand.json"] = write("demand.json", demand_json())
+    sizes["downtime.json"] = write("downtime.json", downtime_json(full))
     for f, ms in PENDING.items():
         if not (WEB_DATA / f).exists() or json.loads((WEB_DATA / f).read_text(encoding="utf-8")).get("pending"):
             sizes[f] = write(f, {"pending": ms})

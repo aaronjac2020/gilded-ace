@@ -107,3 +107,11 @@ Resume point for a fresh session: read this file, then `python run.py all`.
   settings: new 90 / 95 vs. pre-M8.5 97 / 97 (speed index 1.0 → 1.4 s from the deal-in). 4×-CPU main-thread task time is
   unchanged (2.90 s → 2.75 s). Netlify now injects /.netlify/scripts/hud (free-tier HUD) into production; that is the
   rest of the gap [assumption: not present when M8 measured 96]. Report: outputs/lighthouse_desktop_m85.json.
+
+## M9 · Demand + Downtime (2026-11-07)
+- pipeline/demand.py: daily floor money + door-counter traffic (offline hours masked → imputed from zone×weekday×hour; partial hours scaled), event uplift vs same-weekday ±28d (bootstrap 90% CI), zone×hour profile, walkway closures, LVCVA/NOAA as context only.
+- pipeline/downtime.py: fault tickets (wait for tech, down hours, shift, bank), slot-tech staffing by shift; export bank×day lost theo lo/mid/hi.
+- Web: /demand (calendar grid, trend with event/closure bands, weekday profile, zone share Jan vs Jun `#traffic`, event uplift, city context) and /downtime (`#lost` by bank, `downtime-kpi`, shift waits, month range, repeat faults → drawer). Drawer: Timeline + Tickets tabs (timeline lazy-loads machine_day_slim).
+- Findings: Sat 1.64× Tue coin-in; Super Bowl +23% (CI 14–33%), property tournament +18%; Back Forty share 3.9% → 2.8% during W-ENT-B40 closure; grave-shift faults wait 2.0 h vs 0.9 h (one tech); downtime $93.9k theo ($79.7k–$106k).
+- judge-check: check 2 now waits for the lazy Downtime screen before reading `downtime-kpi`.
+- Local judge: all checks passed (outputs/judge_m9_local.txt).

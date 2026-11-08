@@ -73,6 +73,8 @@ export type ScoreRow = {
   lost_theo_usd: number;
   lost_theo_lo_usd: number;
   lost_theo_hi_usd: number;
+  unavailable_hours: number;
+  faults: number;
   effect_shrunk_lo: number;
   effect_shrunk_hi: number;
   hold_flag: boolean;

@@ -11,6 +11,7 @@ import { useFilters } from "../lib/urlState";
 import { Button } from "./ui/button";
 import { Kbd } from "./ui/kbd";
 import { EvidenceLink } from "./EvidenceLink";
+import { MachineTickets, MachineTimeline } from "./MachineTimeline";
 import { VerdictStamp } from "./theme/VerdictStamp";
 import { Tabs, TabsContent, TabsList } from "./ui/tabs";
 import { Tip } from "./ui/tooltip";
@@ -146,6 +147,8 @@ function Body({
               { value: "breakdown", label: "Breakdown" },
               { value: "hold", label: "Hold & luck" },
               { value: "location", label: "Location" },
+              { value: "timeline", label: "Timeline" },
+              { value: "tickets", label: "Tickets" },
             ]}
           />
           <div className="-mx-5 max-h-[calc(100vh-230px)] overflow-y-auto px-5 py-5">
@@ -186,6 +189,12 @@ function Body({
                   /hr, actual {fmt.usd(mv.rate_before)} → {fmt.usd(mv.rate_after)}/hr.
                 </p>
               ))}
+            </TabsContent>
+            <TabsContent value="timeline">
+              <MachineTimeline id={row.machine_id} />
+            </TabsContent>
+            <TabsContent value="tickets">
+              <MachineTickets id={row.machine_id} />
             </TabsContent>
           </div>
         </Tabs>

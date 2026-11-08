@@ -106,9 +106,12 @@ try {
       let dtDetail = "downtime screen pending (M9)";
       await page.getByRole("link", { name: "Downtime" }).click();
       const dt = page.locator("[data-testid=downtime-kpi]");
+      await dt.waitFor({ timeout: 8000 }).catch(() => {});
       if (await dt.count()) {
         const withBank = await dt.innerText();
         await page.goto(`${url}/downtime`);
+        await page.locator("[data-testid=downtime-kpi]").waitFor({ timeout: 8000 });
+        await page.waitForTimeout(300);
         const noBank = await page.locator("[data-testid=downtime-kpi]").innerText();
         dtOk = withBank !== noBank;
         dtDetail = `downtime "${noBank}" -> "${withBank}"`;
