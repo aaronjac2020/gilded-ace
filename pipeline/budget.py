@@ -269,8 +269,8 @@ def move_test(full: pd.DataFrame, alt: dict, cat: pd.DataFrame | None = None, se
 
 
 def recommend(full: pd.DataFrame, alt: dict | None = None) -> list[Line]:
-    """Recommended plan from the full-period scorecard (index machine_id). v0: fixed structure,
-    targets + effect ranges from data; the optimizer + sensitivity replace this in M11."""
+    """Recommended plan from the full-period scorecard (index machine_id): candidate lines with targets and effect
+    ranges from data; the move test swaps in only if it beats the lowest-value line (best_plan checks the same choice)."""
     from pipeline import verdicts
 
     cat = catalog()
@@ -399,14 +399,88 @@ def with_move_test(lines: list[Line], mt: dict, cat: pd.DataFrame) -> tuple[list
     return (cand if cmp["included"] else lines), cmp
 
 
+def best_plan(pool: list[Line], value: dict[str, float], cat: pd.DataFrame | None = None) -> tuple[tuple[str, ...], float]:
+    """Exhaustive search over subsets of the candidate lines: valid (cap, <= max types, compatible), max total value.
+    Ties go to the cheaper plan. The empty plan (keep everything) is always valid."""
+    from itertools import combinations
+
+    cat = catalog() if cat is None else cat
+    best: tuple[tuple[str, ...], float, float] = ((), 0.0, 0.0)
+    k_max = cfg()["budget"]["max_action_types"]
+    for k in range(1, min(k_max, len(pool)) + 1):
+        for combo in combinations(pool, k):
+            if validate(list(combo), cat):
+                continue
+            v, c = sum(value[ln.action_type_id] for ln in combo), plan_total(list(combo), cat)
+            if v > best[1] + 1e-9 or (abs(v - best[1]) <= 1e-9 and c < best[2]):
+                best = (tuple(sorted(ln.action_type_id for ln in combo)), v, c)
+    return best[0], best[1]
+
+
+def sensitivity(pool: list[Line], voi: float, voi_peer: float, cat: pd.DataFrame | None = None) -> list[dict]:
+    """Re-run the plan choice when one input moves: each line's effect at its low / high end or scaled by
+    +/- sensitivity_scale, all lines low / high together, and the move test's information value at the peer
+    calibration or $0. Reports the plan picked in each scenario and whether it differs from the base pick."""
+    cat = catalog() if cat is None else cat
+    sc = cfg()["budget"]["sensitivity_scale"]
+    ids = [ln.action_type_id for ln in pool]
+    by = {ln.action_type_id: ln for ln in pool}
+
+    def val(eff: dict[str, float], v: float) -> dict[str, float]:
+        return {i: eff[i] + (v if i == "A-MOVE-MACHINE" else 0.0) for i in ids}
+
+    mid = {i: by[i].effect_mid_usd for i in ids}
+    scen: list[tuple[str, str, dict[str, float], float]] = [("base", "Base case (mid effects)", mid, voi)]
+    for i in ids:
+        for tag, x, lab in (
+            ("lo", by[i].effect_lo_usd, "low end"),
+            ("hi", by[i].effect_hi_usd, "high end"),
+            ("down", mid[i] * (1 - sc), f"mid -{sc:.0%}"),
+            ("up", mid[i] * (1 + sc), f"mid +{sc:.0%}"),
+        ):
+            scen.append((f"{i}:{tag}", f"{cat.loc[i, 'name']}: {lab}", {**mid, i: x}, voi))
+    scen.append(("all:lo", "Every line at its low end", {i: by[i].effect_lo_usd for i in ids}, voi))
+    scen.append(("all:hi", "Every line at its high end", {i: by[i].effect_hi_usd for i in ids}, voi))
+    scen.append(("voi:peer", "Information value, peer calibration", mid, voi_peer))
+    scen.append(("voi:0", "Information value counted as $0", mid, 0.0))
+    out, base = [], None
+    for sid, label, eff, v in scen:
+        pick, value = best_plan(pool, val(eff, v), cat)
+        base = pick if base is None else base
+        out.append(
+            {
+                "scenario": sid,
+                "label": label,
+                "plan": " + ".join(pick) or "keep all",
+                "value_usd": value,
+                "cost_usd": plan_total([by[i] for i in pick], cat),
+                "changed": pick != base,
+            }
+        )
+    return out
+
+
 def plan_summary(full: pd.DataFrame, alt: dict | None = None) -> dict:
     cat = catalog()
-    lines = recommend(full, alt)
+    base = recommend(full)
+    sens, pool, voi = [], list(base), 0.0
+    lines = base
+    if alt:
+        mt = move_test(full, alt, cat)
+        lines, _ = with_move_test(base, mt, cat)
+        pool = base + [move_line(mt)]
+        voi = mt["voi_usd"]
+        sens = sensitivity(pool, voi, mt.get("voi_usd_tau_peer", voi), cat)
     total = plan_total(lines, cat)
+    value = {ln.action_type_id: line_value(ln, voi if ln.action_type_id == "A-MOVE-MACHINE" else 0.0) for ln in pool}
+    pick, _ = best_plan(pool, value, cat)
     return {
         "lines": to_frame(lines, cat),
+        "pool": to_frame(pool, cat),
         "total_usd": total,
         "kept_usd": cfg()["budget"]["total_usd"] - total,
         "errors": validate(lines, cat),
         "effect": {k: sum(getattr(ln, f"effect_{k}_usd") for ln in lines) for k in ("lo", "mid", "hi")},
+        "optimizer_pick": list(pick),
+        "sensitivity": sens,
     }

@@ -122,3 +122,9 @@ Resume point for a fresh session: read this file, then `python run.py all`.
 - Findings: top 10% of carded players = 66% of theo, top 1% = 23% (Gini 0.75); Local players 28% of player-months, 58% of theo. Reinvestment break week of Apr 21 (90% CI Apr 14–28): 1.20% → 1.30%, +0.10 pts (CI +0.08 to +0.13), null p 0.04. Redemption price 13.1 → 6.0 points/$ week of Apr 28; earn rate flat at 1.00; cost per $ face flat 0.28.
 - Web: /players (segment bar + clickable breakdowns via ?seg=, Lorenz signature tile, net histogram, by-month), /comps (change-point hero tile with `data-testid=change-point`, loyalty ledger, tiers, monthly stack, counted-once tile). Judge check 2b added (segment drill changes all 6 Players charts).
 - Local judge: all checks passed (outputs/judge_m10_local.txt).
+
+## M11 · Budget allocator + sensitivity (2026-11-07)
+- pipeline/budget.py: `best_plan` (exhaustive search over the candidate lines: cap, ≤3 types, compatible; max theo + VOI, ties → cheaper) confirms the recommended plan (A-INSPECT + A-WAYFINDING + A-MOVE-MACHINE, $19,500, $80,500 kept). `sensitivity`: 21 scenarios (each line lo/hi/±50%, all lo/hi, VOI peer/$0); the plan holds in 19. It flips only when inspection is worth $0 (low end), which drops it.
+- web/src/lib/budget.ts mirrors `line_cost`/`validate`. The /plan allocator starts at the recommendation (prints $19,500 = plan total) and refuses a 4th type, incompatible combos (targets fill from ranked candidates, e.g. M-1006 moved + replaced) and >$100k. The sensitivity tile shows the value range per line and lists the flips.
+- tests/test_budget.py (7): $3,380 lease, over budget, ≤3 types (A-HOLD exempt), comp-policy + same-machine incompatibility, quantity limit, optimizer, exported plan valid + totals match + optimizer agrees.
+- Judge check 4b added. Local judge: all passed (outputs/judge_m11_local.txt).

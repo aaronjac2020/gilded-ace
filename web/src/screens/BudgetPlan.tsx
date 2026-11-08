@@ -1,9 +1,13 @@
+import { Minus, Plus, RotateCcw } from "lucide-react";
+import { useMemo, useState } from "react";
 import { EvidenceLink } from "../components/EvidenceLink";
 import { HeroBand, Kpi, KpiStrip } from "../components/ui/hero-band";
 import { Num } from "../components/ui/num";
 import { ErrorState, ScreenSkeleton } from "../components/ui/skeleton";
 import { Tile } from "../components/ui/tile";
 import { BettingTable } from "../components/theme/BettingTable";
+import { HOLD, lineCost, planTotal, validate, type AllocLine, type CatalogRow, type Rules } from "../lib/budget";
+import { cn } from "../lib/cn";
 import { rows, type Columnar } from "../lib/data";
 import { fmt } from "../lib/format";
 import { useJson } from "../lib/useData";
@@ -32,8 +36,12 @@ type MoveTest = {
     included_tau_peer?: boolean;
   };
 };
+type Scenario = { scenario: string; label: string; plan: string; value_usd: number; cost_usd: number; changed: boolean };
 type Budget = {
-  rules: { total_usd: number; horizon_days: number; max_action_types: number };
+  rules: Rules;
+  pool: Columnar;
+  optimizer_pick: string[];
+  sensitivity: Columnar | null;
   formula: string;
   catalog: Columnar;
   recommended: Columnar;
@@ -163,9 +171,10 @@ export default function BudgetPlan() {
         ))}
       </div>
       {data.move_test && <MoveTestCompare mt={data.move_test} />}
+      <Allocator data={data} lines={lines} />
+      {data.sensitivity && <Sensitivity data={data} />}
       <p className="mt-6 max-w-prose text-xs text-fg-subtle">
-        Value of information is credited to the move test only; other lines count it as $0. The interactive allocator and sensitivity view
-        are in progress.
+        Value of information is credited to the move test only; other lines count it as $0.
       </p>
     </div>
   );
@@ -239,6 +248,237 @@ function MoveTestCompare({ mt }: { mt: MoveTest }) {
             {fmt.usdK(c.lowest.value_usd)}).
           </>
         )}
+      </p>
+    </Tile>
+  );
+}
+
+/**
+ * Build-your-own plan from the catalog, starting at the recommendation. Every change is checked with the pipeline's rules
+ * (lib/budget.ts mirrors pipeline/budget.py validate); a change that breaks one is refused and the reason shown.
+ * Targets fill from the plan's ranked candidates, so a machine can't be both moved and replaced.
+ */
+function Allocator({ data, lines }: { data: Budget; lines: Line[] }) {
+  const cat = useMemo(() => new Map(rows<CatalogRow>(data.catalog).map((c) => [c.action_type_id, c])), [data.catalog]);
+  const pool = useMemo(() => rows<Line>(data.pool), [data.pool]);
+  const cands = useMemo(() => {
+    const m = new Map(pool.map((l) => [l.action_type_id, l.targets.split(", ").filter(Boolean)]));
+    if (m.has("A-REPLACE-LEASE")) m.set("A-REPLACE-BUY", m.get("A-REPLACE-LEASE")!);
+    return m;
+  }, [pool]);
+  const start = useMemo(() => Object.fromEntries(lines.map((l) => [l.action_type_id, l.quantity])), [lines]);
+  const [qty, setQty] = useState<Record<string, number>>(start);
+  const [blocked, setBlocked] = useState<{ id: string; errs: string[] } | null>(null);
+  const ids = [...cat.keys()].filter((i) => i !== HOLD);
+  const plan = (q: Record<string, number>): AllocLine[] =>
+    ids.filter((i) => (q[i] ?? 0) > 0).map((i) => ({ id: i, quantity: q[i], targets: (cands.get(i) ?? []).slice(0, q[i]) }));
+  const cur = plan(qty);
+  const total = planTotal(cur, cat);
+  const errs = validate(cur, cat, data.rules);
+  const effect = (i: string, q: number) => {
+    const p = pool.find((l) => l.action_type_id === i);
+    return p ? (p.effect_mid_usd * Math.min(q, p.quantity)) / p.quantity : null;
+  };
+  const theo = cur.reduce((s, l) => s + (effect(l.id, l.quantity) ?? 0), 0);
+  const tryStep = (i: string, d: number) => {
+    const next = { ...qty, [i]: Math.max(0, (qty[i] ?? 0) + d) };
+    const e = validate(plan(next), cat, data.rules);
+    if (d > 0 && e.length) return setBlocked({ id: i, errs: e });
+    setBlocked(null);
+    setQty(next);
+  };
+  const wouldBlock = (i: string) => validate(plan({ ...qty, [i]: (qty[i] ?? 0) + 1 }), cat, data.rules).length > 0;
+  const isRec = ids.every((i) => (qty[i] ?? 0) === (start[i] ?? 0));
+  const cap = data.rules.total_usd;
+
+  return (
+    <Tile
+      id="allocator"
+      className="mt-6 scroll-mt-20"
+      testId="allocator"
+      label="Allocator"
+      title={
+        isRec
+          ? `Starts at the recommendation: ${fmt.usd(total)}, the same as the plan total`
+          : `Your plan: ${fmt.usd(total)} on ${cur.length} action type${cur.length === 1 ? "" : "s"}, ${fmt.usdK(cap - total)} kept`
+      }
+      sub={`Cost = quantity × (unit cost + daily cost × live days of ${data.rules.horizon_days}). Over budget, a 4th action type and incompatible combinations are refused.`}
+      table={{
+        columns: ["Action", "Cost per unit, 30 days", "Quantity", "Cost"],
+        rows: ids.map((i) => [
+          cat.get(i)!.name,
+          fmt.usd(lineCost(cat.get(i)!, 1)),
+          qty[i] ?? 0,
+          fmt.usd(lineCost(cat.get(i)!, qty[i] ?? 0)),
+        ]),
+      }}
+    >
+      <div className="grid grid-cols-1 gap-x-10 gap-y-6 lg:grid-cols-[1fr_280px]">
+        <table className="w-full text-sm">
+          <thead className="text-left text-2xs text-fg-subtle">
+            <tr>
+              <th className="py-1 font-normal">Action</th>
+              <th className="py-1 text-right font-normal">Per unit</th>
+              <th className="py-1 text-center font-normal">Qty</th>
+              <th className="py-1 text-right font-normal">Cost</th>
+              <th className="py-1 text-right font-normal">Theo, mid</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ids.map((i) => {
+              const c = cat.get(i)!;
+              const q = qty[i] ?? 0;
+              const e = q > 0 ? effect(i, q) : null;
+              const wb = wouldBlock(i);
+              return (
+                <tr key={i} data-action={i} className={cn("border-t border-divider", q > 0 ? "text-fg" : "text-fg-muted")}>
+                  <td className="py-1.5 pr-3">
+                    {c.name}
+                    {blocked?.id === i && (
+                      <span className="mt-0.5 block text-2xs text-verdict-downtime" data-testid="alloc-blocked" role="status">
+                        Refused: {blocked.errs.join("; ")}
+                      </span>
+                    )}
+                  </td>
+                  <td className="mono py-1.5 text-right">{fmt.usd(lineCost(c, 1))}</td>
+                  <td className="py-1.5">
+                    <div className="flex items-center justify-center gap-1.5">
+                      <button
+                        type="button"
+                        aria-label={`Remove one ${c.unit}: ${c.name}`}
+                        data-step="-1"
+                        className="rounded p-0.5 hover:bg-surface-2 disabled:opacity-30"
+                        disabled={q === 0}
+                        onClick={() => tryStep(i, -1)}
+                      >
+                        <Minus size={14} />
+                      </button>
+                      <span className="mono w-6 text-center">{q}</span>
+                      <button
+                        type="button"
+                        aria-label={`Add one ${c.unit}: ${c.name}`}
+                        data-step="1"
+                        data-blocked={wb || undefined}
+                        title={wb ? "This would break a plan rule" : undefined}
+                        className={cn("rounded p-0.5 hover:bg-surface-2", wb && "opacity-30")}
+                        onClick={() => tryStep(i, 1)}
+                      >
+                        <Plus size={14} />
+                      </button>
+                    </div>
+                  </td>
+                  <td className="mono py-1.5 text-right">{q > 0 ? fmt.usd(lineCost(c, q)) : "–"}</td>
+                  <td className="mono py-1.5 text-right text-fg-muted">{q > 0 ? (e == null ? "not estimated" : fmt.usdK(e)) : ""}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        <div className="self-start">
+          <p className="eyebrow">Spend vs. cap</p>
+          <p className="mono mt-1 text-2xl text-ivory" data-testid="alloc-total">
+            {fmt.usd(total)}
+          </p>
+          <div className="relative mt-2 h-1.5 rounded-full bg-surface-2">
+            <div
+              className="absolute inset-y-0 left-0 rounded-full bg-gold/60"
+              style={{ width: `${Math.min(100, (total / cap) * 100)}%` }}
+            />
+          </div>
+          <dl className="mt-4 grid grid-cols-2 gap-y-2 text-xs">
+            <dt className="text-fg-subtle">Action types</dt>
+            <dd className="mono text-right">
+              {cur.length} / {data.rules.max_action_types}
+            </dd>
+            <dt className="text-fg-subtle">Kept</dt>
+            <dd className="mono text-right">{fmt.usd(cap - total)}</dd>
+            <dt className="text-fg-subtle">Theo, mid</dt>
+            <dd className="mono text-right">{fmt.usdK(theo)}</dd>
+            <dt className="text-fg-subtle">Recommended total</dt>
+            <dd className="mono text-right" data-testid="plan-total">
+              {fmt.usd(data.total_usd)}
+            </dd>
+          </dl>
+          <p className={cn("mt-4 text-xs", errs.length ? "text-verdict-downtime" : "text-fg-muted")} data-testid="alloc-status">
+            {errs.length ? errs.join("; ") : isRec ? "Valid · same as the recommended plan" : "Valid plan"}
+          </p>
+          {!isRec && (
+            <button
+              type="button"
+              className="mt-3 inline-flex items-center gap-1.5 text-xs text-gold-soft hover:text-ivory"
+              onClick={() => {
+                setQty(start);
+                setBlocked(null);
+              }}
+            >
+              <RotateCcw size={12} /> Reset to the recommendation
+            </button>
+          )}
+          <p className="mt-4 text-2xs text-fg-subtle">
+            Theo scales with quantity up to the plan's ranked candidates. Actions with no data-based estimate show none and add $0.
+          </p>
+        </div>
+      </div>
+    </Tile>
+  );
+}
+
+/** Does the plan choice survive when one input moves? Exhaustive re-pick per scenario (pipeline/budget.py sensitivity). */
+function Sensitivity({ data }: { data: Budget }) {
+  const sc = rows<Scenario>(data.sensitivity!);
+  const base = sc[0];
+  const held = sc.filter((s) => !s.changed).length;
+  const flips = sc.filter((s) => s.changed);
+  const pool = rows<Line>(data.pool);
+  const lo = Math.min(...sc.map((s) => s.value_usd));
+  const hi = Math.max(...sc.map((s) => s.value_usd));
+  const x = (v: number) => ((v - lo) / (hi - lo || 1)) * 100;
+  const bars = pool
+    .map((l) => {
+      const r = sc.filter((s) => s.scenario.startsWith(`${l.action_type_id}:`)).map((s) => s.value_usd);
+      return { id: l.action_type_id, name: l.name, min: Math.min(...r), max: Math.max(...r) };
+    })
+    .sort((a, b) => b.max - b.min - (a.max - a.min));
+  return (
+    <Tile
+      id="sensitivity"
+      className="mt-6 scroll-mt-20"
+      testId="sensitivity"
+      label="Sensitivity"
+      title={`The same plan wins in ${held} of ${sc.length} scenarios`}
+      sub="Each scenario moves one input (a line's effect to its low or high end, or ±50% of mid; the move test's information value) and re-picks the best valid plan from the four candidate lines."
+      table={{
+        columns: ["Scenario", "Best plan", "Value (theo + information)", "Cost", "Changed"],
+        rows: sc.map((s) => [s.label, s.plan, fmt.usd(s.value_usd), fmt.usd(s.cost_usd), s.changed ? "yes" : "no"]),
+      }}
+    >
+      <p className="eyebrow">Best plan's value when one line's effect moves · base {fmt.usdK(base.value_usd)}</p>
+      <div className="mt-3 space-y-3">
+        {bars.map((b) => (
+          <div key={b.id} className="grid grid-cols-[minmax(0,320px)_1fr_110px] items-center gap-4 text-xs">
+            <span className="truncate text-fg-muted" title={b.name}>
+              {b.name}
+            </span>
+            <div className="relative h-2 rounded-full bg-surface-2">
+              <div className="absolute inset-y-0 rounded-full bg-gold/40" style={{ left: `${x(b.min)}%`, right: `${100 - x(b.max)}%` }} />
+              <div className="absolute -top-0.5 h-3 w-0.5 bg-ivory" style={{ left: `${x(base.value_usd)}%` }} />
+            </div>
+            <span className="mono text-right text-fg-muted">
+              {b.max - b.min < 1 ? "no change" : `${fmt.usdK(b.min)}–${fmt.usdK(b.max)}`}
+            </span>
+          </div>
+        ))}
+      </div>
+      <p className="mt-5 text-sm text-fg" data-testid="sensitivity-flips">
+        {flips.length === 0
+          ? "No single change flips the plan."
+          : `The pick changes only in ${flips.length}: ${flips.map((f) => `${f.label.charAt(0).toLowerCase()}${f.label.slice(1)} (${f.plan})`).join("; ")}.`}{" "}
+        Lease replacement never enters: it targets machines the move test already moves, and at its high end it is still worth less than the
+        test once information value counts.
+      </p>
+      <p className="mt-2 text-xs text-fg-subtle">
+        Inspection's low end is $0 (it may find nothing); at that end it no longer covers its {fmt.usd(1200)} and drops out. That is the
+        price of checking, not a reason to skip it.
       </p>
     </Tile>
   );

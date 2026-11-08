@@ -43,7 +43,11 @@ if (!server) {
   const warm = await browser.newContext();
   const wp = await warm.newPage();
   await wp.goto(`${url}/`, { waitUntil: "load" });
-  await wp.locator("[data-testid=verdict-kpis] [data-kpi-value]").first().waitFor({ timeout: 15000 }).catch(() => {});
+  await wp
+    .locator("[data-testid=verdict-kpis] [data-kpi-value]")
+    .first()
+    .waitFor({ timeout: 15000 })
+    .catch(() => {});
   console.log(`warm-up: throwaway context loaded / in ${Date.now() - t} ms`);
   await warm.close();
 }
@@ -64,11 +68,17 @@ try {
   let slowest = "";
   if (loadMs >= 3000) {
     const top = await page.evaluate(() =>
-      performance.getEntriesByType("resource").sort((a, b) => b.duration - a.duration).slice(0, 5).map((e) => `${e.name.split("/").pop()} ${Math.round(e.duration)}ms`),
+      performance
+        .getEntriesByType("resource")
+        .sort((a, b) => b.duration - a.duration)
+        .slice(0, 5)
+        .map((e) => `${e.name.split("/").pop()} ${Math.round(e.duration)}ms`),
     );
     const nav = await page.evaluate(() => {
       const n = performance.getEntriesByType("navigation")[0];
-      return n ? `doc ttfb ${Math.round(n.responseStart)}ms, doc done ${Math.round(n.responseEnd)}ms, dcl ${Math.round(n.domContentLoadedEventEnd)}ms, load ${Math.round(n.loadEventEnd)}ms` : "no nav entry";
+      return n
+        ? `doc ttfb ${Math.round(n.responseStart)}ms, doc done ${Math.round(n.responseEnd)}ms, dcl ${Math.round(n.domContentLoadedEventEnd)}ms, load ${Math.round(n.loadEventEnd)}ms`
+        : "no nav entry";
     });
     slowest = `; ${nav}; slowest: ${top.join(", ")}`;
   }
@@ -78,10 +88,16 @@ try {
     const before = await kpis();
     const titleBefore = await page.getByTestId("assertion-title").innerText();
     await page.locator("[data-period='2025-03']").click();
-    await page.waitForFunction((b) => {
-      const v = [...document.querySelectorAll("[data-testid=verdict-kpis] [data-kpi-value]")].map((e) => e.textContent).join(" | ");
-      return v !== b;
-    }, before.replace(/\n/g, ""), { timeout: 8000 }).catch(() => {});
+    await page
+      .waitForFunction(
+        (b) => {
+          const v = [...document.querySelectorAll("[data-testid=verdict-kpis] [data-kpi-value]")].map((e) => e.textContent).join(" | ");
+          return v !== b;
+        },
+        before.replace(/\n/g, ""),
+        { timeout: 8000 },
+      )
+      .catch(() => {});
     const after = await kpis();
     const titleAfter = await page.getByTestId("assertion-title").innerText();
     record(1, "period change alters Verdict KPIs", before !== after, `"${before}" -> "${after}" (title: ${titleBefore} -> ${titleAfter})`);
@@ -131,7 +147,12 @@ try {
     await page.waitForTimeout(500);
     const s1 = await sigs();
     const changed = s0.filter((s, i) => s !== s1[i]).length;
-    record("2b", `segment ${segId} drill changes all Players charts`, s0.length >= 4 && changed === s0.length, `${changed}/${s0.length} charts changed`);
+    record(
+      "2b",
+      `segment ${segId} drill changes all Players charts`,
+      s0.length >= 4 && changed === s0.length,
+      `${changed}/${s0.length} charts changed`,
+    );
   }
 
   if (only.includes(3)) {
@@ -140,7 +161,12 @@ try {
     const t = page.getByTestId("mae-table");
     await t.waitFor({ timeout: 8000 });
     const txt = await t.innerText();
-    record(3, "Model Lab reachable with MAE table", (await t.isVisible()) && /MAE/.test(txt) && /\$/.test(txt), txt.replace(/\s+/g, " ").slice(0, 120));
+    record(
+      3,
+      "Model Lab reachable with MAE table",
+      (await t.isVisible()) && /MAE/.test(txt) && /\$/.test(txt),
+      txt.replace(/\s+/g, " ").slice(0, 120),
+    );
   }
 
   if (only.includes(4)) {
@@ -156,6 +182,34 @@ try {
       const ok = target ? await target.isVisible() : true;
       record(4, "EvidenceLink from /plan lands on chart + filters", ok, `${u.pathname}${u.search} (focus #${focus})`);
     } else record(4, "EvidenceLink from /plan", false, "no evidence links");
+
+    // Allocator: starts at the recommended total; refuses a 4th type, an incompatible combo and going over budget.
+    await page.goto(`${url}/plan#allocator`);
+    const al = page.getByTestId("allocator");
+    await al.waitFor({ timeout: 8000 });
+    const step = (id, d) => al.locator(`[data-action='${id}'] [data-step='${d}']`).click();
+    const total = () => al.getByTestId("alloc-total").innerText();
+    const blockedMsg = async () =>
+      (await al.getByTestId("alloc-blocked").count()) ? await al.getByTestId("alloc-blocked").innerText() : "";
+    const t0 = await total();
+    const rec = await al.getByTestId("plan-total").innerText();
+    await step("A-SURVEY", 1);
+    const types = await blockedMsg();
+    await step("A-WAYFINDING", -1);
+    for (let k = 0; k < 3; k++) await step("A-REPLACE-BUY", 1);
+    const incompat = await blockedMsg();
+    for (let k = 0; k < 2; k++) await step("A-REPLACE-BUY", -1);
+    for (let k = 0; k < 6; k++) await step("A-MOVE-MACHINE", -1);
+    for (let k = 0; k < 5; k++) await step("A-REPLACE-BUY", 1);
+    const over = await blockedMsg();
+    const tEnd = await total();
+    const ok = t0 === rec && /action types/.test(types) && /incompatible/.test(incompat) && /exceeds/.test(over) && tEnd !== t0;
+    record(
+      "4b",
+      "allocator matches plan total and refuses rule breaks",
+      ok,
+      `start ${t0} = plan ${rec}; 4th type: "${types}"; combo: "${incompat}"; budget: "${over}"; end ${tEnd}`,
+    );
   }
 
   record(9, "no console errors", consoleErrors.length === 0, consoleErrors.slice(0, 3).join(" || ") || "none");

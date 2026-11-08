@@ -1,0 +1,32 @@
+(node:13028) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+PASS  check 0: first load of / (KPIs visible) — 289 ms in page, 289 ms wall (limit 3000)
+PASS  check 1: period change alters Verdict KPIs — "$295.7K | 0
+/
+4 | $93.9K | $19.5K
+/
+$80.5K" -> "$83.9K | 4
+/
+4 | $19.2K | $19.5K
+/
+$80.5K" (title: 7 of 10 aren’t the problem -> 10 of 10 aren’t the problem)
+PASS  check 2: bank B-01 drill changes Verdict + Downtime — verdict "$295.7K | 0
+/
+4 | $93.9K | $19.5K
+/
+$80.5K" -> "$542.3K | 0
+/
+0 | $1.5K | $19.5K
+/
+$80.5K"; downtime "THEO LOST TO DOWNTIME
+$93.9K
+Range $79.7k–$106k" -> "THEO LOST TO DOWNTIME
+$1.5K
+Range $1.3k–$1.7k"
+PASS  check 2b: segment tier:Gold drill changes all Players charts — 6/6 charts changed
+PASS  check 3: Model Lab reachable with MAE table — MODEL 2 Test-window error, 61 days MODEL MAE WAPE Weekday × event $63.9k 4.7% Weekday only $68.7k – Baseline (flat mean)
+PASS  check 4: EvidenceLink from /plan lands on chart + filters — /floor?machine=M-1158&focus=map (focus #map)
+PASS  check 4b: allocator matches plan total and refuses rule breaks — start $19,500 = plan $19,500; 4th type: "Refused: 4 action types; at most 3 allowed"; combo: "Refused: incompatible on M-1006: A-MOVE-MACHINE + A-REPLACE-BUY"; budget: "Refused: total $111,200 exceeds $100,000"; end $89,200
+PASS  check 9: no console errors — none
+
+all checks passed

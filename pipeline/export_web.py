@@ -212,12 +212,15 @@ def budget_json(full: pd.DataFrame) -> dict:
         "formula": "cost = quantity x (unit_cost + recurring_per_day x max(0, horizon_days - lead_days))",
         "catalog": columnar(cat[keep]),
         "recommended": columnar(s["lines"]),
+        "pool": columnar(s["pool"]),
+        "optimizer_pick": s["optimizer_pick"],
+        "sensitivity": columnar(pd.DataFrame(s["sensitivity"])) if s["sensitivity"] else None,
         "total_usd": s["total_usd"],
         "kept_usd": s["kept_usd"],
         "effect": s["effect"],
         "errors": s["errors"],
         "move_test": m.get("move_test"),
-        "version": "v0",
+        "version": "v1",
     }
 
 
