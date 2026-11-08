@@ -12,31 +12,31 @@ const STEPS: Step[] = [
     path: "/",
     sel: "[data-testid=assertion-title]",
     title: "The answer comes first",
-    body: "Every screen opens with its conclusion as the title. The numbers under it are the evidence.",
+    body: "Each chapter opens with its conclusion. Everything under it is the evidence.",
   },
   {
     path: "/",
-    sel: "[data-testid=verdict-kpis]",
+    sel: "[data-testid=reveal-table]",
+    title: "Open any card",
+    body: "Each card is one machine on the cut list. Click it for its case file.",
+  },
+  {
+    path: "/",
+    sel: "[data-testid=period-menu]",
     title: "Change the period",
-    body: "Pick a month in the top bar, or press [ and ]. Every number recomputes from that month's scorecard.",
+    body: "Pick a month here, or press [ and ]. Every number recomputes for that month.",
   },
   {
-    path: "/floor",
-    sel: "[data-bank]",
-    title: "Drill into a bank",
-    body: "Click a bank on the floor. The filter follows you to Verdict and Downtime.",
-  },
-  {
-    path: "/model",
-    sel: "[data-testid=mae-table]",
-    title: "Check the model",
-    body: "Holdout error against a naive baseline, on months the model never saw.",
+    path: "/why",
+    sel: "[data-testid=hands]",
+    title: "Why they're low",
+    body: "The list sorted into hands. Only the truly weak hand is the machine's fault.",
   },
   {
     path: "/plan",
     sel: "[data-testid=plan-lines]",
     title: "Follow the money",
-    body: "Each plan line links to the evidence that justifies it. Press ⌘K any time to jump around.",
+    body: "Each line of the plan links to its evidence. Press ⌘K to jump anywhere.",
   },
 ];
 
@@ -98,7 +98,7 @@ export function Tour() {
             top: box.top - 6,
             width: box.width + 12,
             height: box.height + 12,
-            boxShadow: "0 0 0 9999px rgb(10 9 9 / 0.55)",
+            boxShadow: "0 0 0 9999px rgb(31 23 22 / 0.35)",
           }}
         />
       )}

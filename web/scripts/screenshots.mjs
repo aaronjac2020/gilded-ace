@@ -12,17 +12,19 @@ let url = argVal("--url");
 let server = null;
 
 const ROUTES = [
-  ["verdict", "/"],
-  ["floor", "/floor"],
-  ["demand", "/demand"],
-  ["downtime", "/downtime"],
-  ["players", "/players"],
-  ["comps", "/comps"],
-  ["model", "/model"],
-  ["plan", "/plan"],
-  ["method", "/method"],
+  ["ch1-question", "/"],
+  ["ch2-why", "/why"],
+  ["ch3-floor", "/floor"],
+  ["ch4-guests", "/guests"],
+  ["ch5-plan", "/plan"],
+  ["evidence", "/evidence"],
   ["casefile", "/?machine=M-1158"],
+  ["ch3-floor-bank", "/floor?bank=B-01#map"],
 ];
+if (process.argv.includes("--only")) {
+  const keep = process.argv[process.argv.indexOf("--only") + 1].split(",");
+  ROUTES.splice(0, ROUTES.length, ...ROUTES.filter(([n]) => keep.some((k) => n.startsWith(k))));
+}
 
 async function waitFor(u, ms = 20000) {
   const t0 = Date.now();

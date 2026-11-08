@@ -1,5 +1,5 @@
 import { AnimatePresence, m, useReducedMotion } from "framer-motion";
-import { PERIOD_LABELS } from "../shell/TopBar";
+import { PERIOD_LABELS } from "../shell/nav";
 import { usePlaying } from "../../lib/uiStore";
 import { useJson } from "../../lib/useData";
 import { DecoRule } from "./Deco";

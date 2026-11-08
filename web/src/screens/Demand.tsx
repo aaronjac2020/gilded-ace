@@ -1,6 +1,7 @@
 import { lazy, Suspense, useMemo } from "react";
 import { EvidenceLink } from "../components/EvidenceLink";
-import { PERIOD_LONG } from "../components/shell/TopBar";
+import { PERIOD_LONG } from "../components/shell/nav";
+import { SectionHeader } from "../components/shell/Chapter";
 import { HeroBand, Kpi, KpiStrip } from "../components/ui/hero-band";
 import { Num } from "../components/ui/num";
 import { ErrorState, ScreenSkeleton, Skeleton } from "../components/ui/skeleton";
@@ -108,7 +109,7 @@ export default function Demand() {
           <Kpi
             label="Door entries per day"
             value={<Num value={v.traffic} kind="int" />}
-            note={`Estimated; ${fmt.int(v.masked)} offline counter-hours masked, not zeroed`}
+            note={`Estimated; ${fmt.int(v.masked)} hours with a broken door counter left out`}
           />
           <Kpi
             label="F&B cash per day"
@@ -118,12 +119,19 @@ export default function Demand() {
         </KpiStrip>
       </HeroBand>
 
+      <SectionHeader
+        id="when"
+        title="When guests play"
+        answers="Q2"
+        sentence="Days, weekdays, events and zones, for the selected period."
+        className="mt-20"
+      />
       <section id="calendar" aria-label="Calendar" className="mt-16 scroll-mt-20">
         <Tile
           hero
           label="Calendar"
-          title="Every gaming day, darker to brighter gold by floor coin-in"
-          sub={`Weekends glow; event days are marked with a dot. Days outside ${label} are dimmed.`}
+          title="Every gaming day, shaded by floor coin-in"
+          sub={`Darker = more play. Weekends run darkest; dots mark event days. Days outside ${label} are dimmed.`}
           table={{
             columns: ["Date", "Weekday", "Coin-in", "Events"],
             rows: v.all.map((r) => [isoOf(data.date0, r.d), r.weekday, fmt.usd(r.coin_in), r.events]),
@@ -241,7 +249,7 @@ export default function Demand() {
                     return tipHtml(a[0].name, [["Coin-in / day", fmt.usdK(a[0].value)]]);
                   },
                 },
-                xAxis: { type: "category", data: v.weekday.map((w) => w.wd) },
+                xAxis: { type: "category", data: v.weekday.map((w) => w.wd), axisLabel: { interval: 0 } },
                 yAxis: { type: "value", axisLabel: { formatter: (x: number) => fmt.usdK(x) } },
                 series: [
                   {
@@ -338,7 +346,7 @@ export default function Demand() {
               const x = (u: number) => `${((Math.min(hi, Math.max(lo, u)) - lo) / (hi - lo)) * 100}%`;
               return (
                 <li key={e.event_id} className="grid grid-cols-[1fr_120px_52px] items-center gap-3 text-xs">
-                  <span className="truncate text-fg" title={e.name}>
+                  <span className="text-fg" title={e.name}>
                     {e.name.replace("Gilded Ace ", "")}
                     <span className="ml-1.5 text-2xs text-fg-subtle">{e.scope === "property" ? "property" : "city"}</span>
                   </span>
@@ -386,7 +394,7 @@ export default function Demand() {
           {v.city.map((c) => (
             <div key={c.month} className="flex flex-col gap-1">
               <p className="label-sc text-fg-muted">{c.label}</p>
-              <p className="mono text-sm text-ivory">
+              <p className="mono text-sm text-fg">
                 {fmt.usdK(c.floor)}
                 <span className="text-2xs text-fg-subtle"> /day</span>
               </p>
@@ -499,10 +507,10 @@ function CalendarGrid({ days, date0, win, evName }: { days: Day[]; date0: string
     .map((r) => ({ w: Math.floor((r.d + off) / 7), iso: isoOf(date0, r.d) }));
   return (
     <Chart
-      height={220}
+      height={252}
       label="Calendar heatmap of daily coin-in by week and weekday"
       option={{
-        grid: { left: 36, right: 8, top: 22, bottom: 8 },
+        grid: { left: 36, right: 8, top: 22, bottom: 40 },
         tooltip: {
           formatter: (p: unknown) => {
             const q = p as { data: { r: Day } };
@@ -535,7 +543,15 @@ function CalendarGrid({ days, date0, win, evName }: { days: Day[]; date0: string
         },
         yAxis: { type: "category", data: [...WEEKDAYS].reverse() },
         visualMap: {
-          show: false,
+          show: true,
+          orient: "horizontal",
+          left: 36,
+          bottom: 0,
+          itemWidth: 10,
+          itemHeight: 140,
+          calculable: false,
+          text: ["More play", "Less"],
+          textStyle: { color: colors["fg-muted"], fontSize: 12 },
           min: Math.min(...vals),
           max: Math.max(...vals),
           inRange: { color: [...scales.sequential].slice(1) },

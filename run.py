@@ -41,6 +41,7 @@ TARGETS = {
     "pipeline": lambda: sh([PY, "-m", "pipeline.run_all"]),
     "test": lambda: sh([PY, "-m", "pytest", "-q"]),
     "export": lambda: sh([PY, "-m", "pipeline.export_web"]),
+    "fingerprint": lambda: sh([PY, "-m", "pipeline.fingerprint", *sys.argv[2:]]),
     "web": lambda: sh([NPM, "run", "build"], WEB),
     "dev": lambda: sh([NPM, "run", "dev"], WEB),
     "build": lambda: (
@@ -53,7 +54,7 @@ TARGETS = {
 
 
 def all_() -> None:
-    for t in ("check", "pipeline", "test", "export", "build"):
+    for t in ("check", "pipeline", "test", "export", "fingerprint", "build"):
         TARGETS[t]()
 
 

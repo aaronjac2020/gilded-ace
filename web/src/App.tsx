@@ -1,33 +1,40 @@
 import { lazy, Suspense } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppShell } from "./components/AppShell";
+import { REDIRECTS } from "./components/shell/nav";
 import { ScreenSkeleton } from "./components/ui/skeleton";
-import Verdict from "./screens/Verdict";
+import Question from "./screens/Question";
 
-const FloorMap = lazy(() => import("./screens/FloorMap"));
-const Demand = lazy(() => import("./screens/Demand"));
-const Downtime = lazy(() => import("./screens/Downtime"));
-const Players = lazy(() => import("./screens/Players"));
-const Comps = lazy(() => import("./screens/Comps"));
-const ModelLab = lazy(() => import("./screens/ModelLab"));
-const BudgetPlan = lazy(() => import("./screens/BudgetPlan"));
-const Methodology = lazy(() => import("./screens/Methodology"));
+const Why = lazy(() => import("./screens/Why"));
+const Floor = lazy(() => import("./screens/Floor"));
+const Guests = lazy(() => import("./screens/Guests"));
+const Plan = lazy(() => import("./screens/Plan"));
+const Evidence = lazy(() => import("./screens/Evidence"));
 const NotFound = lazy(() => import("./screens/NotFound"));
+
+/** Old route -> its chapter, keeping ?period=&zone=&bank=&machine=&focus= and #hash. */
+function Redirect({ from }: { from: string }) {
+  const { search, hash } = useLocation();
+  const r = REDIRECTS[from];
+  const focus = new URLSearchParams(search).get("focus");
+  const to = (focus && r.focus?.[focus]) || r.to;
+  return <Navigate replace to={{ pathname: to, search, hash }} />;
+}
 
 export default function App() {
   return (
     <AppShell>
       <Suspense fallback={<ScreenSkeleton />}>
         <Routes>
-          <Route path="/" element={<Verdict />} />
-          <Route path="/floor" element={<FloorMap />} />
-          <Route path="/demand" element={<Demand />} />
-          <Route path="/downtime" element={<Downtime />} />
-          <Route path="/players" element={<Players />} />
-          <Route path="/comps" element={<Comps />} />
-          <Route path="/model" element={<ModelLab />} />
-          <Route path="/plan" element={<BudgetPlan />} />
-          <Route path="/method" element={<Methodology />} />
+          <Route path="/" element={<Question />} />
+          <Route path="/why" element={<Why />} />
+          <Route path="/floor" element={<Floor />} />
+          <Route path="/guests" element={<Guests />} />
+          <Route path="/plan" element={<Plan />} />
+          <Route path="/evidence" element={<Evidence />} />
+          {Object.keys(REDIRECTS).map((p) => (
+            <Route key={p} path={p} element={<Redirect from={p} />} />
+          ))}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

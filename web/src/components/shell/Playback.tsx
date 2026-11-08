@@ -100,7 +100,7 @@ export function Readouts() {
       {items.map(([k, v, kind]) => (
         <div key={k} className="flex flex-col leading-tight">
           <dt className="label-sc text-[9.5px] text-fg-muted">{k}</dt>
-          <dd className="mono text-sm text-ivory">
+          <dd className="mono text-sm text-fg">
             <Num value={v} kind={kind} />
           </dd>
         </div>

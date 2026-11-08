@@ -42,7 +42,7 @@ let registered = false;
 export function registerTheme(): void {
   if (registered) return;
   registered = true;
-  const label = { color: colors["fg-subtle"], fontFamily: fonts.sans, fontSize: 11 };
+  const label = { color: colors["fg-subtle"], fontFamily: fonts.sans, fontSize: 12 };
   const cat = {
     axisLine: { show: false },
     axisTick: { show: false },
@@ -50,11 +50,11 @@ export function registerTheme(): void {
     splitLine: { show: false },
     nameTextStyle: label,
   };
-  const val = { ...cat, splitLine: { show: true, lineStyle: { color: colors.divider, type: [3, 3] as number[] } } };
+  const val = { ...cat, splitLine: { show: true, lineStyle: { color: colors.divider, type: [4, 4] as number[] } } };
   echarts.registerTheme(THEME, {
-    color: [colors["fg-muted"], colors.gold, verdictColors.luck, verdictColors.downtime, verdictColors.inspect_hold, colors["gold-soft"]],
+    color: [colors.maroon, colors["fg-subtle"], colors.gold, verdictColors.luck, verdictColors.downtime, verdictColors.inspect_hold, colors["gold-soft"]],
     backgroundColor: "transparent",
-    textStyle: { fontFamily: fonts.sans, color: colors.fg, fontSize: 12 },
+    textStyle: { fontFamily: fonts.sans, color: colors.fg, fontSize: 13 },
     title: { show: false },
     legend: { show: false, textStyle: label },
     grid: { left: 8, right: 16, top: 16, bottom: 8, containLabel: true },
@@ -71,11 +71,11 @@ export function registerTheme(): void {
 /** The one tooltip: surface-3 card, hairline ring, mono numbers. */
 export const tooltipStyle = {
   backgroundColor: colors["surface-3"],
-  borderColor: colors["ring-strong"],
+  borderColor: colors.divider,
   borderWidth: 1,
-  padding: [8, 10],
-  extraCssText: "border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.45);",
-  textStyle: { color: colors.fg, fontFamily: fonts.sans, fontSize: 12 },
+  padding: [10, 12],
+  extraCssText: "border-radius:10px;box-shadow:0 2px 4px rgba(31,23,22,.08),0 18px 40px -16px rgba(31,23,22,.32);",
+  textStyle: { color: colors.fg, fontFamily: fonts.sans, fontSize: 13 },
   axisPointer: { lineStyle: { color: colors["ring-strong"] }, crossStyle: { color: colors["ring-strong"] } },
 };
 
@@ -86,7 +86,7 @@ export function tipHtml(title: string, rows: [string, string, string?][]): strin
       ([k, v, c]) =>
         `<div style="display:flex;gap:12px;justify-content:space-between;align-items:center;line-height:20px">` +
         `<span style="color:${colors["fg-muted"]};display:flex;align-items:center;gap:6px">${c ? `<i style="width:6px;height:6px;border-radius:9px;background:${c};display:inline-block"></i>` : ""}${k}</span>` +
-        `<span style="font-family:${fonts.mono};font-size:11px">${v}</span></div>`,
+        `<span style="font-family:${fonts.mono};font-size:13px">${v}</span></div>`,
     )
     .join("");
   return `<div style="min-width:160px"><div style="font-weight:600;margin-bottom:4px">${title}</div>${r}</div>`;

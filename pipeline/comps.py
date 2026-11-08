@@ -56,12 +56,13 @@ def sse_split(y: np.ndarray, min_seg: int = 4) -> tuple[int, float]:
     return bk, float(y[bk:].mean() - y[:bk].mean())
 
 
-def change_point(y: np.ndarray, n_boot: int = 2000, block: int = 3, seed: int = 11, min_seg: int = 4) -> dict:
+def change_point(y: np.ndarray, n_boot: int = 2000, block: int = 3, seed: int = 11, min_seg: int = 4, n_perm: int = 5000) -> dict:
     """SSE change point with a moving-block bootstrap of residuals around the fitted two-mean model.
 
     Returns the split index, effect (after - before mean), 90% CIs on both, and the share of resamples that land within
     +-1 week of the point estimate. Also a no-change baseline: the effect found when blocks are resampled from the
-    pooled series (no shift), giving the max |effect| a split finds by chance.
+    pooled series (no shift), giving the max |effect| a split finds by chance. p_perm: permutation test that shuffles the
+    weeks and re-runs the full split search on each shuffle (own RNG, so the bootstrap numbers are unchanged).
     """
     y = np.asarray(y, dtype=float)
     n = len(y)
@@ -94,7 +95,16 @@ def change_point(y: np.ndarray, n_boot: int = 2000, block: int = 3, seed: int = 
         "within_1wk": float(np.mean(np.abs(ks - k) <= 1)),
         "null_effect_p95": float(np.quantile(null, 0.95)),
         "p_null": float(np.mean(np.array(null) >= abs(d))),
+        "p_perm": permutation_p(y, d, n_perm, min_seg),
+        "n_perm": n_perm,
     }
+
+
+def permutation_p(y: np.ndarray, effect: float, n_perm: int = 5000, min_seg: int = 4, seed: int = 29) -> float:
+    """Share of week-order shuffles whose best split finds |effect| at least as large (add-one corrected)."""
+    rng = np.random.default_rng(seed)
+    hits = sum(abs(sse_split(rng.permutation(y), min_seg)[1]) >= abs(effect) for _ in range(n_perm))
+    return float((hits + 1) / (n_perm + 1))
 
 
 def by_segment(month_col: str = "month") -> pd.DataFrame:

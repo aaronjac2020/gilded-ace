@@ -16,7 +16,11 @@ export function EvidenceLink({
 }) {
   const href = `${to}${filterQuery({ ...filters, focus })}`;
   return (
-    <Link to={href} className="focus-ring inline-flex items-center gap-0.5 text-xs font-medium text-gold-soft hover:text-gold" data-evidence={focus}>
+    <Link
+      to={href}
+      className="focus-ring inline-flex items-center gap-0.5 text-xs font-medium text-gold-soft hover:text-gold"
+      data-evidence={focus}
+    >
       {label}
       <ArrowUpRight size={12} aria-hidden />
     </Link>

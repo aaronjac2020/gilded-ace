@@ -5,7 +5,8 @@ import { echarts, registerTheme, THEME } from "../theme/echartsTheme";
 registerTheme();
 
 // CJS module: some bundles hand back { default: Component } instead of the component.
-const ReactEChartsCore = ((ReactEChartsCoreMod as unknown as { default?: typeof ReactEChartsCoreMod }).default ?? ReactEChartsCoreMod) as typeof ReactEChartsCoreMod;
+const ReactEChartsCore = ((ReactEChartsCoreMod as unknown as { default?: typeof ReactEChartsCoreMod }).default ??
+  ReactEChartsCoreMod) as typeof ReactEChartsCoreMod;
 
 /** Themed ECharts wrapper (tree-shaken core build). */
 export function Chart({ option, height = 280, label }: { option: EChartsOption; height?: number; label: string }) {

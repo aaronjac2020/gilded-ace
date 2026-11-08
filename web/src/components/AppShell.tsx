@@ -1,24 +1,17 @@
-import { LazyMotion, m } from "framer-motion";
+import { LazyMotion, m, useReducedMotion } from "framer-motion";
 import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { Toaster } from "sonner";
-import { cn } from "../lib/cn";
 import { useCommandOpen, useTour } from "../lib/uiStore";
 import { navFor } from "./shell/nav";
+import { Stepper } from "./shell/Chapter";
 import { ShortcutsSheet, useGlobalKeys } from "./shell/Shortcuts";
-import { Sidebar } from "./shell/Sidebar";
-import { TopBar } from "./shell/TopBar";
+import { TooltipProvider } from "./ui/tooltip";
 
 // Overlays load on first use so the entry chunk stays small; they stay mounted afterwards for exit animations.
-const MachineDrawer = lazy(() =>
-  import("./MachineDrawer").then((x) => ({ default: x.MachineDrawer })),
-);
-const CommandMenu = lazy(() =>
-  import("./shell/CommandMenu").then((x) => ({ default: x.CommandMenu })),
-);
-const Tour = lazy(() =>
-  import("./shell/Tour").then((x) => ({ default: x.Tour })),
-);
+const MachineDrawer = lazy(() => import("./MachineDrawer").then((x) => ({ default: x.MachineDrawer })));
+const CommandMenu = lazy(() => import("./shell/CommandMenu").then((x) => ({ default: x.CommandMenu })));
+const Tour = lazy(() => import("./shell/Tour").then((x) => ({ default: x.Tour })));
 const motionFeatures = () => import("framer-motion").then((x) => x.domMax);
 
 function useSticky(on: boolean) {
@@ -28,15 +21,14 @@ function useSticky(on: boolean) {
   }, [on]);
   return on || seen;
 }
-import { TooltipProvider } from "./ui/tooltip";
 
 const SITE = "The Gilded Ace";
 
-/** ?focus=<id>: scroll the anchor into view and pulse it gold once it renders. */
+/** ?focus=<id> (or #id): scroll the anchor into view and pulse it once it renders. */
 function useFocusAnchor() {
-  const { pathname, search } = useLocation();
+  const { pathname, search, hash } = useLocation();
   useEffect(() => {
-    const id = new URLSearchParams(search).get("focus");
+    const id = new URLSearchParams(search).get("focus") ?? (hash ? decodeURIComponent(hash.slice(1)) : null);
     if (!id) return;
     let tries = 0;
     let raf = 0;
@@ -46,6 +38,8 @@ function useFocusAnchor() {
         if (tries++ < 120) raf = requestAnimationFrame(seek);
         return;
       }
+      if (el.tagName === "DETAILS") (el as HTMLDetailsElement).open = true;
+      el.closest("details")?.setAttribute("open", "");
       el.scrollIntoView({ block: "start", behavior: "smooth" });
       el.classList.remove("pulse-target");
       void el.offsetWidth;
@@ -53,12 +47,13 @@ function useFocusAnchor() {
     };
     seek();
     return () => cancelAnimationFrame(raf);
-  }, [pathname, search]);
+  }, [pathname, search, hash]);
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   const [params] = useSearchParams();
+  const reduce = useReducedMotion();
   const drawerOn = useSticky(params.has("machine"));
   const commandOn = useSticky(useCommandOpen());
   const tourOn = useSticky(useTour() !== null);
@@ -66,42 +61,29 @@ export function AppShell({ children }: { children: ReactNode }) {
   useFocusAnchor();
   useEffect(() => {
     const n = navFor(pathname);
-    document.title = n
-      ? n.to === "/"
-        ? `${SITE} · Floor review`
-        : `${n.title} · ${SITE}`
-      : `Not found · ${SITE}`;
+    document.title = n ? (n.to === "/" ? `${SITE} · Slot floor review` : `${n.title} · ${SITE}`) : `${SITE}`;
   }, [pathname]);
-  const bleed = pathname === "/floor";
 
   return (
     <LazyMotion features={motionFeatures}>
       <TooltipProvider>
-        <div className="flex min-h-screen">
-          <a
-            href="#main"
-            className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-sm focus:bg-gold focus:px-3 focus:py-1 focus:text-bg"
-          >
-            Skip to content
-          </a>
-          <Sidebar />
-          <div className="flex min-w-0 flex-1 flex-col">
-            <TopBar />
-            <m.main
-              key={pathname}
-              id="main"
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-              className={cn(
-                "w-full flex-1 pb-16",
-                bleed ? "" : "mx-auto max-w-content px-6",
-              )}
-            >
-              {children}
-            </m.main>
-          </div>
-        </div>
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-sm focus:bg-maroon focus:px-3 focus:py-1 focus:text-card"
+        >
+          Skip to content
+        </a>
+        <Stepper />
+        <m.main
+          key={pathname}
+          id="main"
+          initial={reduce ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className="min-h-[calc(100vh-72px)] w-full"
+        >
+          {children}
+        </m.main>
         <Suspense fallback={null}>
           {drawerOn && <MachineDrawer />}
           {commandOn && <CommandMenu />}
@@ -110,13 +92,12 @@ export function AppShell({ children }: { children: ReactNode }) {
         <ShortcutsSheet />
         <Toaster
           position="bottom-center"
-          theme="dark"
+          theme="light"
           toastOptions={{
             classNames: {
-              toast:
-                "!bg-surface-3 !text-fg !ring-1 !ring-ring-strong !border-0 !rounded-lg !shadow-float !font-sans !text-sm",
+              toast: "!bg-surface-1 !text-fg !border !border-divider !rounded-[10px] !shadow-float !font-sans !text-sm",
               description: "!text-fg-muted",
-              actionButton: "!bg-transparent !text-gold-soft !font-medium",
+              actionButton: "!bg-maroon !text-card !font-semibold",
             },
           }}
         />

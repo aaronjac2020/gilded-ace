@@ -1,0 +1,258 @@
+{
+ "about": "Verify these results: run python run.py all; your hashes should match these.",
+ "git_commit": "9a6b00c9691f9fe6c47bf57063d37c383aa36f63",
+ "git_dirty": false,
+ "data_release": {
+  "dataset": "Dashboard Royale \u2014 The Gilded Ace",
+  "version": "0.9.0-draft",
+  "world_id": "gilded-ace-v1",
+  "build_seed": 20250102
+ },
+ "manifest_sha256": "1a59c68ed4f4b2eb0f875c8e169effd5686fbc98a94a09ac170b8f22bad836e2",
+ "seed": 42,
+ "inputs": [
+  {
+   "path": "1_prepared_views/player_period.parquet",
+   "sha256": "e7ddbbafb2ddd9a24ec8bb7b5c5a9c79a17ff0d379011a4f35054be03a0fac2f",
+   "matches_release": true
+  },
+  {
+   "path": "1_prepared_views/prepared_daily_view.parquet",
+   "sha256": "dcf59b0a3ad7dceeff1de7ae5a86e313c42300f3f3b73c652df86cd60fd0eebb",
+   "matches_release": true
+  },
+  {
+   "path": "1_prepared_views/property_day.parquet",
+   "sha256": "8e3df1d0662e27cd964d72287bac224e9f2395600ad8bece9ce4f8b17f5457d5",
+   "matches_release": true
+  },
+  {
+   "path": "2_machine_decision/action_catalog.parquet",
+   "sha256": "d4583febb24d0528feb90f8fa81bb4c2910abba94def7d8c06b96897814d2842",
+   "matches_release": true
+  },
+  {
+   "path": "2_machine_decision/calendar_day.parquet",
+   "sha256": "b6c26f1c60fba6594d52803228e14c734088bd8fb905520ee71041d191092e19",
+   "matches_release": true
+  },
+  {
+   "path": "2_machine_decision/cost_rules.parquet",
+   "sha256": "feedcd1b0ffa965191a6e76b547ec88c981a9ed5955485820d50c5b904a0a498",
+   "matches_release": true
+  },
+  {
+   "path": "2_machine_decision/floor_locations.parquet",
+   "sha256": "47958de9cb8cfbba7cfeab41eb015f8e840e1572f1a2f3d2ed6b6d494de43c39",
+   "matches_release": true
+  },
+  {
+   "path": "2_machine_decision/floor_walkways.parquet",
+   "sha256": "9cdb3c0205d179dea91ef6c71948913c14dd214e95c76805aeb8624efa07854c",
+   "matches_release": true
+  },
+  {
+   "path": "2_machine_decision/game_math.parquet",
+   "sha256": "b6ebc7040d7120dd20be89c5f6ba264d650be9e4bfd03530a2e0abfb3f4f931d",
+   "matches_release": true
+  },
+  {
+   "path": "2_machine_decision/machine_day.parquet",
+   "sha256": "8bd1ebdb1dd2f695eef8585da0d3d5b6785d7c050e29ae52b14c2123c7c33176",
+   "matches_release": true
+  },
+  {
+   "path": "2_machine_decision/machines.parquet",
+   "sha256": "da7f869b62161b61bc44b0fc19d266ccaab2eab94505aa279956d70a1b8047e0",
+   "matches_release": true
+  },
+  {
+   "path": "2_machine_decision/operations.parquet",
+   "sha256": "1d08ce76f31037c95ac3f40918917afa1f4b2fab9d8500a609c7ed4e05e9ca13",
+   "matches_release": true
+  },
+  {
+   "path": "2_machine_decision/placements.parquet",
+   "sha256": "0759516a4c8885176ac2e027b6a214f771144d4d4e3d23210d008c3eb806f810",
+   "matches_release": true
+  },
+  {
+   "path": "3_guests/fnb_transactions.parquet",
+   "sha256": "6021ec899dfded9241bb617e85f922045de42d12af77d6cd0a2e85cce5a1df4b",
+   "matches_release": true
+  },
+  {
+   "path": "3_guests/loyalty_ledger.parquet",
+   "sha256": "f00e81ec27c36fc9d6adea0569a7b31d041f41572bef596dadfdd2ffcbe46f5e",
+   "matches_release": true
+  },
+  {
+   "path": "3_guests/players.parquet",
+   "sha256": "1bd2af3b338effc243dac5ce5b65a796a43d885be77f221445c1cfaa7e7c2c0b",
+   "matches_release": true
+  },
+  {
+   "path": "3_guests/sessions.parquet",
+   "sha256": "2557a50f213e4e8b16d0b733281bf2d7c77ecad6300a0fcc6febdbb17ed45e98",
+   "matches_release": true
+  },
+  {
+   "path": "3_guests/trips.parquet",
+   "sha256": "4ce086b3d08919b818f5e5474acfaab50a51c77f97f04cb1b202d674128fc031",
+   "matches_release": true
+  },
+  {
+   "path": "4_context/events.parquet",
+   "sha256": "f55b840d409bd56991ce1afe401239a67ec646d3a540217701dc7b4ad88607f8",
+   "matches_release": true
+  },
+  {
+   "path": "4_context/real_sources/benchmark_state_monthly.parquet",
+   "sha256": "795e583037761ff76243dbed9abcee32e375dbe7eecae2f9f65f06e36fed58b0",
+   "matches_release": true
+  },
+  {
+   "path": "4_context/real_sources/city_visitation_monthly.parquet",
+   "sha256": "e352d813e635e836dc5421890c9b140c061c674de0cae07755e6eeb6aebaeb63",
+   "matches_release": true
+  },
+  {
+   "path": "4_context/real_sources/weather_daily.parquet",
+   "sha256": "97883e79568416b875168662ad577796f16f0288b797a61aa6a05eba856108a9",
+   "matches_release": true
+  },
+  {
+   "path": "4_context/zone_traffic_hourly.parquet",
+   "sha256": "5f33099b4e65115461828c0de1bde4f88244d57b9069b263601abdbc20e22e3c",
+   "matches_release": true
+  },
+  {
+   "path": "5_optional/security_incidents.parquet",
+   "sha256": "8d46b99cc61cde78940032c3947d6f9b3c9e8f21ad2b76870c018b6566a7926e",
+   "matches_release": true
+  },
+  {
+   "path": "5_optional/shift_roster.parquet",
+   "sha256": "c688b49849c6cd1501b54cf700a9cdb811554a2fea1d402c3b3890a8602f0f4e",
+   "matches_release": true
+  }
+ ],
+ "outputs": [
+  {
+   "path": "outputs/comps_weekly.parquet",
+   "sha256": "9ce950f10db75cc9e93b88414cce61658597d288c2201d900214fe8c37ffe40d"
+  },
+  {
+   "path": "outputs/demand_daily.parquet",
+   "sha256": "711888256218a5fc43d7e9d768e3621fb1b7baeaeb747557fd87461dfdaccfd9"
+  },
+  {
+   "path": "outputs/downtime_tickets.parquet",
+   "sha256": "7b80f54e5d5a996b344e931eb9aadfeaf7aef37b5207ece54108a16fc056d521"
+  },
+  {
+   "path": "outputs/forecast_holdout.parquet",
+   "sha256": "eade87d4a83561189eb2705bbd1e73a4ec40e2a1a3f7ff35014d9b90abcb5af9"
+  },
+  {
+   "path": "outputs/machine_scorecard.parquet",
+   "sha256": "61035b5f58768e8ed2c5aa35aa6fae97cc93d836e64252bef27210b9e178e462"
+  },
+  {
+   "path": "outputs/players_segments.parquet",
+   "sha256": "877d80ebbbf00ea1d06bc6b84cc54d6480498764a6c3015d04eef686d3a9f4d2"
+  },
+  {
+   "path": "outputs/metrics.json",
+   "sha256": "ca20ec1bf50ff6de687be9c95637efe7192c7800a0ef862933049fd263cc996c"
+  },
+  {
+   "path": "web/public/data/budget.json",
+   "sha256": "d9ab492a1dc897e08bc75ff85ab0debf6fc3cec53b67e78163fab72b482d0768"
+  },
+  {
+   "path": "web/public/data/claims.json",
+   "sha256": "967e0c134d6b97c0ddd963ea55d97157d771e950a75c1718e0a064fb697f216b"
+  },
+  {
+   "path": "web/public/data/comps.json",
+   "sha256": "bd7b19006efdc338ab49b53c92aca6371b6b23a1cbf08a0c53706f5dc83f34a8"
+  },
+  {
+   "path": "web/public/data/demand.json",
+   "sha256": "8977ed2412ebcce56b55d6682a0a9e9e612c21d83f7231aaeddf660b90e3249a"
+  },
+  {
+   "path": "web/public/data/downtime.json",
+   "sha256": "11cd9b093129b7f7618ead3e8336d382deda7e406c55e9d7025ab40616a13615"
+  },
+  {
+   "path": "web/public/data/floor.json",
+   "sha256": "3bfe1c7433b2156c9a0e25975e392dd0f8bc3218a3f700a0bfeab111033efea7"
+  },
+  {
+   "path": "web/public/data/lists.json",
+   "sha256": "ebe2167e7a58fd7d1f6ed3b4e6075dc85468af2c49a89984b603acdba6f882b0"
+  },
+  {
+   "path": "web/public/data/machine_day_slim.json",
+   "sha256": "f40b4b514daec3726b1ee2e6db240769dda3a4a63363248d945ad11d06563595"
+  },
+  {
+   "path": "web/public/data/machines.json",
+   "sha256": "fd649e01721afde406fc60c0a3f1646897c03843d660eead3f1dbfd72233e6db"
+  },
+  {
+   "path": "web/public/data/model_lab.json",
+   "sha256": "862c3432d9df8dce6817d0c9b332c88f7c4625895751c1ddb3fa9bdc28d9ddbc"
+  },
+  {
+   "path": "web/public/data/month_highlights.json",
+   "sha256": "51ce6a5fe448db787b66c0618bc5b24cb7f65b16e59d3610755ac02d81403222"
+  },
+  {
+   "path": "web/public/data/placements.json",
+   "sha256": "506fea97ac6ff10b8b4840638dd248f4dd15d10155781eed8c1adec2c7dd4492"
+  },
+  {
+   "path": "web/public/data/players_segments.json",
+   "sha256": "d05cf2771a9f71896baade4e9b8ec5b9ded6bc234a60649e7ec69bceee713423"
+  },
+  {
+   "path": "web/public/data/scorecard_2025-01.json",
+   "sha256": "753491f98a792a0bbd51f4ade9bca197dab3cb8d7117c023384cbd768c7893c2"
+  },
+  {
+   "path": "web/public/data/scorecard_2025-02.json",
+   "sha256": "902e477e5d63c4b553f467604ebeb04bb80ec0409dced6593cedb14897d9b69c"
+  },
+  {
+   "path": "web/public/data/scorecard_2025-03.json",
+   "sha256": "c172dd9176d250d6c2a9d70a33e67dbbdf4d243099e13890fcd64b46741068cf"
+  },
+  {
+   "path": "web/public/data/scorecard_2025-04.json",
+   "sha256": "ec398e3a4128da8b08387351b38c872c746f38ecbcd8c9486640871e7ae0c666"
+  },
+  {
+   "path": "web/public/data/scorecard_2025-05.json",
+   "sha256": "7c7253e1ae56c7b4d9b5276622c21e158fbe7d3330c46eb4e41ca6aff6e72dda"
+  },
+  {
+   "path": "web/public/data/scorecard_2025-06.json",
+   "sha256": "411aa44f303a91953f4f0cf3fd57fdb28819b6c61343ba11d0866a0e4421b9de"
+  },
+  {
+   "path": "web/public/data/scorecard_full.json",
+   "sha256": "65718ac2d7ec646e287b11090a3897537c9590ce2005d0430f8fc3dae00418fe"
+  },
+  {
+   "path": "web/public/data/scorecard_test.json",
+   "sha256": "2330cc1b66c52c232cbb4b3007e3aeab932646cddc8c5e67befc0001d236b8c0"
+  },
+  {
+   "path": "web/public/data/scorecard_train.json",
+   "sha256": "72373b9a56ca3dfcd500597e87d792941af5381275b39b4bbc8ed6592e7a37c4"
+  }
+ ]
+}

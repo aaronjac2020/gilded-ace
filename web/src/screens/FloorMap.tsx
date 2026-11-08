@@ -3,7 +3,7 @@ import { Maximize2, Minus, Pause, Play, Plus } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { MONTHS } from "../components/shell/nav";
-import { PERIOD_LABELS, PERIOD_LONG } from "../components/shell/TopBar";
+import { PERIOD_LABELS, PERIOD_LONG } from "../components/shell/nav";
 import { HeroBand, Kpi, KpiStrip } from "../components/ui/hero-band";
 import { Num } from "../components/ui/num";
 import { ErrorState, ScreenSkeleton } from "../components/ui/skeleton";
@@ -172,7 +172,7 @@ export default function FloorMap() {
       <section
         id="map"
         aria-label="Floor map"
-        className="felt relative mx-6 mt-6 overflow-hidden rounded-xl ring-1 ring-inset ring-gold/20 md:mx-10"
+        className="felt relative mx-6 mt-6 scroll-mt-24 overflow-hidden rounded-xl ring-1 ring-inset ring-gold/20 md:mx-10"
       >
         <svg
           ref={svg}
@@ -203,13 +203,13 @@ export default function FloorMap() {
                   strokeLinejoin="round"
                 />
                 <text
-                  x={h.c[0]}
-                  y={Math.max(16, h.top - 26)}
-                  textAnchor="middle"
-                  fill={colors["fg-subtle"]}
-                  fontSize={11 / Math.sqrt(t.k)}
+                  x={h.top - 26 < 60 ? Math.max(...h.hull.map((q) => q[0])) + 14 : h.c[0]}
+                  y={h.top - 26 < 60 ? h.top + 10 : h.top - 26}
+                  textAnchor={h.top - 26 < 60 ? "start" : "middle"}
+                  fill={colors["fg-muted"]}
+                  fontSize={13 / Math.sqrt(t.k)}
                   letterSpacing="0.08em"
-                  fontWeight={500}
+                  fontWeight={600}
                 >
                   {h.name.toUpperCase()}
                 </text>
@@ -589,8 +589,8 @@ function ZoneLedger({
 }) {
   const max = Math.max(...zones.map((z) => z.flag), 1);
   return (
-    <div className="absolute right-6 top-20 hidden w-[218px] xl:block" data-testid="zone-ledger">
-      <p className="label-sc mb-2 text-gold-soft/80">By zone · reason besides weak play</p>
+    <div className="absolute right-6 top-36 hidden w-[218px] min-[1440px]:block" data-testid="zone-ledger">
+      <p className="label-sc mb-2 text-gold-soft">By zone · reason besides weak play</p>
       <ul className="flex flex-col gap-0.5">
         {[...zones]
           .sort((a, b) => b.flag - a.flag)
@@ -604,7 +604,7 @@ function ZoneLedger({
                   "focus-ring grid w-full grid-cols-[1fr_auto] items-center gap-x-2 rounded-sm px-2 py-1 text-left text-xs transition-colors duration-hover",
                   active === z.z
                     ? "bg-black/35 text-ivory ring-1 ring-inset ring-gold/30"
-                    : "text-fg-muted hover:bg-black/20 hover:text-fg",
+                    : "text-ivory/85 hover:bg-black/20 hover:text-ivory",
                 )}
               >
                 <span className="truncate">{z.name}</span>

@@ -1,6 +1,6 @@
 import { lazy, Suspense, useMemo } from "react";
 import { EvidenceLink } from "../components/EvidenceLink";
-import { PERIOD_LONG } from "../components/shell/TopBar";
+import { PERIOD_LONG } from "../components/shell/nav";
 import { HeroBand, Kpi, KpiStrip } from "../components/ui/hero-band";
 import { Num } from "../components/ui/num";
 import { ErrorState, ScreenSkeleton, Skeleton } from "../components/ui/skeleton";
@@ -84,10 +84,10 @@ export default function Players() {
         eyebrow={`Players · ${label}${seg === "all" ? "" : ` · ${seg.replace(":", " ")}`}`}
         title={
           <>
-            The top 10% of {who} produce {fmt.pct(s.top10_theo, 0)} of their theo; the top 1% alone, {fmt.pct(s.top1_theo, 0)}
+            The top 10% of {who} produce {fmt.pct(s.top10_theo, 0)} of their theo
           </>
         }
-        sub={`${label}: ${fmt.int(s.players)} carded players wagered ${fmt.usdK(s.wagered)} and got back ${fmt.usdK(s.returned)}. ${fmt.pct(s.winners_share, 0)} finished ahead; the median player lost ${fmt.usd(-s.median_net)}.`}
+        sub={`The top 1% alone produce ${fmt.pct(s.top1_theo, 0)}. ${label}: ${fmt.int(s.players)} carded players wagered ${fmt.usdK(s.wagered)} and got back ${fmt.usdK(s.returned)}. ${fmt.pct(s.winners_share, 0)} finished ahead; the median player lost ${fmt.usd(-s.median_net)}.`}
       >
         <KpiStrip testId="players-kpis">
           <Kpi label="Carded players" value={<Num value={s.players} kind="int" />} note={`${fmt.usdK(s.theo)} theo`} />
@@ -105,7 +105,6 @@ export default function Players() {
             label="Net per player"
             value={<Num value={s.net / s.players} kind="usd" />}
             note={`Player's view; median ${fmt.usd(s.median_net)}`}
-            focal
           />
         </KpiStrip>
       </HeroBand>
@@ -189,7 +188,7 @@ export default function Players() {
               ).map(([k, x]) => (
                 <div key={k}>
                   <dt className="eyebrow">{k}</dt>
-                  <dd className="mono mt-1 text-xl text-ivory">{fmt.pct(x)}</dd>
+                  <dd className="mono mt-1 text-xl text-fg">{fmt.pct(x)}</dd>
                 </div>
               ))}
               <p className="col-span-2 text-2xs text-fg-subtle md:col-span-1">
@@ -231,15 +230,15 @@ export default function Players() {
                   xAxis: {
                     type: "category",
                     data: v.hist.map((h) => h.short),
-                    axisLabel: { interval: 1, fontSize: 10, rotate: 40 },
+                    axisLabel: { interval: 2, fontSize: 11, hideOverlap: true },
                   },
-                  yAxis: { type: "value", axisLabel: { formatter: (x: number) => fmt.pct(x / s.players, 0) } },
+                  yAxis: { type: "value", minInterval: 1, axisLabel: { formatter: (x: number) => `${x}%` } },
                   series: [
                     {
                       type: "bar",
                       barCategoryGap: "12%",
                       data: v.hist.map((h) => ({
-                        value: h.n,
+                        value: (h.n / s.players) * 100,
                         itemStyle: { color: h.hi != null && h.hi <= 0 ? colors.gold : "#6B6261" },
                       })),
                     },
@@ -248,7 +247,17 @@ export default function Players() {
               />
             </Suspense>
           </div>
-          <p className="mt-2 text-2xs text-fg-subtle">{data.notes.unit}</p>
+          <p className="mt-2 flex flex-wrap items-center gap-x-4 text-2xs text-fg-subtle">
+            <span className="flex items-center gap-1.5">
+              <span className="size-2 rounded-sm" style={{ background: colors.gold }} aria-hidden />
+              Lost money
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="size-2 rounded-sm bg-[#6B6261]" aria-hidden />
+              Broke even or won
+            </span>
+            <span>{data.notes.unit}</span>
+          </p>
         </Tile>
       </div>
 
@@ -304,7 +313,7 @@ export default function Players() {
           className="col-span-12 scroll-mt-20 lg:col-span-8"
           label="By month"
           title={v.monthTitle}
-          sub={`Active ${who} (bars) and theo per active player (line), by month. Months outside ${label} are dimmed.`}
+          sub={`Active players, ${who} (bars) and theo per active player (line), by month. Months outside ${label} are dimmed.`}
           table={{
             columns: ["Month", "Active players", "Theo", "Theo / player", "Net / player"],
             rows: v.months.map((m) => [
@@ -322,7 +331,7 @@ export default function Players() {
                 height={260}
                 label={`Monthly active players and theo per player for ${who}`}
                 option={{
-                  grid: { left: 4, right: 4, top: 24, bottom: 4, containLabel: true },
+                  grid: { left: 4, right: 4, top: 48, bottom: 4, containLabel: true },
                   legend: { top: 0, right: 0, textStyle: { color: colors["fg-muted"], fontSize: 11 } },
                   tooltip: {
                     trigger: "axis",
@@ -338,14 +347,25 @@ export default function Players() {
                   },
                   xAxis: { type: "category", data: v.months.map((m) => m.label) },
                   yAxis: [
-                    { type: "value", axisLabel: { formatter: (x: number) => fmt.int(x) } },
-                    { type: "value", splitLine: { show: false }, axisLabel: { formatter: (x: number) => fmt.usd(x) } },
+                    {
+                      type: "value",
+                      name: "Players",
+                      nameTextStyle: { align: "left" },
+                      axisLabel: { formatter: (x: number) => fmt.int(x) },
+                    },
+                    {
+                      type: "value",
+                      name: "Theo / player",
+                      nameTextStyle: { align: "right" },
+                      splitLine: { show: false },
+                      axisLabel: { formatter: (x: number) => fmt.usd(x) },
+                    },
                   ],
                   series: [
                     {
                       name: "Active players",
                       type: "bar",
-                      data: v.months.map((m) => ({ value: m.players, itemStyle: { color: m.inPeriod ? "#5A5150" : "#2A2525" } })),
+                      data: v.months.map((m) => ({ value: m.players, itemStyle: { color: m.inPeriod ? "#8A7F7E" : "#DDD6D3" } })),
                     },
                     {
                       name: "Theo / player",

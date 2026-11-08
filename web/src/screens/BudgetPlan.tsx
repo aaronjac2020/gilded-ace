@@ -1,6 +1,7 @@
 import { Minus, Plus, RotateCcw } from "lucide-react";
 import { useMemo, useState } from "react";
 import { EvidenceLink } from "../components/EvidenceLink";
+import { SectionHeader } from "../components/shell/Chapter";
 import { HeroBand, Kpi, KpiStrip } from "../components/ui/hero-band";
 import { Num } from "../components/ui/num";
 import { ErrorState, ScreenSkeleton } from "../components/ui/skeleton";
@@ -67,6 +68,24 @@ type Line = {
 };
 
 /** Chart anchor to scroll to when an evidence href doesn't name one. */
+/** Plain names for action codes in prose; tables keep the codes. */
+const PLAIN: Record<string, string> = {
+  "A-MOVE-MACHINE": "the move test",
+  "A-MOVE-BANK": "a bank move",
+  "A-REPLACE-LEASE": "lease replacement",
+  "A-REPLACE-BUY": "buying a replacement",
+  "A-TECH-SHIFT": "an extra technician",
+  "A-PREVENTIVE": "preventive maintenance",
+  "A-INSPECT": "inspection",
+  "A-WAYFINDING": "the signage refresh",
+  "A-COMP-PILOT": "a comp pilot",
+  "A-COMP-CHANGE": "a comp rate change",
+  "A-PROMO": "a promotion weekend",
+  "A-SURVEY": "a guest survey",
+  "A-HOLD": "keeping budget",
+};
+const plain = (s: string) => s.replace(/A-[A-Z-]+[A-Z]/g, (id) => PLAIN[id] ?? id);
+
 const DEFAULT_FOCUS: Record<string, string> = { "/": "ours", "/floor": "map", "/demand": "traffic", "/downtime": "lost" };
 
 function Evidence({ href }: { href: string }) {
@@ -75,11 +94,16 @@ function Evidence({ href }: { href: string }) {
   return <EvidenceLink to={to} focus={focus ?? DEFAULT_FOCUS[to]} filters={filters} />;
 }
 
+/** Catalog names are per unit ("Relocate one machine"); show the planned quantity in the label. */
+const lineName = (l: { name: string; quantity: number }) =>
+  l.quantity > 1 ? l.name.replace(/one machine/, `${l.quantity} machines`) : l.name;
+
 export default function BudgetPlan() {
   const { data, error } = useJson<Budget>("budget.json");
   if (error) return <ErrorState what="budget" error={error} />;
   if (!data) return <ScreenSkeleton />;
   const lines = rows<Line>(data.recommended);
+  const assumed = lines.find((l) => l.action_type_id === "A-WAYFINDING")?.effect_mid_usd ?? 0;
   const cap = data.rules.total_usd;
   const hiMax = Math.max(...lines.map((l) => l.effect_hi_usd), 1);
 
@@ -100,7 +124,7 @@ export default function BudgetPlan() {
         <BettingTable
           bets={lines.map((l) => ({
             id: l.action_type_id,
-            name: l.name,
+            name: lineName(l),
             cost: l.cost_usd,
             quantity: l.quantity,
             targets: l.targets,
@@ -121,25 +145,36 @@ export default function BudgetPlan() {
             value={<Num value={data.total_usd} kind="usdCompact" />}
             note={`${fmt.pct(data.total_usd / cap)} of the cap`}
           />
-          <Kpi label="Kept" value={<Num value={data.kept_usd} kind="usdCompact" />} note="Unspent, returned" />
+          <Kpi label="Kept" value={<Num value={data.kept_usd} kind="usdCompact" />} note="Not spent in this plan" />
           <Kpi
             label="Expected theo, mid"
             value={<Num value={data.effect.mid} kind="usdCompact" />}
-            note={`Range ${fmt.usdK(data.effect.lo)}–${fmt.usdK(data.effect.hi)} within ${data.rules.horizon_days} days`}
+            note={`Range ${fmt.usdK(data.effect.lo)}–${fmt.usdK(data.effect.hi)} within ${data.rules.horizon_days} days; ${fmt.usdK(assumed)} rests on an assumed signage lift`}
           />
         </KpiStrip>
+        <p className="mt-6 max-w-[760px] text-[15px] text-fg" data-testid="plan-payback">
+          Spend and expected theo roughly match, so the plan about pays for itself. The bigger return is learning whether moves work before
+          paying for replacements. Our 10 weakest get the same {data.rules.horizon_days}-day re-check; replace any still weak.
+        </p>
       </div>
 
-      <div className="mt-16 grid grid-cols-12 gap-8" data-testid="plan-lines">
-        {lines.map((l) => (
+      <SectionHeader
+        id="actions"
+        title="The three actions"
+        answers="Q6"
+        sentence="What each costs, what it should return, and how we'll measure it."
+        className="mt-20"
+      />
+      <div className="mt-8 grid grid-cols-12 gap-8" data-testid="plan-lines">
+        {lines.map((l, i) => (
           <Tile
             key={l.action_type_id}
-            className="col-span-12 lg:col-span-6"
-            label={l.action_type_id}
-            title={l.name}
+            className="col-span-12 lg:col-span-4"
+            label={`Action ${i + 1}`}
+            title={lineName(l)}
             sub={
               <>
-                <span className="mono text-gold-soft">{fmt.usd(l.cost_usd)}</span> · qty {l.quantity} · {l.targets}
+                <span className="mono text-fg">{fmt.usdK(l.cost_usd)}</span> · qty {l.quantity} · {l.targets}
               </>
             }
             footer={<Evidence href={l.evidence} />}
@@ -194,8 +229,8 @@ function MoveTestCompare({ mt }: { mt: MoveTest }) {
       label="Plan choice"
       title={
         c.included
-          ? `The move test replaces ${c.replaces ?? "nothing"}: ${fmt.usdK(c.move_test.value_usd)} theo + information vs. ${fmt.usdK(c.lowest.value_usd)}`
-          : `The move test stays out: ${fmt.usdK(c.move_test.value_usd)} vs. ${fmt.usdK(c.lowest.value_usd)} for ${c.lowest.action_type_id}`
+          ? `The move test replaces ${c.replaces ? plain(c.replaces) : "nothing"}: ${fmt.usdK(c.move_test.value_usd)} theo + information vs. ${fmt.usdK(c.lowest.value_usd)}`
+          : `The move test stays out: ${fmt.usdK(c.move_test.value_usd)} vs. ${fmt.usdK(c.lowest.value_usd)} for ${plain(c.lowest.action_type_id)}`
       }
       sub="Information value = expected gain on the follow-on decision (lease-replace quiet-spot weak machines for 90 days) from knowing whether play follows the spot."
       table={{
@@ -236,7 +271,7 @@ function MoveTestCompare({ mt }: { mt: MoveTest }) {
         to the 4 observed moves.
       </p>
       <p className="mt-2 text-xs text-fg-muted" data-testid="move-test-width">
-        Planned interval at {mt.pick.swaps} swaps: <span className="mono text-ivory">±{mt.pick.halfwidth.toFixed(2)}</span> with
+        Planned interval at {mt.pick.swaps} swaps: <span className="mono text-fg">±{mt.pick.halfwidth.toFixed(2)}</span> with
         machine-to-machine variation (noise alone ±{mt.pick.halfwidth_noise_only.toFixed(2)}). The information value uses this realistic
         width.
         {mt.voi_usd_tau_peer != null && c.move_test.value_usd_tau_peer != null && (
@@ -244,7 +279,7 @@ function MoveTestCompare({ mt }: { mt: MoveTest }) {
             {" "}
             With the wider peer-calibrated variation (±{mt.pick.halfwidth_tau_peer.toFixed(2)}), information value is{" "}
             {fmt.usdK(mt.voi_usd_tau_peer)} and the test {c.included_tau_peer ? "still" : "would no longer"} beat
-            {c.included_tau_peer ? "s" : ""} {c.lowest.action_type_id} ({fmt.usdK(c.move_test.value_usd_tau_peer)} vs.{" "}
+            {c.included_tau_peer ? "s" : ""} {plain(c.lowest.action_type_id)} ({fmt.usdK(c.move_test.value_usd_tau_peer)} vs.{" "}
             {fmt.usdK(c.lowest.value_usd)}).
           </>
         )}
@@ -299,8 +334,8 @@ function Allocator({ data, lines }: { data: Budget; lines: Line[] }) {
       label="Allocator"
       title={
         isRec
-          ? `Starts at the recommendation: ${fmt.usd(total)}, the same as the plan total`
-          : `Your plan: ${fmt.usd(total)} on ${cur.length} action type${cur.length === 1 ? "" : "s"}, ${fmt.usdK(cap - total)} kept`
+          ? `Starts at the recommendation: ${fmt.usdK(total)}, the same as the plan total`
+          : `Your plan: ${fmt.usdK(total)} on ${cur.length} action type${cur.length === 1 ? "" : "s"}, ${fmt.usdK(cap - total)} kept`
       }
       sub={`Cost = quantity × (unit cost + daily cost × live days of ${data.rules.horizon_days}). Over budget, a 4th action type and incompatible combinations are refused.`}
       table={{
@@ -376,7 +411,7 @@ function Allocator({ data, lines }: { data: Budget; lines: Line[] }) {
         </table>
         <div className="self-start">
           <p className="eyebrow">Spend vs. cap</p>
-          <p className="mono mt-1 text-2xl text-ivory" data-testid="alloc-total">
+          <p className="mono mt-1 text-2xl text-fg" data-testid="alloc-total">
             {fmt.usd(total)}
           </p>
           <div className="relative mt-2 h-1.5 rounded-full bg-surface-2">
@@ -405,7 +440,7 @@ function Allocator({ data, lines }: { data: Budget; lines: Line[] }) {
           {!isRec && (
             <button
               type="button"
-              className="mt-3 inline-flex items-center gap-1.5 text-xs text-gold-soft hover:text-ivory"
+              className="mt-3 inline-flex items-center gap-1.5 text-xs text-gold-soft hover:text-maroon"
               onClick={() => {
                 setQty(start);
                 setBlocked(null);
@@ -421,6 +456,19 @@ function Allocator({ data, lines }: { data: Budget; lines: Line[] }) {
       </div>
     </Tile>
   );
+}
+
+/** "Machine inspection…: low end" → "machine inspection… at its low end"; one closing clause when every flip picks the same plan. */
+function flipText(flips: Scenario[]): string {
+  const what = (f: Scenario) => {
+    const t = f.label.replace(/: (low|high) end$/, " at its $1 end");
+    return t.charAt(0).toLowerCase() + t.slice(1);
+  };
+  const plan = (f: Scenario) => plain(f.plan).replace(" + ", " and ");
+  const same = new Set(flips.map((f) => f.plan)).size === 1;
+  return same
+    ? `The pick changes in only ${flips.length}: ${flips.map(what).join(", or ")}. Then the plan drops to ${plan(flips[0])}.`
+    : `The pick changes in only ${flips.length}: ${flips.map((f) => `${what(f)} picks ${plan(f)}`).join("; ")}.`;
 }
 
 /** Does the plan choice survive when one input moves? Exhaustive re-pick per scenario (pipeline/budget.py sensitivity). */
@@ -452,7 +500,10 @@ function Sensitivity({ data }: { data: Budget }) {
         rows: sc.map((s) => [s.label, s.plan, fmt.usd(s.value_usd), fmt.usd(s.cost_usd), s.changed ? "yes" : "no"]),
       }}
     >
-      <p className="eyebrow">Best plan's value when one line's effect moves · base {fmt.usdK(base.value_usd)}</p>
+      <p className="eyebrow">
+        Best plan's value when one line's effect moves · base {fmt.usdK(base.value_usd)} = {fmt.usdK(data.effect.mid)} theo +{" "}
+        {fmt.usdK(base.value_usd - data.effect.mid)} information
+      </p>
       <div className="mt-3 space-y-3">
         {bars.map((b) => (
           <div key={b.id} className="grid grid-cols-[minmax(0,320px)_1fr_110px] items-center gap-4 text-xs">
@@ -470,11 +521,8 @@ function Sensitivity({ data }: { data: Budget }) {
         ))}
       </div>
       <p className="mt-5 text-sm text-fg" data-testid="sensitivity-flips">
-        {flips.length === 0
-          ? "No single change flips the plan."
-          : `The pick changes only in ${flips.length}: ${flips.map((f) => `${f.label.charAt(0).toLowerCase()}${f.label.slice(1)} (${f.plan})`).join("; ")}.`}{" "}
-        Lease replacement never enters: it targets machines the move test already moves, and at its high end it is still worth less than the
-        test once information value counts.
+        {flips.length === 0 ? "No single change flips the plan." : flipText(flips)} Lease replacement never enters: it targets machines the
+        move test already moves, and at its high end it is still worth less than the test once information value counts.
       </p>
       <p className="mt-2 text-xs text-fg-subtle">
         Inspection's low end is $0 (it may find nothing); at that end it no longer covers its {fmt.usd(1200)} and drops out. That is the

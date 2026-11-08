@@ -3,54 +3,56 @@
  * the hex mirrors below exist only for canvas renderers (ECharts) that cannot read CSS variables.
  */
 export const colors = {
-  bg: "#0A0909",
-  "surface-1": "#111010",
-  "surface-2": "#171515",
-  "surface-3": "#1E1B1B",
-  fg: "#EDEAE9",
-  "fg-muted": "#8F8786",
-  "fg-subtle": "#5E5756",
+  bg: "#F5EFE4",
+  "surface-1": "#FFFCF6",
+  "surface-2": "#FAF5EC",
+  "surface-3": "#FFFCF6",
+  fg: "#1F1716",
+  "fg-muted": "#5E534F",
+  "fg-subtle": "#6F655F",
   maroon: "#500000",
   "maroon-bright": "#7A1A1A",
-  gold: "#C9822E",
-  "gold-soft": "#E3B36A",
-  /** white at 6% / 8% / 14% over bg, flattened for canvas. */
-  divider: "rgba(255,255,255,0.06)",
-  ring: "rgba(255,255,255,0.08)",
-  "ring-strong": "rgba(255,255,255,0.14)",
+  gold: "#A86F1C",
+  "gold-soft": "#8A5A1E",
+  divider: "#E4DACB",
+  ring: "rgba(31,23,22,0.10)",
+  "ring-strong": "rgba(31,23,22,0.18)",
 } as const;
 
+/** Reason colors (always paired with an icon + label). `setting` is presentation-only: low payback design. */
 export const verdictColors = {
-  luck: "#6FA8DC",
-  location: "#C9822E",
-  downtime: "#B4656F",
-  inspect_hold: "#9B7FD1",
-  truly_weak: "#D9D4D3",
-  ok: "#3A3434",
+  setting: "#7A5AA8",
+  luck: "#2F6EA3",
+  location: "#8A5A1E",
+  downtime: "#A3434F",
+  inspect_hold: "#5E534F",
+  truly_weak: "#1F1716",
+  ok: "#8C817B",
 } as const;
 
-export type Verdict = keyof typeof verdictColors;
+export type Verdict = Exclude<keyof typeof verdictColors, "setting">;
 
 export const verdictLabels: Record<Verdict, string> = {
-  inspect_hold: "Inspect hold",
-  downtime: "Downtime",
-  location: "Location",
-  luck: "Luck",
+  inspect_hold: "Check the payout",
+  downtime: "Often down",
+  location: "Quiet spot",
+  luck: "Unlucky stretch",
   truly_weak: "Truly weak",
-  ok: "OK",
+  ok: "No clear problem",
 };
 
 export const verdictOrder: Verdict[] = ["inspect_hold", "downtime", "location", "luck", "truly_weak", "ok"];
 
 /** Sequential (surface-2 -> maroon -> gold) and diverging (luck <-> neutral <-> maroon-bright), OKLCH-interpolated. */
 export const scales = {
-  sequential: ["#171515", "#2A1312", "#41100D", "#5E1B10", "#86391A", "#AA5E25", "#C9822E"],
-  diverging: ["#6FA8DC", "#5B7FA0", "#4A5560", "#3A3434", "#5A2A28", "#6E2220", "#7A1A1A"],
+  sequential: ["#FAF5EC", "#F1E2C8", "#E6C99C", "#D4A464", "#B97E3A", "#8F4A22", "#500000"],
+  diverging: ["#2F6EA3", "#7FA3C4", "#C9D3DB", "#EFE8DC", "#D8A99E", "#A85A50", "#7A1A1A"],
 } as const;
 
 export const fonts = {
-  sans: "'Inter Variable', Inter, system-ui, sans-serif",
+  sans: "'Manrope Variable', Manrope, system-ui, sans-serif",
+  display: "'Fraunces Variable', Fraunces, Georgia, serif",
   mono: "'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace",
 };
 
-export const motion = { ease: [0.16, 1, 0.3, 1] as const, hover: 0.12, menu: 0.18, route: 0.24 };
+export const motion = { ease: [0.16, 1, 0.3, 1] as const, hover: 0.15, menu: 0.18, route: 0.2 };

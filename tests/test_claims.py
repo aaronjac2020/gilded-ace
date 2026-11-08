@@ -8,16 +8,23 @@ from pipeline.claims import APPROVED
 from pipeline.config import WEB_DATA
 
 ROOT = Path(__file__).resolve().parents[1]
+# Chapter route -> screen files that render it (chapters compose the earlier screens).
 SCREENS = {
-    "/": "Verdict",
-    "/floor": "FloorMap",
-    "/demand": "Demand",
-    "/downtime": "Downtime",
-    "/players": "Players",
-    "/comps": "Comps",
-    "/model": "ModelLab",
-    "/plan": "BudgetPlan",
-    "/method": "Methodology",
+    "/": ["Question"],
+    "/why": ["Why", "ModelLab"],
+    "/floor": ["Floor", "FloorMap", "Demand", "Downtime", "ModelLab"],
+    "/guests": ["Guests", "Players", "Comps"],
+    "/plan": ["Plan", "BudgetPlan"],
+    "/evidence": ["Evidence", "Methodology", "ModelLab"],
+}
+# Old routes redirect (web/src/components/shell/nav.ts REDIRECTS); focus overrides move single anchors.
+REDIRECTS = {
+    "/model": ("/why", {"model2": "/floor", "importance": "/evidence"}),
+    "/demand": ("/floor", {}),
+    "/downtime": ("/floor", {}),
+    "/players": ("/guests", {}),
+    "/comps": ("/guests", {}),
+    "/method": ("/evidence", {}),
 }
 FIELDS = ("claim", "source", "result", "alternative", "limitation", "link")
 FORBIDDEN = re.compile(r"fraud|cheat|theft|rigged|suspect|caught", re.I)
@@ -48,10 +55,13 @@ def test_approved_claim_verbatim_and_required_notes():
 def test_deep_links_resolve():
     for x in _claims():
         path, _, qs = x["link"].partition("?")
-        assert path in SCREENS, x["link"]
         focus = dict(p.split("=", 1) for p in qs.split("&") if p).get("focus")
+        if path in REDIRECTS:
+            to, over = REDIRECTS[path]
+            path = over.get(focus, to)
+        assert path in SCREENS, x["link"]
         if focus:
-            src = (ROOT / "web" / "src" / "screens" / f"{SCREENS[path]}.tsx").read_text(encoding="utf-8")
+            src = "".join((ROOT / "web" / "src" / "screens" / f"{f}.tsx").read_text(encoding="utf-8") for f in SCREENS[path])
             assert re.search(rf'id="{re.escape(focus)}"', src), f"{x['id']}: #{focus} not on {path}"
 
 
