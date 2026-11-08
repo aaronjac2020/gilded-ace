@@ -38,6 +38,8 @@ type Cp = {
   within_1wk: number;
   null_effect_p95: number;
   p_null: number;
+  p_perm: number;
+  n_perm: number;
   week: string;
   week_lo: string;
   week_hi: string;
@@ -71,6 +73,8 @@ const pp = (x: number, d = 2) => `${(x * 100).toFixed(d)}%`;
 const shortDate = (iso: string) =>
   new Date(iso + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 
+/** Permutation p to 3 decimals, floored at the test's resolution. */
+const pval = (p: number) => (p < 0.001 ? "< 0.001" : p.toFixed(3));
 export default function Comps() {
   const { data, error } = useJson<CompsData>("comps.json");
   const [f] = useFilters();
@@ -90,10 +94,11 @@ export default function Comps() {
         eyebrow={`Comps · ${label}`}
         title={
           <>
-            Comp reinvestment stepped up from {pp(cp.before)} to {pp(cp.after)} of theo the week of {shortDate(cp.week)}
+            Redemption price fell {ppd.before.toFixed(1)} → {ppd.after.toFixed(1)} points per $; comp cost rose {pp(cp.before)} →{" "}
+            {pp(cp.after)} of theo
           </>
         }
-        sub={`Inside that window, the week of ${shortDate(ppd.week)}, the redemption price fell from ${ppd.before.toFixed(1)} to ${ppd.after.toFixed(1)} points per dollar of comp, while players kept earning ${earn.before.toFixed(2)} points per dollar wagered. In ${label} comps cost ${fmt.usdK(v.cost)}, ${pp(v.rate)} of carded theo.`}
+        sub={`Week of ${shortDate(ppd.week)}. Earning held at ${earn.before.toFixed(2)} points per $ wagered, so each point bought more. Comps cost ${fmt.usdK(v.cost)}, ${pp(v.rate)} of carded theo.`}
       >
         <KpiStrip testId="comps-kpis">
           <Kpi
@@ -175,7 +180,8 @@ export default function Comps() {
             {fmt.pct(cp.within_1wk, 0)} of resamples within a week). Effect:{" "}
             <span className="mono text-fg">+{(cp.effect * 100).toFixed(2)} pts</span> (90% CI +{(cp.effect_lo * 100).toFixed(2)} to +
             {(cp.effect_hi * 100).toFixed(2)}), a {fmt.pct(rel, 0)} rise in comp cost per dollar of theo. A split of a series with no break
-            finds a shift this large {fmt.pct(cp.p_null, 0)} of the time.
+            finds a shift this large {fmt.pct(cp.p_null, 0)} of the time. Shuffling the weeks {fmt.int(cp.n_perm)} times and re-running the
+            full split search each time: permutation p = <span className="mono text-fg">{pval(cp.p_perm)}</span>.
           </p>
           <p className="mt-2 max-w-prose text-2xs text-fg-subtle">{data.notes.change_point}</p>
         </Tile>
@@ -189,14 +195,14 @@ export default function Comps() {
           title={`Points got ${(ppd.before / ppd.after).toFixed(1)}× more valuable at redemption; earning did not change`}
           sub="Points redeemed per dollar of comp face value (gold) and points earned per dollar wagered (grey), weekly."
           table={{
-            columns: ["Series", "Break week", "Before", "After", "Chance of a shift this large"],
+            columns: ["Series", "Break week", "Before", "After", "Permutation p"],
             rows: (
               [
                 ["Points per $ redeemed", ppd],
                 ["Points earned per $ wagered", earn],
                 ["Cost per $ of face", data.change_points.cost_per_face],
               ] as const
-            ).map(([k, c]) => [k, c.week, c.before.toFixed(3), c.after.toFixed(3), fmt.pct(c.p_null, 0)]),
+            ).map(([k, c]) => [k, c.week, c.before.toFixed(3), c.after.toFixed(3), pval(c.p_perm)]),
           }}
         >
           <Suspense fallback={<Skeleton className="h-[260px] w-full" />}>

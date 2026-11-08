@@ -1,7 +1,6 @@
 import { lazy, Suspense, useMemo } from "react";
 import { EvidenceLink } from "../components/EvidenceLink";
 import { PERIOD_LONG } from "../components/shell/nav";
-import { SectionHeader } from "../components/shell/Chapter";
 import { HeroBand, Kpi, KpiStrip } from "../components/ui/hero-band";
 import { Num } from "../components/ui/num";
 import { ErrorState, ScreenSkeleton, Skeleton } from "../components/ui/skeleton";
@@ -110,13 +109,6 @@ export default function Players() {
         </KpiStrip>
       </HeroBand>
 
-      <SectionHeader
-        id="who-plays"
-        title="Who carries the floor"
-        answers="Q4"
-        sentence="Pick a segment; every chart below follows it."
-        className="mt-20"
-      />
       <SegmentBar data={data} seg={seg} setSeg={setSeg} />
 
       <div className="mt-8 grid grid-cols-12 gap-8">

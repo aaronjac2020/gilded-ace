@@ -3,16 +3,16 @@ import { ChapterPart } from "../components/ui/hero-band";
 import Comps from "./Comps";
 import Players from "./Players";
 
-/** Chapter 4 · Guests & loyalty: who drives play (lead), then what the comp program spends. */
+/** Chapter 4 · Guests & loyalty: what the comp program spends (lead), then who drives play. */
 export default function Guests() {
   return (
     <Chapter testId="chapter-guests">
       <ChapterPart lead>
-        <Players />
-      </ChapterPart>
-      <Bridge>The plan spends nothing on comps or players. This chapter checks that call: who drives play, and what comps cost.</Bridge>
-      <ChapterPart title="What comps cost" answers="Q5">
         <Comps />
+      </ChapterPart>
+      <Bridge>The plan spends nothing on comps or players. This chapter checks that call: what comps cost, and who drives play.</Bridge>
+      <ChapterPart title="Who drives play" answers="Q4">
+        <Players />
       </ChapterPart>
     </Chapter>
   );
