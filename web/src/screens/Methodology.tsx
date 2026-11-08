@@ -56,15 +56,18 @@ export default function Methodology() {
           >
             {data.approved}
           </blockquote>
-          <ClaimFacts c={lead} />
+          <ClaimFacts c={lead} open />
         </Tile>
       </section>
 
       <DecoRule className="my-14" />
 
       <div className="grid grid-cols-12 items-start gap-8">
-        <Tile id="decision-order" className="col-span-12 scroll-mt-20" label="Pipeline verdicts" title="Pipeline order: first match wins">
-          <ol className="grid gap-x-10 gap-y-3 text-sm md:grid-cols-2">
+        <details id="decision-order" className="card col-span-12 scroll-mt-20 px-6 py-4">
+          <summary className="cursor-pointer text-[15px] font-semibold text-fg">
+            Pipeline verdict order, used by claims 05 and 06 (first match wins)
+          </summary>
+          <ol className="mt-4 grid gap-x-10 gap-y-3 text-sm md:grid-cols-2">
             {RULES.map(([k, d], i) => (
               <li key={k} className="grid grid-cols-[24px_1fr] gap-2">
                 <span className="mono text-gold-soft">{i + 1}</span>
@@ -85,8 +88,8 @@ export default function Methodology() {
             Machine effect = coin-in per available hour ÷ what the spot and game predict, shrunk toward 1 by its bootstrap error. Intervals
             are 90%, from 2,000 bootstrap resamples.
           </p>
-        </Tile>
-        <div className="col-span-12 grid grid-cols-1 gap-8 lg:grid-cols-2 xl:grid-cols-3" data-testid="claims">
+        </details>
+        <div className="col-span-12 grid grid-cols-1 gap-8 lg:grid-cols-2" data-testid="claims">
           {rest.map((c, i) => (
             <section key={c.id} id={`claim-${c.id}`} className="scroll-mt-20">
               <Tile
@@ -96,6 +99,12 @@ export default function Methodology() {
                 footer={<Evidence href={c.link} />}
               >
                 <p className="text-sm text-fg">{c.claim}</p>
+                {c.id === "verdict-mix" && (
+                  <p className="mt-3 text-sm text-fg-muted" data-testid="verdict-mix-note">
+                    These are pipeline verdicts, where spot and luck are checked before truly weak. The story checks truly weak first, so
+                    Chapter 1 counts 3 of the manager&rsquo;s 10 as truly weak, all milder than our 10 weakest.
+                  </p>
+                )}
                 <ClaimFacts c={c} />
               </Tile>
             </section>
@@ -115,13 +124,34 @@ const readable = (s: string) =>
     body.replace(/'(\w+)': (\d+)/g, (_m, k: string, n: string) => `${k.replace("_hold", "").replace("_", " ")} ${n}`),
   );
 
-function ClaimFacts({ c }: { c: Claim }) {
+/** Result always shows; on the smaller cards the alternative, limitation and query fold behind one disclosure. */
+function ClaimFacts({ c, open = false }: { c: Claim; open?: boolean }) {
   const rows: [string, string][] = [
     ["Result", readable(c.result)],
     ["Alternative tested", c.alternative],
     ["Limitation", c.limitation],
     ["Source", c.source],
   ];
+  if (!open)
+    return (
+      <dl className="mt-5 max-w-[720px] space-y-3 text-[15px]">
+        <div>
+          <dt className="eyebrow">Result</dt>
+          <dd className="mt-1 text-fg">{rows[0][1]}</dd>
+        </div>
+        <details>
+          <summary className="eyebrow cursor-pointer">Alternative tested, limitation, query</summary>
+          <div className="mt-2 space-y-3">
+            {rows.slice(1).map(([k, v]) => (
+              <div key={k}>
+                <dt className="eyebrow">{k}</dt>
+                <dd className={k === "Source" ? "mono mt-1 text-[13px] text-fg-muted" : "mt-1 text-fg"}>{v}</dd>
+              </div>
+            ))}
+          </div>
+        </details>
+      </dl>
+    );
   return (
     <dl className="mt-5 max-w-[720px] space-y-3 text-[15px]">
       {rows.map(([k, v]) =>

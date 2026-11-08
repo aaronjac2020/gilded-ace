@@ -94,6 +94,10 @@ function Evidence({ href }: { href: string }) {
   return <EvidenceLink to={to} focus={focus ?? DEFAULT_FOCUS[to]} filters={filters} />;
 }
 
+/** Catalog names are per unit ("Relocate one machine"); show the planned quantity in the label. */
+const lineName = (l: { name: string; quantity: number }) =>
+  l.quantity > 1 ? l.name.replace(/one machine/, `${l.quantity} machines`) : l.name;
+
 export default function BudgetPlan() {
   const { data, error } = useJson<Budget>("budget.json");
   if (error) return <ErrorState what="budget" error={error} />;
@@ -119,7 +123,7 @@ export default function BudgetPlan() {
         <BettingTable
           bets={lines.map((l) => ({
             id: l.action_type_id,
-            name: l.name,
+            name: lineName(l),
             cost: l.cost_usd,
             quantity: l.quantity,
             targets: l.targets,
@@ -161,12 +165,12 @@ export default function BudgetPlan() {
         className="mt-20"
       />
       <div className="mt-8 grid grid-cols-12 gap-8" data-testid="plan-lines">
-        {lines.map((l) => (
+        {lines.map((l, i) => (
           <Tile
             key={l.action_type_id}
             className="col-span-12 lg:col-span-4"
-            label={l.action_type_id}
-            title={l.name}
+            label={`Action ${i + 1}`}
+            title={lineName(l)}
             sub={
               <>
                 <span className="mono text-fg">{fmt.usdK(l.cost_usd)}</span> · qty {l.quantity} · {l.targets}
@@ -505,7 +509,7 @@ function Sensitivity({ data }: { data: Budget }) {
       <p className="mt-5 text-sm text-fg" data-testid="sensitivity-flips">
         {flips.length === 0
           ? "No single change flips the plan."
-          : `The pick changes only in ${flips.length}: ${flips.map((f) => `${f.label.charAt(0).toLowerCase()}${f.label.slice(1)}${f.label.includes(plain(f.plan)) ? "" : ` (${plain(f.plan)})`}`).join("; ")}.`}{" "}
+          : `The pick changes only in ${flips.length}: ${flips.map((f) => `${f.label.charAt(0).toLowerCase()}${f.label.slice(1)}${f.label.includes(plain(f.plan)) ? "" : `, which picks ${plain(f.plan)}`}`).join("; ")}.`}{" "}
         Lease replacement never enters: it targets machines the move test already moves, and at its high end it is still worth less than the
         test once information value counts.
       </p>

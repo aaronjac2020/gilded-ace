@@ -191,7 +191,7 @@ export default function Downtime() {
               const x = v.shift[s.id];
               const max = Math.max(...SHIFTS.map((t) => v.shift[t.id].down), 1);
               return (
-                <div key={s.id} className="grid grid-cols-[88px_1fr_120px] items-center gap-4">
+                <div key={s.id} className="grid grid-cols-[88px_1fr_150px] items-center gap-4">
                   <p className="flex flex-col leading-tight">
                     <span className="text-sm text-fg">{s.label}</span>
                     <span className="mono text-2xs text-fg-subtle">{s.hours}</span>

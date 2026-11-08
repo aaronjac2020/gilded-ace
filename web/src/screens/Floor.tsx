@@ -20,7 +20,8 @@ function CutListZone() {
   if (!top) return null;
   return (
     <Bridge>
-      {top.n} of the 10 on the cut list sit in {top.name}. This chapter shows where and when guests play, and what that means for them.
+      {top.n} of the 10 on the cut list sit in {top.name}, though most have a stronger reason first. This chapter shows where and when
+      guests play.
     </Bridge>
   );
 }

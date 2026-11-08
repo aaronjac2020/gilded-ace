@@ -34,7 +34,7 @@ export default function Question() {
   const ids = mgr.map((r) => r.machine_id);
   const t = tally(ids, flags);
   const overlap = new Set(ours.map((r) => r.machine_id).filter((id) => ids.includes(id)));
-  const openRow = (id: string) => open(id, [...new Set([...ids, ...ours.map((r) => r.machine_id)])]);
+  const openRow = (id: string) => open(id, ids.includes(id) ? ids : ours.map((r) => r.machine_id));
   const per = PERIOD_MENU.find(([k]) => k === f.period)?.[1] ?? f.period;
   const scope = f.bank ? ` · bank ${f.bank}` : f.zone ? ` · zone ${f.zone}` : "";
 
@@ -297,7 +297,7 @@ function Deal({
                     suit="♠"
                     className="aspect-[5/7] w-full transition-transform duration-hover ease-out group-hover:-translate-y-1"
                   >
-                    <div className="flex h-full flex-col items-center px-1.5 pb-3 pt-3.5 text-center text-ink">
+                    <div className="flex h-full flex-col items-center px-1.5 pb-5 pt-3.5 text-center text-ink">
                       <span className="font-mono text-[13px] font-semibold tracking-tight">{r.machine_id}</span>
                       <span className="serif mt-2.5 text-[24px] font-semibold leading-none">{fmt.usdK(r.house_win_usd)}</span>
                       <span className="mt-1 text-[13px] text-ink-2">house win</span>

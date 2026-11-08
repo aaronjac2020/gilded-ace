@@ -16,7 +16,7 @@ export const REASON_ICON: Record<Reason, LucideIcon> = {
   none: CircleDashed,
 };
 
-/** Shorter stamp text for card faces, where "Set to pay back more" would wrap. */
+/** Shorter stamp text for card faces, where the full label would overflow the card. */
 export const CARD_LABEL: Partial<Record<Reason, string>> = { setting: "Pays back more" };
 
 type Meta = { rules: Rules; verdict_rules: VerdictRules };
@@ -25,10 +25,7 @@ type Meta = { rules: Rules; verdict_rules: VerdictRules };
 export function useReasons(f: Filters) {
   const sc = useScorecard(f);
   const meta = useJson<Meta>("meta.json").data;
-  const flags = useMemo(
-    () => (sc.all && meta?.verdict_rules ? flagsFor(sc.all, meta.verdict_rules, meta.rules) : null),
-    [sc.all, meta],
-  );
+  const flags = useMemo(() => (sc.all && meta?.verdict_rules ? flagsFor(sc.all, meta.verdict_rules, meta.rules) : null), [sc.all, meta]);
   return { ...sc, flags, rules: meta?.rules ?? null };
 }
 

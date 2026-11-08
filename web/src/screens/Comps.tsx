@@ -94,11 +94,11 @@ export default function Comps() {
         eyebrow={`Comps · ${label}`}
         title={
           <>
-            Redemption price fell {ppd.before.toFixed(1)} → {ppd.after.toFixed(1)} points per $; comp cost rose {pp(cp.before)} →{" "}
-            {pp(cp.after)} of theo
+            A comp dollar takes {ppd.after.toFixed(1)} points, not {ppd.before.toFixed(1)}; cost rose {pp(cp.before)} → {pp(cp.after)} of
+            theo
           </>
         }
-        sub={`Week of ${shortDate(ppd.week)}. Earning held at ${earn.before.toFixed(2)} points per $ wagered, so each point bought more. Comps cost ${fmt.usdK(v.cost)}, ${pp(v.rate)} of carded theo.`}
+        sub={`Price change week of ${shortDate(ppd.week)} (cost step ${shortDate(cp.week)}). Earning held at ${earn.before.toFixed(2)} points per $ wagered, so each point bought more.`}
       >
         <KpiStrip testId="comps-kpis">
           <Kpi
@@ -210,8 +210,7 @@ export default function Comps() {
               height={260}
               label="Weekly loyalty redemption price and earn rate"
               option={{
-                grid: { left: 4, right: 4, top: 24, bottom: 4, containLabel: true },
-                legend: { top: 0, right: 0, textStyle: { color: colors["fg-muted"], fontSize: 11 } },
+                grid: { left: 4, right: 4, top: 48, bottom: 4, containLabel: true },
                 tooltip: {
                   trigger: "axis",
                   formatter: (q: unknown) => {
@@ -226,8 +225,22 @@ export default function Comps() {
                 },
                 xAxis: { type: "category", data: v.weeks.map((w) => shortDate(w.week)), axisLabel: { interval: 3 } },
                 yAxis: [
-                  { type: "value", min: 0, axisLabel: { formatter: (x: number) => x.toFixed(0) } },
-                  { type: "value", min: 0, max: 1.5, splitLine: { show: false }, axisLabel: { formatter: (x: number) => x.toFixed(1) } },
+                  {
+                    type: "value",
+                    min: 0,
+                    name: "Redeemed per $",
+                    nameTextStyle: { align: "left", color: colors["gold-soft"] },
+                    axisLabel: { formatter: (x: number) => x.toFixed(0) },
+                  },
+                  {
+                    type: "value",
+                    min: 0,
+                    max: 1.5,
+                    name: "Earned per $",
+                    nameTextStyle: { align: "right", color: "#8A7F7E" },
+                    splitLine: { show: false },
+                    axisLabel: { formatter: (x: number) => x.toFixed(1) },
+                  },
                 ],
                 series: [
                   {
@@ -244,8 +257,8 @@ export default function Comps() {
                     type: "line",
                     yAxisIndex: 1,
                     data: v.weeks.map((w) => w.earn_rate),
-                    lineStyle: { color: colors["fg-muted"], width: 1.5 },
-                    itemStyle: { color: colors["fg-muted"] },
+                    lineStyle: { color: "#8A7F7E", width: 1.5 },
+                    itemStyle: { color: "#8A7F7E" },
                     symbol: "none",
                   },
                 ],
@@ -310,7 +323,14 @@ export default function Comps() {
               label="Monthly comp cost stacked by tier"
               option={{
                 grid: { left: 4, right: 4, top: 24, bottom: 4, containLabel: true },
-                legend: { top: 0, right: 0, textStyle: { color: colors["fg-muted"], fontSize: 11 } },
+                legend: {
+                  show: true,
+                  top: 0,
+                  right: 0,
+                  itemWidth: 10,
+                  itemHeight: 10,
+                  textStyle: { color: colors["fg-muted"], fontSize: 11 },
+                },
                 tooltip: {
                   trigger: "axis",
                   formatter: (q: unknown) => {
@@ -328,6 +348,7 @@ export default function Comps() {
                   name: t,
                   type: "bar" as const,
                   stack: "c",
+                  itemStyle: { color: TIER_COLOR[t] },
                   data: v.months.map((m) => ({
                     value: m.byTier[t] ?? 0,
                     itemStyle: { color: TIER_COLOR[t], opacity: m.inPeriod ? 1 : 0.3 },

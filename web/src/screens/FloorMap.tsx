@@ -204,12 +204,12 @@ export default function FloorMap() {
                 />
                 <text
                   x={h.c[0]}
-                  y={Math.max(16, h.top - 26)}
+                  y={h.top - 26 < 60 ? h.top + 22 : h.top - 26}
                   textAnchor="middle"
-                  fill={colors["fg-subtle"]}
-                  fontSize={11 / Math.sqrt(t.k)}
+                  fill={colors["fg-muted"]}
+                  fontSize={13 / Math.sqrt(t.k)}
                   letterSpacing="0.08em"
-                  fontWeight={500}
+                  fontWeight={600}
                 >
                   {h.name.toUpperCase()}
                 </text>

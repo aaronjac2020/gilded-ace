@@ -286,12 +286,12 @@ export default function ModelLab({ part }: { part?: "why" | "evidence" } = {}) {
               className="col-span-12"
               label="Stability"
               title="Same machines, two windows"
-              sub={`Shrunk effect, Jan–Apr vs. May–Jun. ${p.n} machines with 14+ days in each window.`}
+              sub={`Our machine score (shrunk effect), Jan–Apr vs. May–Jun. ${p.n} machines with 14+ days in each window.`}
               testId="persistence"
             >
               <dl className="grid grid-cols-2 divide-x divide-divider">
                 <div className="pr-4">
-                  <dt className="eyebrow">Spearman rank corr.</dt>
+                  <dt className="eyebrow">Rank agreement</dt>
                   <dd className="display mt-1 text-3xl text-fg">
                     <Num value={p.spearman} kind="dec" />
                   </dd>
@@ -446,7 +446,7 @@ export function ForecastSection() {
 }
 
 const OUTCOME_LABELS = { effect: "May–Jun play vs. spot and game", house_win: "May–Jun raw house win" } as const;
-const RANKING_LABELS = { manager: "Manager: house win", ours: "Ours: shrunk effect" } as const;
+const RANKING_LABELS = { manager: "Manager: house win", ours: "Ours: machine score" } as const;
 
 /** Dot-and-whisker: both Jan–Apr rankings scored on the same machines and the same May–Jun outcomes. */
 function RankingCompare({ c, moved, test }: { c: NonNullable<Lab["persistence_compare"]>; moved?: Moved; test: Lab["move_test_pick"] }) {
@@ -455,9 +455,9 @@ function RankingCompare({ c, moved, test }: { c: NonNullable<Lab["persistence_co
   const metrics = [
     {
       key: "rho",
-      label: "Spearman rank corr.",
+      label: "Rank agreement (Spearman ρ)",
       lo: -0.2,
-      ticks: [-0.2, 0, 0.5, 1],
+      ticks: [0, 0.5, 1],
       pick: (a: Agreement) => [a.spearman, a.spearman_lo, a.spearman_hi] as const,
       fmtV: (v: number) => v.toFixed(2),
     },

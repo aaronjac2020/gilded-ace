@@ -56,7 +56,7 @@ export function BettingTable({
           const maxCost = Math.max(...spots.map((x) => x.cost));
           const n = Math.max(1, Math.round((s.cost / maxCost) * 22));
           return (
-            <li key={s.id} className="flex w-[132px] flex-col items-center">
+            <li key={s.id} className="flex w-[176px] flex-col items-center">
               <button
                 type="button"
                 onMouseEnter={() => setActive(s.id)}
@@ -85,7 +85,9 @@ export function BettingTable({
                   />
                 </m.span>
               </button>
-              <p className="mt-1 flex min-h-[60px] items-start justify-center text-center text-sm leading-5 text-ivory">{s.name}</p>
+              <p className="mt-1 line-clamp-3 h-[60px] text-center text-sm leading-5 text-ivory" title={s.name}>
+                {s.name}
+              </p>
               <p className="mono text-xs text-[#E3B36A]">{fmt.usdK(s.cost)}</p>
             </li>
           );

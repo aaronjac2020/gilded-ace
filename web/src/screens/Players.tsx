@@ -230,15 +230,15 @@ export default function Players() {
                   xAxis: {
                     type: "category",
                     data: v.hist.map((h) => h.short),
-                    axisLabel: { interval: 1, fontSize: 10, rotate: 40 },
+                    axisLabel: { interval: 2, fontSize: 11, hideOverlap: true },
                   },
-                  yAxis: { type: "value", axisLabel: { formatter: (x: number) => fmt.pct(x / s.players, 0) } },
+                  yAxis: { type: "value", minInterval: 1, axisLabel: { formatter: (x: number) => `${x}%` } },
                   series: [
                     {
                       type: "bar",
                       barCategoryGap: "12%",
                       data: v.hist.map((h) => ({
-                        value: h.n,
+                        value: (h.n / s.players) * 100,
                         itemStyle: { color: h.hi != null && h.hi <= 0 ? colors.gold : "#6B6261" },
                       })),
                     },
