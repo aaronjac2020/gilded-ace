@@ -118,6 +118,20 @@ try {
       }
       record(2, `bank ${id} drill changes Verdict + Downtime`, before !== after && dtOk, `verdict "${before}" -> "${after}"; ${dtDetail}`);
     } else record(2, "bank drill", false, "no bank elements");
+
+    // Guest variant: a player-segment drilldown must change every Players chart (each carries a data-sig of its data).
+    const sigs = async () => page.locator("[data-sig]").evaluateAll((els) => els.map((e) => e.getAttribute("data-sig")));
+    await page.goto(`${url}/players`);
+    await page.locator("[data-sig]").first().waitFor({ timeout: 8000 });
+    await page.waitForTimeout(300);
+    const s0 = await sigs();
+    const seg = page.locator("#segments [data-segment]").nth(1);
+    const segId = await seg.getAttribute("data-segment");
+    await seg.click();
+    await page.waitForTimeout(500);
+    const s1 = await sigs();
+    const changed = s0.filter((s, i) => s !== s1[i]).length;
+    record("2b", `segment ${segId} drill changes all Players charts`, s0.length >= 4 && changed === s0.length, `${changed}/${s0.length} charts changed`);
   }
 
   if (only.includes(3)) {

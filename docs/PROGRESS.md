@@ -115,3 +115,10 @@ Resume point for a fresh session: read this file, then `python run.py all`.
 - Findings: Sat 1.64× Tue coin-in; Super Bowl +23% (CI 14–33%), property tournament +18%; Back Forty share 3.9% → 2.8% during W-ENT-B40 closure; grave-shift faults wait 2.0 h vs 0.9 h (one tech); downtime $93.9k theo ($79.7k–$106k).
 - judge-check: check 2 now waits for the lazy Downtime screen before reading `downtime-kpi`.
 - Local judge: all checks passed (outputs/judge_m9_local.txt).
+
+## M10 · Players + Comps (2026-11-07)
+- pipeline/players.py: player × window aggregates (full/train/test/months) → one-dimension segments (tier/region/age): exact top 1%/10% shares of theo and net loss, Lorenz (51 pts), Gini on theo, net-per-player histogram; tier×region×age×month cube (min cell 13 players). Web gets aggregates only (tests: no ids; segments ≥100 players; cube cells ≥10).
+- pipeline/comps.py: weekly reinvestment = ledger economic comp cost ÷ carded theo (full weeks Jan 6–Jun 23); SSE single split (≥4 wks/side) + moving-block bootstrap (3-wk blocks, 2000 draws) CI on date and effect + no-break null; same on points/$ redeemed, earn rate, cost/face. F&B comp COGS ($190.7k) = ledger cost → counted once.
+- Findings: top 10% of carded players = 66% of theo, top 1% = 23% (Gini 0.75); Local players 28% of player-months, 58% of theo. Reinvestment break week of Apr 21 (90% CI Apr 14–28): 1.20% → 1.30%, +0.10 pts (CI +0.08 to +0.13), null p 0.04. Redemption price 13.1 → 6.0 points/$ week of Apr 28; earn rate flat at 1.00; cost per $ face flat 0.28.
+- Web: /players (segment bar + clickable breakdowns via ?seg=, Lorenz signature tile, net histogram, by-month), /comps (change-point hero tile with `data-testid=change-point`, loyalty ledger, tiers, monthly stack, counted-once tile). Judge check 2b added (segment drill changes all 6 Players charts).
+- Local judge: all checks passed (outputs/judge_m10_local.txt).

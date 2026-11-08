@@ -14,14 +14,32 @@ from datetime import UTC, datetime
 import numpy as np
 import pandas as pd
 
-from pipeline import budget, demand, downtime, verdicts
+from pipeline import budget, comps, demand, downtime, players, verdicts
 from pipeline.config import OUTPUTS, WEB_DATA, cfg, periods
 from pipeline.load import machine_days, table
 
-RATE_COLS = ("availability", "hold", "luck_z", "effect", "share", "_z", "weight", "tau", "rtp", "_p", "wape", "pct", "uplift")
+RATE_COLS = (
+    "top1",
+    "top10",
+    "gini",
+    "earn_rate",
+    "cost_per_face",
+    "winners",
+    "availability",
+    "hold",
+    "luck_z",
+    "effect",
+    "share",
+    "_z",
+    "weight",
+    "tau",
+    "rtp",
+    "_p",
+    "wape",
+    "pct",
+    "uplift",
+)
 PENDING = {
-    "players_segments.json": "M10",
-    "comps.json": "M10",
     "claims.json": "M12",
 }
 
@@ -29,7 +47,7 @@ PENDING = {
 def _round(col: str, s: pd.Series) -> pd.Series:
     if not pd.api.types.is_float_dtype(s):
         return s
-    nd = 4 if any(k in col for k in RATE_COLS) else 2
+    nd = 6 if col in ("reinvestment", "earn_rate") else 4 if any(k in col for k in RATE_COLS) else 2
     return s.round(nd)
 
 
@@ -359,6 +377,53 @@ def downtime_json(full: pd.DataFrame) -> dict:
     }
 
 
+def players_json() -> dict:
+    """Segment x period stats (exact top shares, Lorenz, Gini, net histogram) + tier x region x age x month cube.
+
+    Aggregates only: every row sums over players. Segments are one dimension at a time.
+    """
+    pm = players.player_months()
+    st = players.segment_table(pm)
+    st.drop(columns=["lorenz_theo", "net_hist"]).to_parquet(OUTPUTS / "players_segments.parquet", index=False)
+    c = players.cube(pm)
+    edges = [None if not np.isfinite(e) else float(e) for e in players.NET_EDGES]
+    return {
+        "dims": {k: sorted(pm[v].dropna().unique().tolist(), key=str) for k, v in players.DIMS.items()},
+        "tier_order": players.TIER_ORDER,
+        "segments": columnar(st, encode=("period", "segment")),
+        "cube": columnar(c, encode=("month", "tier", "region", "age")),
+        "net_edges": edges,
+        "notes": {
+            "unit": "One player = one carded player id, summed over the period's months. Net = payout - coin-in (player's view; negative = loss).",
+            "tier": "Tier is the tier at enrolment or Jan 1 (opening tier), so a player stays in one segment all period.",
+            "privacy": "Only aggregates over players are published; no player ids or player-level rows.",
+        },
+    }
+
+
+def comps_json() -> dict:
+    """Weekly reinvestment + loyalty rates, change points with block-bootstrap CIs, comp cost by month x tier x region."""
+    w = comps.weekly()
+    w.to_parquet(OUTPUTS / "comps_weekly.parquet", index=False)
+    cps = {}
+    for col in ("reinvestment", "points_per_dollar", "earn_rate", "cost_per_face"):
+        cp = comps.change_point(w[col].to_numpy())
+        weeks = w["week"].dt.strftime("%Y-%m-%d")
+        cps[col] = {**cp, "week": weeks.iloc[cp["k"]], "week_lo": weeks.iloc[cp["k_lo"]], "week_hi": weeks.iloc[cp["k_hi"]]}
+    return {
+        "weekly": columnar(w.drop(columns=["days"])),
+        "change_points": cps,
+        "by_segment": columnar(comps.by_segment(), encode=("month", "tier", "region")),
+        "fnb": comps.fnb_cash_margin(),
+        "notes": {
+            "cost": "Comp cost = economic cost of redemptions in the loyalty ledger (what the comp costs the property), not face value.",
+            "double_count": "Comped F&B rows carry COGS equal to the ledger's economic cost; F&B margin here uses paid rows only so comps are counted once.",
+            "change_point": "One mean shift in the weekly series, chosen by least squared error (>= 4 weeks each side). 90% CIs from a moving-block bootstrap (3-week blocks) of residuals; 'chance' = largest shift a split finds in the same series with no break.",
+            "weeks": "Full Monday-start gaming weeks only (Jan 6 - Jun 29).",
+        },
+    }
+
+
 def run() -> dict[str, int]:
     """Write every web JSON; returns {file: bytes}. Raises if the total exceeds web.max_total_mb."""
     sizes: dict[str, int] = {}
@@ -382,6 +447,8 @@ def run() -> dict[str, int]:
     sizes["month_highlights.json"] = write("month_highlights.json", month_highlights(sc))
     sizes["demand.json"] = write("demand.json", demand_json())
     sizes["downtime.json"] = write("downtime.json", downtime_json(full))
+    sizes["players_segments.json"] = write("players_segments.json", players_json())
+    sizes["comps.json"] = write("comps.json", comps_json())
     for f, ms in PENDING.items():
         if not (WEB_DATA / f).exists() or json.loads((WEB_DATA / f).read_text(encoding="utf-8")).get("pending"):
             sizes[f] = write(f, {"pending": ms})
