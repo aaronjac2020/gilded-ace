@@ -69,7 +69,7 @@ export function ShortcutsSheet() {
         <Dialog.Overlay className="fixed inset-0 z-50 bg-bg/60" />
         <Dialog.Content
           aria-describedby={undefined}
-          className="fixed left-1/2 top-[12vh] z-50 w-[440px] max-w-[calc(100vw-32px)] -translate-x-1/2 rounded-xl bg-surface-3 p-5 shadow-float data-[state=open]:animate-fade-up"
+          className="fixed left-1/2 top-[12vh] z-50 w-[440px] max-w-[calc(100vw-32px)] -translate-x-1/2 rounded-xl bg-surface-3 p-6 shadow-float data-[state=open]:animate-fade-up"
         >
           <div className="mb-3 flex items-center justify-between">
             <Dialog.Title className="text-lg font-semibold tracking-tight text-fg">Keyboard shortcuts</Dialog.Title>

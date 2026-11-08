@@ -13,6 +13,7 @@ import { useFilters } from "../lib/urlState";
 import { sum, useJson, useScorecard } from "../lib/useData";
 import { tipHtml } from "../theme/echartsTheme";
 import { colors, verdictColors } from "../theme/tokens";
+import { Evidence, Lead } from "../components/ui/more";
 
 const Chart = lazy(() => import("../components/Chart").then((m) => ({ default: m.Chart })));
 
@@ -38,7 +39,13 @@ type BankDay = {
   lost_mid: number;
   lost_hi: number;
 };
-export type DowntimeData = { date0: string; bank_day: Columnar; tickets: Columnar; staffing: Columnar; notes: Record<string, string> };
+export type DowntimeData = {
+  date0: string;
+  bank_day: Columnar;
+  tickets: Columnar;
+  staffing: Columnar;
+  notes: Record<string, string>;
+};
 
 const SHIFTS = [
   { id: "day", label: "Day", hours: "06–14" },
@@ -72,8 +79,29 @@ export default function Downtime() {
   const unavail = sum(sc, (r) => r.unavailable_hours);
   const faults = sum(sc, (r) => r.faults);
   const byBank = Object.values(
-    sc.reduce<Record<string, { bank: string; zone: string; lost: number; lo: number; hi: number; hours: number; n: number }>>((acc, r) => {
-      const b = (acc[r.bank_id] ??= { bank: r.bank_id, zone: r.zone_id, lost: 0, lo: 0, hi: 0, hours: 0, n: 0 });
+    sc.reduce<
+      Record<
+        string,
+        {
+          bank: string;
+          zone: string;
+          lost: number;
+          lo: number;
+          hi: number;
+          hours: number;
+          n: number;
+        }
+      >
+    >((acc, r) => {
+      const b = (acc[r.bank_id] ??= {
+        bank: r.bank_id,
+        zone: r.zone_id,
+        lost: 0,
+        lo: 0,
+        hi: 0,
+        hours: 0,
+        n: 0,
+      });
       b.lost += r.lost_theo_usd;
       b.lo += r.lost_theo_lo_usd;
       b.hi += r.lost_theo_hi_usd;
@@ -144,7 +172,12 @@ export default function Downtime() {
                     type="button"
                     data-bank={b.bank}
                     aria-pressed={on}
-                    onClick={() => set({ bank: on ? null : b.bank, zone: on ? f.zone : b.zone })}
+                    onClick={() =>
+                      set({
+                        bank: on ? null : b.bank,
+                        zone: on ? f.zone : b.zone,
+                      })
+                    }
                     className="focus-ring grid w-full grid-cols-[64px_64px_1fr_72px] items-center gap-3 rounded-sm px-1 py-1 text-left hover:bg-surface-2"
                   >
                     <span className={on ? "mono text-sm text-gold-soft" : "mono text-sm text-fg"}>{b.bank}</span>
@@ -152,11 +185,17 @@ export default function Downtime() {
                     <span className="relative h-3">
                       <span
                         className="absolute inset-y-[4px] rounded-full bg-verdict-downtime/25"
-                        style={{ left: `${(b.lo / max) * 100}%`, width: `${((b.hi - b.lo) / max) * 100}%` }}
+                        style={{
+                          left: `${(b.lo / max) * 100}%`,
+                          width: `${((b.hi - b.lo) / max) * 100}%`,
+                        }}
                       />
                       <span
                         className="absolute inset-y-[3px] left-0 rounded-full bg-verdict-downtime"
-                        style={{ width: `${(b.lost / max) * 100}%`, opacity: 0.85 }}
+                        style={{
+                          width: `${(b.lost / max) * 100}%`,
+                          opacity: 0.85,
+                        }}
                       />
                     </span>
                     <span className="mono text-right text-xs text-fg-muted">{fmt.usdK(b.lost)}</span>
@@ -165,7 +204,9 @@ export default function Downtime() {
               );
             })}
           </ul>
-          <p className="mt-3 text-2xs text-fg-subtle">{data.notes.lost}</p>
+          <Evidence className="mt-3">
+            <p className="text-2xs">{data.notes.lost}</p>
+          </Evidence>
         </Tile>
       </section>
 
@@ -192,28 +233,28 @@ export default function Downtime() {
               const max = Math.max(...SHIFTS.map((t) => v.shift[t.id].down), 1);
               return (
                 <div key={s.id} className="grid grid-cols-[88px_1fr_150px] items-center gap-4">
-                  <p className="flex flex-col leading-tight">
+                  <Lead className="flex flex-col leading-tight">
                     <span className="text-sm text-fg">{s.label}</span>
                     <span className="mono text-2xs text-fg-subtle">{s.hours}</span>
-                  </p>
+                  </Lead>
                   <div className="relative h-5 overflow-hidden rounded-sm bg-surface-2">
                     <div className="absolute inset-y-0 left-0 bg-verdict-downtime/30" style={{ width: `${(x.down / max) * 100}%` }} />
                     <div className="absolute inset-y-0 left-0 bg-verdict-downtime" style={{ width: `${(x.wait / max) * 100}%` }} />
                   </div>
-                  <p className="mono text-right text-xs text-fg-muted">
+                  <Lead className="mono text-right text-xs text-fg-muted">
                     <span className="text-fg">{x.wait.toFixed(1)}</span> + {(x.down - x.wait).toFixed(1)} h
                     <span className="block text-2xs text-fg-subtle">
                       {x.actual.toFixed(1)} tech{x.actual >= 1.5 ? "s" : ""} on shift
                     </span>
-                  </p>
+                  </Lead>
                 </div>
               );
             })}
           </div>
-          <p className="mt-4 text-xs text-fg-muted">
+          <Lead className="mt-4 text-xs text-fg-muted">
             Grave runs one slot tech; day averages {v.shift.day.actual.toFixed(2)} of {v.shift.day.planned.toFixed(2)} planned. Longer grave
             waits are a staffing pattern, not a machine fault. {data.notes.tickets}
-          </p>
+          </Lead>
         </Tile>
 
         <Tile
@@ -231,7 +272,13 @@ export default function Downtime() {
               height={240}
               label="Bar chart of lost theo by month with range"
               option={{
-                grid: { left: 4, right: 8, top: 12, bottom: 4, containLabel: true },
+                grid: {
+                  left: 4,
+                  right: 8,
+                  top: 12,
+                  bottom: 4,
+                  containLabel: true,
+                },
                 tooltip: {
                   trigger: "axis",
                   formatter: (q: unknown) => {
@@ -245,21 +292,46 @@ export default function Downtime() {
                   },
                 },
                 xAxis: { type: "category", data: v.months.map((m) => m.label) },
-                yAxis: { type: "value", axisLabel: { formatter: (x: number) => fmt.usdK(x) } },
+                yAxis: {
+                  type: "value",
+                  axisLabel: { formatter: (x: number) => fmt.usdK(x) },
+                },
                 series: [
-                  { type: "bar", data: v.months.map((m) => m.mid), itemStyle: { color: verdictColors.downtime } },
+                  {
+                    type: "bar",
+                    data: v.months.map((m) => m.mid),
+                    itemStyle: { color: verdictColors.downtime },
+                  },
                   {
                     type: "custom",
-                    renderItem: ((_: unknown, api: { value: (i: number) => number; coord: (p: [number, number]) => [number, number] }) => {
+                    renderItem: ((
+                      _: unknown,
+                      api: {
+                        value: (i: number) => number;
+                        coord: (p: [number, number]) => [number, number];
+                      },
+                    ) => {
                       const i = api.value(0);
                       const [x, y0] = api.coord([i, api.value(1)]);
                       const [, y1] = api.coord([i, api.value(2)]);
                       return {
                         type: "group",
                         children: [
-                          { type: "line", shape: { x1: x, y1: y0, x2: x, y2: y1 }, style: { stroke: colors.fg, lineWidth: 1 } },
-                          { type: "line", shape: { x1: x - 5, y1: y0, x2: x + 5, y2: y0 }, style: { stroke: colors.fg, lineWidth: 1 } },
-                          { type: "line", shape: { x1: x - 5, y1: y1, x2: x + 5, y2: y1 }, style: { stroke: colors.fg, lineWidth: 1 } },
+                          {
+                            type: "line",
+                            shape: { x1: x, y1: y0, x2: x, y2: y1 },
+                            style: { stroke: colors.fg, lineWidth: 1 },
+                          },
+                          {
+                            type: "line",
+                            shape: { x1: x - 5, y1: y0, x2: x + 5, y2: y0 },
+                            style: { stroke: colors.fg, lineWidth: 1 },
+                          },
+                          {
+                            type: "line",
+                            shape: { x1: x - 5, y1: y1, x2: x + 5, y2: y1 },
+                            style: { stroke: colors.fg, lineWidth: 1 },
+                          },
                         ],
                       };
                     }) as never,
@@ -346,15 +418,38 @@ function derive(data: DowntimeData, win: [number, number], f: { zone: string | n
         },
       ];
     }),
-  ) as Record<(typeof SHIFTS)[number]["id"], { n: number; wait: number; down: number; lost: number; planned: number; actual: number }>;
+  ) as Record<
+    (typeof SHIFTS)[number]["id"],
+    {
+      n: number;
+      wait: number;
+      down: number;
+      lost: number;
+      planned: number;
+      actual: number;
+    }
+  >;
 
   const bd = rows<BankDay>(data.bank_day).filter((r) => inScope(r, r.zone_id, r.bank_id));
-  const byMonth: Record<string, { m: string; label: string; mid: number; lo: number; hi: number; faults: number }> = {};
+  const byMonth: Record<
+    string,
+    {
+      m: string;
+      label: string;
+      mid: number;
+      lo: number;
+      hi: number;
+      faults: number;
+    }
+  > = {};
   for (const r of bd) {
     const m = isoOf(data.date0, r.d).slice(0, 7);
     const x = (byMonth[m] ??= {
       m,
-      label: new Date(m + "-01T00:00:00Z").toLocaleDateString("en-US", { month: "short", timeZone: "UTC" }),
+      label: new Date(m + "-01T00:00:00Z").toLocaleDateString("en-US", {
+        month: "short",
+        timeZone: "UTC",
+      }),
       mid: 0,
       lo: 0,
       hi: 0,
@@ -374,9 +469,26 @@ function derive(data: DowntimeData, win: [number, number], f: { zone: string | n
         ? `${fmt.usdK(worst.mid)} lost in ${worst.label}`
         : "No downtime";
 
-  const rep: Record<string, { id: string; bank: string; n: number; down: number; cost: number; lost: number }> = {};
+  const rep: Record<
+    string,
+    {
+      id: string;
+      bank: string;
+      n: number;
+      down: number;
+      cost: number;
+      lost: number;
+    }
+  > = {};
   for (const t of tickets) {
-    const x = (rep[t.machine_id] ??= { id: t.machine_id, bank: t.bank, n: 0, down: 0, cost: 0, lost: 0 });
+    const x = (rep[t.machine_id] ??= {
+      id: t.machine_id,
+      bank: t.bank,
+      n: 0,
+      down: 0,
+      cost: 0,
+      lost: 0,
+    });
     x.n += 1;
     x.down += t.down_hours;
     x.cost += t.repair_cost;
@@ -385,5 +497,12 @@ function derive(data: DowntimeData, win: [number, number], f: { zone: string | n
   const repeat = Object.values(rep)
     .sort((a, b) => b.n - a.n || b.down - a.down)
     .slice(0, 10);
-  return { tickets, shift, months, monthTitle, repeat, medDown: median(tickets.map((t) => t.down_hours)) };
+  return {
+    tickets,
+    shift,
+    months,
+    monthTitle,
+    repeat,
+    medDown: median(tickets.map((t) => t.down_hours)),
+  };
 }

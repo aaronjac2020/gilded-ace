@@ -11,6 +11,7 @@ import { useFilters } from "../lib/urlState";
 import { useJson } from "../lib/useData";
 import { tipHtml } from "../theme/echartsTheme";
 import { colors } from "../theme/tokens";
+import { Evidence, Lead } from "../components/ui/more";
 
 const Chart = lazy(() => import("../components/Chart").then((m) => ({ default: m.Chart })));
 
@@ -59,19 +60,38 @@ type CompsData = {
   weekly: Columnar;
   change_points: Record<"reinvestment" | "points_per_dollar" | "earn_rate" | "cost_per_face", Cp>;
   by_segment: Columnar;
-  fnb: { paid_cash: number; paid_cogs: number; comped_cogs: number; comped_face: number; ledger_cost: number; all_cogs: number };
+  fnb: {
+    paid_cash: number;
+    paid_cogs: number;
+    comped_cogs: number;
+    comped_face: number;
+    ledger_cost: number;
+    all_cogs: number;
+  };
   notes: Record<string, string>;
 };
 
 const MONTHS = ["2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06"];
 const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
-const PERIOD_MONTHS: Record<string, string[]> = { full: MONTHS, train: MONTHS.slice(0, 4), test: MONTHS.slice(4) };
+const PERIOD_MONTHS: Record<string, string[]> = {
+  full: MONTHS,
+  train: MONTHS.slice(0, 4),
+  test: MONTHS.slice(4),
+};
 const TIERS = ["Base", "Gold", "Platinum"];
-const TIER_COLOR: Record<string, string> = { Base: "#5A5150", Gold: colors.gold, Platinum: "#D9D4D3" };
+const TIER_COLOR: Record<string, string> = {
+  Base: "#5A5150",
+  Gold: colors.gold,
+  Platinum: "#D9D4D3",
+};
 
 const pp = (x: number, d = 2) => `${(x * 100).toFixed(d)}%`;
 const shortDate = (iso: string) =>
-  new Date(iso + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+  new Date(iso + "T00:00:00Z").toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
 
 /** Permutation p to 3 decimals, floored at the test's resolution. */
 const pval = (p: number) => (p < 0.001 ? "< 0.001" : p.toFixed(3));
@@ -133,7 +153,13 @@ export default function Comps() {
               height={300}
               label={`Weekly comp reinvestment rate with a change point at ${cp.week}`}
               option={{
-                grid: { left: 4, right: 72, top: 28, bottom: 4, containLabel: true },
+                grid: {
+                  left: 4,
+                  right: 72,
+                  top: 28,
+                  bottom: 4,
+                  containLabel: true,
+                },
                 tooltip: {
                   trigger: "axis",
                   formatter: (q: unknown) => {
@@ -146,8 +172,16 @@ export default function Comps() {
                     ]);
                   },
                 },
-                xAxis: { type: "category", data: v.weeks.map((w) => shortDate(w.week)), axisLabel: { interval: 3 } },
-                yAxis: { type: "value", scale: true, axisLabel: { formatter: (x: number) => pp(x, 2) } },
+                xAxis: {
+                  type: "category",
+                  data: v.weeks.map((w) => shortDate(w.week)),
+                  axisLabel: { interval: 3 },
+                },
+                yAxis: {
+                  type: "value",
+                  scale: true,
+                  axisLabel: { formatter: (x: number) => pp(x, 2) },
+                },
                 series: [
                   {
                     type: "line",
@@ -163,11 +197,31 @@ export default function Comps() {
                     markLine: {
                       silent: true,
                       symbol: "none",
-                      lineStyle: { color: colors["fg-muted"], type: "dashed", width: 1 },
-                      label: { color: colors["fg-muted"], fontSize: 10, formatter: "{b}" },
+                      lineStyle: {
+                        color: colors["fg-muted"],
+                        type: "dashed",
+                        width: 1,
+                      },
+                      label: {
+                        color: colors["fg-muted"],
+                        fontSize: 10,
+                        formatter: "{b}",
+                      },
                       data: [
-                        [{ name: `before ${pp(cp.before)}`, coord: [0, cp.before] }, { coord: [cp.k - 1, cp.before] }],
-                        [{ name: `after ${pp(cp.after)}`, coord: [cp.k, cp.after] }, { coord: [v.weeks.length - 1, cp.after] }],
+                        [
+                          {
+                            name: `before ${pp(cp.before)}`,
+                            coord: [0, cp.before],
+                          },
+                          { coord: [cp.k - 1, cp.before] },
+                        ],
+                        [
+                          {
+                            name: `after ${pp(cp.after)}`,
+                            coord: [cp.k, cp.after],
+                          },
+                          { coord: [v.weeks.length - 1, cp.after] },
+                        ],
                       ] as never,
                     },
                   },
@@ -175,15 +229,21 @@ export default function Comps() {
               }}
             />
           </Suspense>
-          <p className="mt-4 max-w-prose text-sm text-fg" data-testid="change-point">
-            Change point: week of <span className="mono text-fg">{cp.week}</span> (90% CI {cp.week_lo} to {cp.week_hi};{" "}
-            {fmt.pct(cp.within_1wk, 0)} of resamples within a week). Effect:{" "}
-            <span className="mono text-fg">+{(cp.effect * 100).toFixed(2)} pts</span> (90% CI +{(cp.effect_lo * 100).toFixed(2)} to +
-            {(cp.effect_hi * 100).toFixed(2)}), a {fmt.pct(rel, 0)} rise in comp cost per dollar of theo. A split of a series with no break
-            finds a shift this large {fmt.pct(cp.p_null, 0)} of the time. Shuffling the weeks {fmt.int(cp.n_perm)} times and re-running the
-            full split search each time: permutation p = <span className="mono text-fg">{pval(cp.p_perm)}</span>.
+          <p className="mt-4 max-w-prose text-sm text-fg">
+            Change point: week of <span className="mono text-fg">{cp.week}</span>, +{(cp.effect * 100).toFixed(2)} pts; permutation p ={" "}
+            <span className="mono text-fg">{pval(cp.p_perm)}</span>.
           </p>
-          <p className="mt-2 max-w-prose text-2xs text-fg-subtle">{data.notes.change_point}</p>
+          <Evidence>
+            <p className="max-w-prose" data-testid="change-point">
+              Change point: week of <span className="mono text-fg">{cp.week}</span> (90% CI {cp.week_lo} to {cp.week_hi};{" "}
+              {fmt.pct(cp.within_1wk, 0)} of resamples within a week). Effect:{" "}
+              <span className="mono text-fg">+{(cp.effect * 100).toFixed(2)} pts</span> (90% CI +{(cp.effect_lo * 100).toFixed(2)} to +
+              {(cp.effect_hi * 100).toFixed(2)}), a {fmt.pct(rel, 0)} rise in comp cost per dollar of theo. A split of a series with no
+              break finds a shift this large {fmt.pct(cp.p_null, 0)} of the time. Shuffling the weeks {fmt.int(cp.n_perm)} times and
+              re-running the full split search each time: permutation p = <span className="mono text-fg">{pval(cp.p_perm)}</span>.
+            </p>
+            <p className="max-w-prose text-2xs text-fg-subtle">{data.notes.change_point}</p>
+          </Evidence>
         </Tile>
       </section>
 
@@ -193,7 +253,7 @@ export default function Comps() {
           className="col-span-12 scroll-mt-20 lg:col-span-7"
           label="Loyalty ledger"
           title={`Points got ${(ppd.before / ppd.after).toFixed(1)}× more valuable at redemption; earning did not change`}
-          sub="Points redeemed per dollar of comp face value (gold) and points earned per dollar wagered (grey), weekly."
+          sub="Points redeemed per dollar of comp face value (dark) and points earned per dollar wagered (grey), weekly."
           table={{
             columns: ["Series", "Break week", "Before", "After", "Permutation p"],
             rows: (
@@ -210,7 +270,13 @@ export default function Comps() {
               height={260}
               label="Weekly loyalty redemption price and earn rate"
               option={{
-                grid: { left: 4, right: 4, top: 48, bottom: 4, containLabel: true },
+                grid: {
+                  left: 4,
+                  right: 4,
+                  top: 48,
+                  bottom: 4,
+                  containLabel: true,
+                },
                 tooltip: {
                   trigger: "axis",
                   formatter: (q: unknown) => {
@@ -223,13 +289,20 @@ export default function Comps() {
                     ]);
                   },
                 },
-                xAxis: { type: "category", data: v.weeks.map((w) => shortDate(w.week)), axisLabel: { interval: 3 } },
+                xAxis: {
+                  type: "category",
+                  data: v.weeks.map((w) => shortDate(w.week)),
+                  axisLabel: { interval: 3 },
+                },
                 yAxis: [
                   {
                     type: "value",
                     min: 0,
                     name: "Redeemed per $",
-                    nameTextStyle: { align: "left", color: colors["gold-soft"] },
+                    nameTextStyle: {
+                      align: "left",
+                      color: colors["gold-soft"],
+                    },
                     axisLabel: { formatter: (x: number) => x.toFixed(0) },
                   },
                   {
@@ -265,11 +338,11 @@ export default function Comps() {
               }}
             />
           </Suspense>
-          <p className="mt-3 text-xs text-fg-muted">
+          <Lead className="mt-3 text-xs text-fg-muted">
             Redemptions went from about {fmt.int(v.redBefore)} to {fmt.int(v.redAfter)} a week, and comp cost per dollar of face value held
             at {data.change_points.cost_per_face.before.toFixed(2)}, so the mix of comps did not change. Cheaper points explain the step:
             the same play now buys more comps. [Synthetic data; the ledger does not record the reason.]
-          </p>
+          </Lead>
         </Tile>
 
         <Tile
@@ -291,17 +364,21 @@ export default function Comps() {
                   <span className="text-sm text-fg">{t.tier}</span>
                   <span
                     className="h-2 rounded-full"
-                    style={{ width: `${(t.cost / t.theo / max) * 100}%`, background: TIER_COLOR[t.tier], minWidth: 4 }}
+                    style={{
+                      width: `${(t.cost / t.theo / max) * 100}%`,
+                      background: TIER_COLOR[t.tier],
+                      minWidth: 4,
+                    }}
                   />
                   <span className="mono text-right text-xs text-fg-muted">{pp(t.cost / t.theo)}</span>
                 </li>
               );
             })}
           </ul>
-          <p className="mt-4 text-xs text-fg-muted">
+          <Lead className="mt-4 text-xs text-fg-muted">
             Top region by comp cost: <span className="text-fg">{v.topRegion.region}</span>, {fmt.usdK(v.topRegion.cost)} (
             {pp(v.topRegion.cost / v.topRegion.theo)} of its theo).
-          </p>
+          </Lead>
         </Tile>
       </div>
 
@@ -322,7 +399,13 @@ export default function Comps() {
               height={260}
               label="Monthly comp cost stacked by tier"
               option={{
-                grid: { left: 4, right: 4, top: 24, bottom: 4, containLabel: true },
+                grid: {
+                  left: 4,
+                  right: 4,
+                  top: 24,
+                  bottom: 4,
+                  containLabel: true,
+                },
                 legend: {
                   show: true,
                   top: 0,
@@ -343,7 +426,10 @@ export default function Comps() {
                   },
                 },
                 xAxis: { type: "category", data: v.months.map((m) => m.label) },
-                yAxis: { type: "value", axisLabel: { formatter: (x: number) => fmt.usdK(x) } },
+                yAxis: {
+                  type: "value",
+                  axisLabel: { formatter: (x: number) => fmt.usdK(x) },
+                },
                 series: TIERS.map((t) => ({
                   name: t,
                   type: "bar" as const,
@@ -351,7 +437,10 @@ export default function Comps() {
                   itemStyle: { color: TIER_COLOR[t] },
                   data: v.months.map((m) => ({
                     value: m.byTier[t] ?? 0,
-                    itemStyle: { color: TIER_COLOR[t], opacity: m.inPeriod ? 1 : 0.3 },
+                    itemStyle: {
+                      color: TIER_COLOR[t],
+                      opacity: m.inPeriod ? 1 : 0.3,
+                    },
                   })),
                 })),
               }}
@@ -382,10 +471,12 @@ export default function Comps() {
               </div>
             ))}
           </dl>
-          <p className="mt-4 text-xs text-fg-muted">{data.notes.double_count}</p>
-          <p className="mt-2 text-xs text-fg-muted">
+          <Evidence className="mt-4">
+            <p className="text-xs">{data.notes.double_count}</p>
+          </Evidence>
+          <Lead className="mt-2 text-xs text-fg-muted">
             Guardrail: comp changes are judged on cost per dollar of theo, never by pushing more offers to players with heavy losses.
-          </p>
+          </Lead>
         </Tile>
       </div>
     </div>
@@ -403,7 +494,12 @@ function derive(data: CompsData, period: string) {
 
   const tiers = TIERS.map((t) => {
     const xs = inP.filter((r) => r.tier === t);
-    return { tier: t, cost: sum(xs, "comp_cost"), theo: sum(xs, "theo"), players: sum(xs, "players") };
+    return {
+      tier: t,
+      cost: sum(xs, "comp_cost"),
+      theo: sum(xs, "theo"),
+      players: sum(xs, "players"),
+    };
   }).filter((t) => t.theo > 0);
   const hiT = [...tiers].sort((a, b) => b.cost / b.theo - a.cost / a.theo)[0];
   const loT = [...tiers].sort((a, b) => a.cost / a.theo - b.cost / b.theo)[0];
@@ -426,7 +522,13 @@ function derive(data: CompsData, period: string) {
         xs.filter((r) => r.tier === t),
         "comp_cost",
       );
-    return { label: MONTH_SHORT[i], inPeriod: months.includes(m), cost: sum(xs, "comp_cost"), theo: sum(xs, "theo"), byTier };
+    return {
+      label: MONTH_SHORT[i],
+      inPeriod: months.includes(m),
+      cost: sum(xs, "comp_cost"),
+      theo: sum(xs, "theo"),
+      byTier,
+    };
   });
   const first = monthRows[0];
   const last = monthRows[monthRows.length - 1];

@@ -74,7 +74,7 @@ export function CardShuffle({ label = "Shuffling" }: { label?: string }) {
     return () => clearTimeout(t);
   }, []);
   return (
-    <div aria-busy="true" aria-label="Loading" className="flex min-h-[60vh] flex-col items-center justify-center gap-5">
+    <div aria-busy="true" aria-label="Loading" className="flex min-h-[60vh] flex-col items-center justify-center gap-6">
       {show && (
         <>
           <div className="relative h-[72px] w-[100px]" aria-hidden>

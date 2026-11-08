@@ -93,7 +93,7 @@ function Body({
 }) {
   return (
     <>
-      <div className="sticky top-0 border-b border-divider px-5 pb-0 pt-4">
+      <div className="sticky top-0 border-b border-divider px-6 pb-0 pt-4">
         <div className="flex items-center justify-between gap-3">
           <p className="text-[13px] font-semibold text-gold-soft">Case file</p>
           <div className="flex items-center gap-1">
@@ -122,7 +122,7 @@ function Body({
         <div className="mt-1 flex items-start justify-between gap-4">
           <div className="min-w-0">
             <Drawer.Title asChild>
-              <m.h2 layoutId={`id-${row.machine_id}`} className="mono text-3xl font-semibold tracking-tight text-fg">
+              <m.h2 layoutId={`id-${row.machine_id}`} className="num font-mono text-3xl font-semibold tracking-tight text-fg">
                 {row.machine_id}
               </m.h2>
             </Drawer.Title>
@@ -152,7 +152,7 @@ function Body({
               { value: "tickets", label: "Tickets" },
             ]}
           />
-          <div className="-mx-5 max-h-[calc(100vh-230px)] overflow-y-auto px-5 py-5">
+          <div className="-mx-5 max-h-[calc(100vh-230px)] overflow-y-auto px-6 py-6">
             <TabsContent value="call">
               <TheCall row={row} rules={rules} />
             </TabsContent>
@@ -200,7 +200,7 @@ function Body({
           </div>
         </Tabs>
       </div>
-      <p className="mt-auto flex items-center gap-2 border-t border-divider px-5 py-2 text-[13px] text-fg-subtle">
+      <p className="mt-auto flex items-center gap-2 border-t border-divider px-6 py-2 text-[13px] text-fg-subtle">
         <Kbd>←</Kbd>
         <Kbd>→</Kbd> step through list · <Kbd>Esc</Kbd> close
       </p>
@@ -350,7 +350,7 @@ function Waterfall({ row }: { row: ScoreRow }) {
   ];
   const max = Math.max(...items.map(([, v]) => Math.abs(v)), 1);
   return (
-    <dl className="mt-5 space-y-2.5" aria-label="House win breakdown">
+    <dl className="mt-6 space-y-2.5" aria-label="House win breakdown">
       {items.map(([k, v, c]) => (
         <div key={k} className="grid grid-cols-[150px_1fr_88px] items-center gap-3 text-sm">
           <dt className="text-fg-muted">{k}</dt>

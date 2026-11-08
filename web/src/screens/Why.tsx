@@ -13,16 +13,35 @@ import { useMachineParam } from "../lib/uiStore";
 import { managerList } from "../lib/useData";
 import { useFilters } from "../lib/urlState";
 import ModelLab from "./ModelLab";
+import { Lead } from "../components/ui/more";
 
 /** The three big hands. Setting counts every machine with that flag; the others count main reasons. */
 const HANDS: { k: Reason; id: string; title: string; line: string }[] = [
-  { k: "setting", id: "game-setting", title: "Set to pay back more", line: "Their game math keeps less of each bet, by design." },
-  { k: "location", id: "location", title: "Quiet spots", line: "Few guests walk past. Any machine there would earn less." },
-  { k: "weak", id: "ours", title: "Truly weak", line: "Draws less play than similar machines in similar spots. Worth replacing." },
+  {
+    k: "setting",
+    id: "game-setting",
+    title: "Set to pay back more",
+    line: "Their game math keeps less of each bet, by design.",
+  },
+  {
+    k: "location",
+    id: "location",
+    title: "Quiet spots",
+    line: "Few guests walk past. Any machine there would earn less.",
+  },
+  {
+    k: "weak",
+    id: "ours",
+    title: "Truly weak",
+    line: "Draws less play than similar machines in similar spots. Worth replacing.",
+  },
 ];
 /** Smaller reasons, one line each, so every machine on the list is accounted for. */
 const MINOR: { k: Reason; line: string }[] = [
-  { k: "inspect", line: "Pays out differently from its design. Verify before deciding." },
+  {
+    k: "inspect",
+    line: "Pays out differently from its design. Verify before deciding.",
+  },
   { k: "luck", line: "Guests won more than usual. That evens out." },
   { k: "downtime", line: "Broken often enough to explain the shortfall." },
   { k: "none", line: "Earned less, but within normal range." },
@@ -58,7 +77,7 @@ export default function Why() {
       sentence="Only the truly weak are worth replacing. A machine can have more than one reason."
       visual={
         <div data-testid="hands">
-          <div className="grid gap-5 md:grid-cols-[1.25fr_1fr_1.25fr]">
+          <div className="grid gap-6 md:grid-cols-[1.25fr_1fr_1.25fr]">
             {HANDS.map((h) => {
               const cards = inHand(h.k);
               const Icon = REASON_ICON[h.k];
@@ -92,18 +111,19 @@ export default function Why() {
               );
             })}
           </div>
-          <ul className="card mt-5 grid divide-y divide-divider md:grid-cols-4 md:divide-x md:divide-y-0" aria-label="Other reasons">
+          <ul className="card mt-6 grid divide-y divide-divider md:grid-cols-4 md:divide-x md:divide-y-0" aria-label="Other reasons">
             {MINOR.map((m) => {
               const Icon = REASON_ICON[m.k];
               const n2 = second(m.k);
               return (
-                <li key={m.k} className="flex flex-col gap-1 px-5 py-4" data-hand={m.k} data-count={t.counts[m.k]}>
+                <li key={m.k} className="flex flex-col gap-1 px-6 py-4" data-hand={m.k} data-count={t.counts[m.k]}>
                   <span className="flex items-center gap-2 text-[15px] font-semibold" style={{ color: REASON[m.k].color }}>
                     <Icon size={16} aria-hidden />
                     <span className="tabular-nums text-fg">{t.counts[m.k]}</span> {REASON[m.k].label}
                   </span>
                   <span className="text-[13px] text-fg-muted">
-                    as main reason{n2.length > 0 && `; also a second reason for ${n2.join(", ")}`}
+                    as main reason
+                    {n2.length > 0 && `; also a second reason for ${n2.join(", ")}`}
                   </span>
                   <span className="text-[13px] text-fg-muted">{m.line}</span>
                 </li>
@@ -155,14 +175,19 @@ export default function Why() {
 }
 
 function Fan({ rows, flags }: { rows: ScoreRow[]; flags: Map<string, Flags> }) {
-  if (!rows.length) return <p className="text-[15px] text-fg-muted">None in this period.</p>;
+  if (!rows.length) return <Lead className="text-[15px] text-fg-muted">None in this period.</Lead>;
   return (
     <div className="flex h-[84px] items-end pl-2" aria-hidden>
       {rows.map((r, i) => (
         <PlayingCard key={r.machine_id} suit="♠" fan={(i - (rows.length - 1) / 2) * 5} className="-ml-3 aspect-[5/7] w-[60px] first:ml-0">
           <div className="flex h-full flex-col items-center justify-center gap-1 text-ink">
             <span className="font-mono text-[13px] font-semibold">{r.machine_id.slice(2)}</span>
-            <span className="h-1.5 w-6 rounded-full" style={{ background: REASON[reasonOf(flags, r.machine_id)].color }} />
+            <span
+              className="h-1.5 w-6 rounded-full"
+              style={{
+                background: REASON[reasonOf(flags, r.machine_id)].color,
+              }}
+            />
           </div>
         </PlayingCard>
       ))}
@@ -171,7 +196,7 @@ function Fan({ rows, flags }: { rows: ScoreRow[]; flags: Map<string, Flags> }) {
 }
 
 function MachineRows({ rows, flags, onOpen }: { rows: ScoreRow[]; flags: Map<string, Flags>; onOpen: (id: string) => void }) {
-  if (!rows.length) return <p className="text-base text-fg-muted">None in this period.</p>;
+  if (!rows.length) return <Lead className="text-base text-fg-muted">None in this period.</Lead>;
   return (
     <ul className="card divide-y divide-divider">
       {rows.map((r) => (
@@ -179,7 +204,7 @@ function MachineRows({ rows, flags, onOpen }: { rows: ScoreRow[]; flags: Map<str
           <button
             type="button"
             onClick={() => onOpen(r.machine_id)}
-            className="focus-ring flex w-full flex-wrap items-center gap-4 px-5 py-3.5 text-left hover:bg-surface-2"
+            className="focus-ring flex w-full flex-wrap items-center gap-4 px-6 py-3.5 text-left hover:bg-surface-2"
             data-machine-row={r.machine_id}
           >
             <span className="w-16 font-mono text-[13px] font-semibold">{r.machine_id}</span>

@@ -12,8 +12,8 @@ export const colors = {
   "fg-subtle": "#6F655F",
   maroon: "#500000",
   "maroon-bright": "#7A1A1A",
-  gold: "#A86F1C",
-  "gold-soft": "#8A5A1E",
+  gold: "#3A302D",
+  "gold-soft": "#3A302D",
   divider: "#E4DACB",
   ring: "rgba(31,23,22,0.10)",
   "ring-strong": "rgba(31,23,22,0.18)",
@@ -50,8 +50,8 @@ export const scales = {
 } as const;
 
 export const fonts = {
-  sans: "'Manrope Variable', Manrope, system-ui, sans-serif",
-  display: "'Fraunces Variable', Fraunces, Georgia, serif",
+  sans: "'Source Serif 4 Variable', 'Source Serif 4', Georgia, serif",
+  display: "'Source Serif 4 Variable', 'Source Serif 4', Georgia, serif",
   mono: "'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace",
 };
 

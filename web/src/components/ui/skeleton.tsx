@@ -26,7 +26,7 @@ export function EmptyState({ text, onClear }: { text: string; onClear?: () => vo
 
 export function ErrorState({ what, error }: { what: string; error: string }) {
   return (
-    <div role="alert" className="card m-6 flex items-center justify-between gap-3 p-5 text-sm">
+    <div role="alert" className="card m-6 flex items-center justify-between gap-3 p-6 text-sm">
       <span className="text-fg-muted">
         Could not load {what}. <span className="mono text-xs text-fg-subtle">{error}</span>
       </span>

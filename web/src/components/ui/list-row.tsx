@@ -79,7 +79,7 @@ export function RowList({
             <m.span layoutId={`pill-${it.id}`} className="w-[92px] shrink-0">
               <StatusPill verdict={it.verdict} />
             </m.span>
-            <m.span layoutId={`id-${it.id}`} className="mono w-[54px] shrink-0 text-xs text-fg">
+            <m.span layoutId={`id-${it.id}`} className="num w-[54px] shrink-0 font-mono text-xs text-fg">
               {it.id}
             </m.span>
             <span className="min-w-0 flex-1 truncate text-fg-muted">{it.meta}</span>

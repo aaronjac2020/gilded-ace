@@ -13,6 +13,7 @@ import { useFilters } from "../lib/urlState";
 import { useJson } from "../lib/useData";
 import { areaFill, tipHtml } from "../theme/echartsTheme";
 import { colors, scales } from "../theme/tokens";
+import { Lead } from "../components/ui/more";
 
 const Chart = lazy(() => import("../components/Chart").then((m) => ({ default: m.Chart })));
 
@@ -34,7 +35,12 @@ type Day = {
   holiday: string | null;
   events: string;
 };
-type ZoneDay = { d: number; zone: string; entries: number; masked_hours: number };
+type ZoneDay = {
+  d: number;
+  zone: string;
+  entries: number;
+  masked_hours: number;
+};
 type Ev = {
   event_id: string;
   name: string;
@@ -76,7 +82,11 @@ type DemandData = {
 
 const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 const shortDate = (iso: string) =>
-  new Date(iso + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+  new Date(iso + "T00:00:00Z").toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
 
 export default function Demand() {
   const { data, error } = useJson<DemandData>("demand.json");
@@ -159,11 +169,20 @@ export default function Demand() {
               height={280}
               label="Line chart of daily coin-in with event bands"
               option={{
-                grid: { left: 4, right: 12, top: 28, bottom: 4, containLabel: true },
+                grid: {
+                  left: 4,
+                  right: 12,
+                  top: 28,
+                  bottom: 4,
+                  containLabel: true,
+                },
                 tooltip: {
                   trigger: "axis",
                   formatter: (q: unknown) => {
-                    const a = q as { axisValueLabel: string; value: [string, number] }[];
+                    const a = q as {
+                      axisValueLabel: string;
+                      value: [string, number];
+                    }[];
                     const iso = a[0]?.value[0];
                     const r = v.days.find((x) => isoOf(data.date0, x.d) === iso);
                     return tipHtml(a[0]?.axisValueLabel ?? "", [
@@ -183,7 +202,11 @@ export default function Demand() {
                   },
                 },
                 xAxis: { type: "time", axisLabel: { formatter: "{MMM} {d}" } },
-                yAxis: { type: "value", axisLabel: { formatter: (x: number) => fmt.usdK(x) }, scale: true },
+                yAxis: {
+                  type: "value",
+                  axisLabel: { formatter: (x: number) => fmt.usdK(x) },
+                  scale: true,
+                },
                 series: [
                   {
                     name: "Coin-in",
@@ -201,10 +224,18 @@ export default function Demand() {
                             {
                               xAxis: e.start,
                               name: e.scope === "property" ? e.name.replace("Gilded Ace ", "") : "",
-                              itemStyle: { color: e.scope === "property" ? "rgba(201,130,46,0.16)" : "rgba(255,255,255,0.05)" },
-                              label: { color: colors["gold-soft"], fontSize: 10, position: "top" },
+                              itemStyle: {
+                                color: e.scope === "property" ? "rgba(201,130,46,0.16)" : "rgba(255,255,255,0.05)",
+                              },
+                              label: {
+                                color: colors["gold-soft"],
+                                fontSize: 10,
+                                position: "top",
+                              },
                             },
-                            { xAxis: isoOf(data.date0, Math.round((Date.parse(e.end) - Date.parse(data.date0)) / 86400000) + 1) },
+                            {
+                              xAxis: isoOf(data.date0, Math.round((Date.parse(e.end) - Date.parse(data.date0)) / 86400000) + 1),
+                            },
                           ]),
                         ...data.closures
                           .filter((c) => c.d_to >= win[0] && c.d_from <= win[1])
@@ -218,7 +249,9 @@ export default function Demand() {
                                 borderWidth: 1,
                               },
                             },
-                            { xAxis: isoOf(data.date0, Math.min(c.d_to, win[1])) },
+                            {
+                              xAxis: isoOf(data.date0, Math.min(c.d_to, win[1])),
+                            },
                           ]),
                       ] as never,
                     },
@@ -234,14 +267,23 @@ export default function Demand() {
           label="Weekday profile"
           title={`${v.top.wd} peaks; ${v.low.wd} is the trough`}
           sub="Mean coin-in per gaming day (06:00 start)"
-          table={{ columns: ["Weekday", "Coin-in / day", "Days"], rows: v.weekday.map((w) => [w.wd, fmt.usd(w.v), w.n]) }}
+          table={{
+            columns: ["Weekday", "Coin-in / day", "Days"],
+            rows: v.weekday.map((w) => [w.wd, fmt.usd(w.v), w.n]),
+          }}
         >
           <Suspense fallback={<Skeleton className="h-[280px] w-full" />}>
             <Chart
               height={280}
               label="Bar chart of mean coin-in by weekday"
               option={{
-                grid: { left: 4, right: 4, top: 12, bottom: 4, containLabel: true },
+                grid: {
+                  left: 4,
+                  right: 4,
+                  top: 12,
+                  bottom: 4,
+                  containLabel: true,
+                },
                 tooltip: {
                   trigger: "axis",
                   formatter: (q: unknown) => {
@@ -249,14 +291,23 @@ export default function Demand() {
                     return tipHtml(a[0].name, [["Coin-in / day", fmt.usdK(a[0].value)]]);
                   },
                 },
-                xAxis: { type: "category", data: v.weekday.map((w) => w.wd), axisLabel: { interval: 0 } },
-                yAxis: { type: "value", axisLabel: { formatter: (x: number) => fmt.usdK(x) } },
+                xAxis: {
+                  type: "category",
+                  data: v.weekday.map((w) => w.wd),
+                  axisLabel: { interval: 0 },
+                },
+                yAxis: {
+                  type: "value",
+                  axisLabel: { formatter: (x: number) => fmt.usdK(x) },
+                },
                 series: [
                   {
                     type: "bar",
                     data: v.weekday.map((w) => ({
                       value: w.v,
-                      itemStyle: { color: w.wd === v.top.wd ? colors.gold : w.wd === v.low.wd ? colors["fg-subtle"] : "#3A3434" },
+                      itemStyle: {
+                        color: w.wd === v.top.wd ? colors.gold : w.wd === v.low.wd ? colors["fg-subtle"] : "#3A3434",
+                      },
                     })),
                   },
                 ],
@@ -305,14 +356,14 @@ export default function Demand() {
               );
             })}
           </ul>
-          <p className="mt-4 flex items-center gap-4 text-2xs text-fg-subtle">
+          <Lead className="mt-4 flex items-center gap-4 text-2xs text-fg-subtle">
             <span className="flex items-center gap-1.5">
               <i className="inline-block h-1.5 w-4 rounded-full bg-fg-subtle/60" /> January
             </span>
             <span className="flex items-center gap-1.5">
               <i className="inline-block h-1.5 w-4 rounded-full bg-gold" /> June
             </span>
-          </p>
+          </Lead>
           {v.closure && (
             <p className="mt-3 text-xs text-fg-muted" data-testid="closure-effect">
               While walkway {v.closure.walkway_id} was closed ({shortDate(isoOf(data.date0, v.closure.d_from))}–
@@ -320,7 +371,7 @@ export default function Demand() {
               {fmt.pct(v.closure.share["Z-B40"].outside)} to {fmt.pct(v.closure.share["Z-B40"].during)}; it recovered after reopening.
             </p>
           )}
-          <p className="mt-2 text-2xs text-fg-subtle">{data.notes.traffic}</p>
+          <Lead className="mt-2 text-2xs text-fg-subtle">{data.notes.traffic}</Lead>
         </Tile>
 
         <Tile
@@ -354,7 +405,10 @@ export default function Demand() {
                     <span className="absolute inset-y-[5px] w-px bg-fg-subtle/60" style={{ left: x(0) }} />
                     <span
                       className="absolute inset-y-[5px] h-0.5 rounded-full bg-gold/40"
-                      style={{ left: x(e.uplift_lo), right: `calc(100% - ${x(e.uplift_hi)})` }}
+                      style={{
+                        left: x(e.uplift_lo),
+                        right: `calc(100% - ${x(e.uplift_hi)})`,
+                      }}
                     />
                     <span
                       className={
@@ -370,7 +424,7 @@ export default function Demand() {
               );
             })}
           </ul>
-          <p className="mt-3 text-2xs text-fg-subtle">Filled dot: interval clears zero. {data.notes.uplift}</p>
+          <Lead className="mt-3 text-2xs text-fg-subtle">Filled dot: interval clears zero. {data.notes.uplift}</Lead>
         </Tile>
       </div>
 
@@ -393,15 +447,15 @@ export default function Demand() {
         <div className="grid grid-cols-3 gap-6 md:grid-cols-6">
           {v.city.map((c) => (
             <div key={c.month} className="flex flex-col gap-1">
-              <p className="label-sc text-fg-muted">{c.label}</p>
-              <p className="mono text-sm text-fg">
+              <Lead className="label-sc text-fg-muted">{c.label}</Lead>
+              <Lead className="mono text-sm text-fg">
                 {fmt.usdK(c.floor)}
                 <span className="text-2xs text-fg-subtle"> /day</span>
-              </p>
-              <p className="text-2xs text-fg-subtle">
+              </Lead>
+              <Lead className="text-2xs text-fg-subtle">
                 City {(c.visitor_volume / 1e6).toFixed(2)}M ({signed(c.visitor_yoy_ratio, 0)} YoY)
-              </p>
-              <p className="text-2xs text-fg-subtle">Avg high {c.tmax != null ? `${c.tmax.toFixed(0)}°C` : "–"}</p>
+              </Lead>
+              <Lead className="text-2xs text-fg-subtle">Avg high {c.tmax != null ? `${c.tmax.toFixed(0)}°C` : "–"}</Lead>
             </div>
           ))}
         </div>
@@ -445,7 +499,12 @@ function derive(data: DemandData, win: [number, number]) {
   const jan = share("01");
   const jun = share("06");
   const zoneShare = Object.keys(jan)
-    .map((zone) => ({ zone, name: zoneNames[zone] ?? zone, jan: jan[zone], jun: jun[zone] ?? 0 }))
+    .map((zone) => ({
+      zone,
+      name: zoneNames[zone] ?? zone,
+      jan: jan[zone],
+      jun: jun[zone] ?? 0,
+    }))
     .sort((a, b) => b.jun - a.jun);
   const mover = [...zoneShare].sort((a, b) => Math.abs(b.jun - b.jan) - Math.abs(a.jun - a.jan))[0];
   const zoneTitle =
@@ -462,7 +521,10 @@ function derive(data: DemandData, win: [number, number]) {
     const w = xs.map((r) => r.tmax_c).filter((t): t is number => t != null);
     return {
       ...c,
-      label: new Date(c.month + "-01T00:00:00Z").toLocaleDateString("en-US", { month: "short", timeZone: "UTC" }),
+      label: new Date(c.month + "-01T00:00:00Z").toLocaleDateString("en-US", {
+        month: "short",
+        timeZone: "UTC",
+      }),
       floor: mean(xs.map((r) => r.coin_in)),
       tmax: w.length ? mean(w) : null,
     };
@@ -495,7 +557,7 @@ function derive(data: DemandData, win: [number, number]) {
   };
 }
 
-/** Calendar as a week x weekday heatmap (sequential maroon -> gold). Event days carry a dot. */
+/** Calendar as a week x weekday heatmap (sequential, light -> maroon). Event days carry a dot. */
 function CalendarGrid({ days, date0, win, evName }: { days: Day[]; date0: string; win: [number, number]; evName: Record<string, string> }) {
   const off = (new Date(date0 + "T00:00:00Z").getUTCDay() + 6) % 7; // Monday = 0
   const cell = (d: number) => [Math.floor((d + off) / 7), 6 - ((d + off) % 7)];
@@ -536,7 +598,12 @@ function CalendarGrid({ days, date0, win, evName }: { days: Day[]; date0: string
             interval: 0,
             formatter: (w: string) => {
               const m = monthStarts.find((s) => s.w === Number(w));
-              return m ? new Date(m.iso + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", timeZone: "UTC" }) : "";
+              return m
+                ? new Date(m.iso + "T00:00:00Z").toLocaleDateString("en-US", {
+                    month: "short",
+                    timeZone: "UTC",
+                  })
+                : "";
             },
           },
           position: "top",
@@ -561,13 +628,24 @@ function CalendarGrid({ days, date0, win, evName }: { days: Day[]; date0: string
           {
             type: "heatmap",
             data: inWin.map((r) => ({ value: [...cell(r.d), r.coin_in], r })),
-            itemStyle: { borderColor: colors.bg, borderWidth: 2, borderRadius: 3 },
-            emphasis: { itemStyle: { borderColor: colors["gold-soft"], borderWidth: 1 } },
+            itemStyle: {
+              borderColor: colors.bg,
+              borderWidth: 2,
+              borderRadius: 3,
+            },
+            emphasis: {
+              itemStyle: { borderColor: colors["gold-soft"], borderWidth: 1 },
+            },
           },
           {
             type: "heatmap",
             data: days.filter((r) => r.d < win[0] || r.d > win[1]).map((r) => ({ value: [...cell(r.d), 0], r })),
-            itemStyle: { color: colors["surface-2"], borderColor: colors.bg, borderWidth: 2, borderRadius: 3 },
+            itemStyle: {
+              color: colors["surface-2"],
+              borderColor: colors.bg,
+              borderWidth: 2,
+              borderRadius: 3,
+            },
           },
           {
             type: "scatter",

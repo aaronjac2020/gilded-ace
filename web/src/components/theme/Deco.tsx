@@ -31,7 +31,7 @@ export function DecoCorner({ at, className }: { at: keyof typeof corner; classNa
       width="26"
       height="26"
       viewBox="0 0 26 26"
-      className={cn("pointer-events-none absolute text-gold/45", corner[at], className)}
+      className={cn("pointer-events-none absolute text-ivory/30", corner[at], className)}
       aria-hidden
     >
       <path d="M1 25V8l7-7h17" fill="none" stroke="currentColor" strokeWidth="1" />

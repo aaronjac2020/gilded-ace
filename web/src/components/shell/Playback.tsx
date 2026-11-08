@@ -93,7 +93,7 @@ export function Readouts() {
   ];
   return (
     <dl
-      className="hidden shrink-0 items-center gap-5 whitespace-nowrap border-l border-divider pl-5 min-[1360px]:flex"
+      className="hidden shrink-0 items-center gap-6 whitespace-nowrap border-l border-divider pl-6 min-[1360px]:flex"
       aria-label="Floor readouts"
       data-testid="readouts"
     >

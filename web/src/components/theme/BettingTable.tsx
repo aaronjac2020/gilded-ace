@@ -16,7 +16,7 @@ export type Bet = {
   hi?: number;
 };
 
-const TONES: ChipTone[] = ["gold", "maroon", "ivory"];
+const TONES: ChipTone[] = ["maroon", "ivory", "lacquer"];
 
 /**
  * The plan as bets on felt: one chip stack per action (height ∝ cost) plus the held stack.
@@ -45,7 +45,7 @@ export function BettingTable({
   const spend = bets.reduce((a, b) => a + b.cost, 0);
 
   return (
-    <div ref={ref} className="felt rail relative px-6 pb-6 pt-5 md:px-10" data-testid="betting-table">
+    <div ref={ref} className="felt rail relative px-6 pb-6 pt-6 md:px-10" data-testid="betting-table">
       <DecoCorner at="tl" />
       <DecoCorner at="tr" />
       <DecoCorner at="bl" />
@@ -66,8 +66,8 @@ export function BettingTable({
                 aria-label={`${s.name}: ${fmt.usd(s.cost)}`}
                 className={cn(
                   "focus-ring relative flex h-[150px] w-[112px] items-end justify-center rounded-full pb-6",
-                  "after:pointer-events-none after:absolute after:inset-x-0 after:bottom-2 after:h-12 after:rounded-[50%] after:border after:border-gold/35 after:transition-colors",
-                  active === s.id && "after:border-gold",
+                  "after:pointer-events-none after:absolute after:inset-x-0 after:bottom-2 after:h-12 after:rounded-[50%] after:border after:border-ivory/25 after:transition-colors",
+                  active === s.id && "after:border-ivory",
                   s.id === "held" && "after:border-dashed",
                 )}
               >
@@ -81,7 +81,7 @@ export function BettingTable({
                     n={Math.min(n, 22)}
                     tone={s.tone}
                     width={48}
-                    className={s.id === "held" ? "drop-shadow-[0_0_2px_oklch(var(--gold-soft))]" : undefined}
+                    className={s.id === "held" ? "drop-shadow-[0_0_2px_oklch(var(--ivory))]" : undefined}
                   />
                 </m.span>
               </button>
@@ -93,7 +93,7 @@ export function BettingTable({
           );
         })}
       </ul>
-      <div className="mt-6 min-h-[44px] border-t border-gold/20 px-2 pt-4 text-xs text-[#E9DCCB]" aria-live="polite">
+      <div className="mt-6 min-h-[44px] border-t border-ivory/20 px-2 pt-4 text-xs text-[#E9DCCB]" aria-live="polite">
         {cur && cur.id !== "held" && "quantity" in cur ? (
           <p>
             <span className="text-ivory">{cur.name}</span> · qty <span className="mono text-ivory">{cur.quantity}</span> · {cur.targets} ·

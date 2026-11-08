@@ -6,7 +6,7 @@ export function DealerButton({ children, className, label }: { children?: ReactN
   return (
     <span
       className={cn(
-        "card-face inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 font-mono text-[10px] font-semibold leading-none ring-1 ring-gold/60",
+        "card-face inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 num text-[10px] font-semibold leading-none ring-1 ring-gold/60",
         className,
       )}
       aria-label={label}

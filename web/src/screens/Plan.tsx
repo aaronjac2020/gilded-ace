@@ -61,7 +61,7 @@ function CutList() {
               <button
                 type="button"
                 onClick={() => open(r.machine_id, ids)}
-                className="focus-ring flex w-full flex-wrap items-center gap-4 px-5 py-3.5 text-left hover:bg-surface-2"
+                className="focus-ring flex w-full flex-wrap items-center gap-4 px-6 py-3.5 text-left hover:bg-surface-2"
                 data-machine-row={r.machine_id}
               >
                 <span className="w-16 font-mono text-[13px] font-semibold">{r.machine_id}</span>

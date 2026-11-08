@@ -21,8 +21,8 @@
     --fg-subtle: var(--ink-3);
     --maroon: 27.1% 0.111 29.2; /* #500000 */
     --maroon-bright: 38.3% 0.131 25.9; /* #7A1A1A */
-    --gold: 58.8% 0.117 70.6; /* #A86F1C */
-    --gold-soft: 50.9% 0.097 67.9; /* #8A5A1E: gold text on ivory */
+    --gold: 30.6% 0.013 40; /* #3A302D: former gold accents are dark ink; only .gold-text (one hero number per screen) stays gold */
+    --gold-soft: 30.6% 0.013 40; /* #3A302D */
     --setting: 53.5% 0.122 301.3; /* #7A5AA8 */
     --luck: 52.3% 0.106 247; /* #2F6EA3 */
     --location: 50.9% 0.097 67.9; /* #8A5A1E */
@@ -33,7 +33,7 @@
     --ring: rgb(31 23 22 / 0.1);
     --ring-strong: rgb(31 23 22 / 0.18);
     --divider: #e4dacb;
-    --gold-tint: oklch(var(--gold) / 0.18);
+    --gold-tint: oklch(58.8% 0.117 70.6 / 0.18);
     --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     --shadow-card: 0 1px 2px rgb(31 23 22 / 0.06), 0 8px 24px -12px rgb(31 23 22 / 0.18);
     --shadow-lift: 0 2px 4px rgb(31 23 22 / 0.08), 0 18px 40px -16px rgb(31 23 22 / 0.32);
@@ -56,6 +56,8 @@
   body {
     @apply bg-bg font-sans text-base text-fg antialiased;
     line-height: 1.6;
+    font-optical-sizing: auto;
+    font-variant-numeric: tabular-nums;
   }
   /* 2% grain on the page background only */
   body::before {
@@ -80,6 +82,16 @@
     text-wrap: balance;
     font-family: theme("fontFamily.display");
     font-optical-sizing: auto;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  button,
+  select,
+  input,
+  [role="tab"],
+  [role="radio"] {
+    font-size: 15px;
+    font-weight: 500;
   }
   p {
     text-wrap: pretty;
@@ -97,20 +109,21 @@
   .num {
     font-variant-numeric: tabular-nums;
   }
+  /* Numbers: the serif with tabular figures. Machine IDs use font-mono directly. */
   .mono {
-    @apply font-mono num;
+    @apply font-sans num;
   }
   .eyebrow {
     @apply text-2xs font-semibold text-fg-subtle;
   }
   /* The only uppercase label on the site: the chapter eyebrow. */
   .chapter-eyebrow {
-    @apply font-sans text-[13px] font-semibold uppercase tracking-[0.14em] text-gold-soft;
+    @apply font-sans text-[13px] font-semibold uppercase tracking-[0.14em] text-fg-muted;
   }
   .display {
     font-family: theme("fontFamily.display");
     font-weight: 600;
-    letter-spacing: -0.015em;
+    letter-spacing: -0.01em;
   }
   /* "Answers Q1": small muted tag beside section titles. */
   .answers-tag {
@@ -232,7 +245,7 @@
     font-family: theme("fontFamily.serif");
     font-optical-sizing: auto;
   }
-  /* Small label: sentence-case Manrope 13px (mono caps labels were retired with the redesign). */
+  /* Small label: sentence-case serif 13px (mono caps labels were retired with the redesign). */
   .label-sc {
     font-family: theme("fontFamily.sans");
     font-size: 13px;

@@ -86,7 +86,7 @@ export function tipHtml(title: string, rows: [string, string, string?][]): strin
       ([k, v, c]) =>
         `<div style="display:flex;gap:12px;justify-content:space-between;align-items:center;line-height:20px">` +
         `<span style="color:${colors["fg-muted"]};display:flex;align-items:center;gap:6px">${c ? `<i style="width:6px;height:6px;border-radius:9px;background:${c};display:inline-block"></i>` : ""}${k}</span>` +
-        `<span style="font-family:${fonts.mono};font-size:13px">${v}</span></div>`,
+        `<span style="font-family:${fonts.sans};font-size:13px;font-variant-numeric:tabular-nums">${v}</span></div>`,
     )
     .join("");
   return `<div style="min-width:160px"><div style="font-weight:600;margin-bottom:4px">${title}</div>${r}</div>`;

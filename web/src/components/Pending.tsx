@@ -7,7 +7,7 @@ export function Pending({ eyebrow, question, plan }: { eyebrow: string; question
   return (
     <div>
       <HeroBand className="-mx-6" eyebrow={eyebrow} title={question} sub="In progress. The exhibits planned for this question:" />
-      <section aria-label="Planned exhibits" className="felt rail relative mt-16 px-6 pb-8 pt-5 md:px-10">
+      <section aria-label="Planned exhibits" className="felt rail relative mt-16 px-6 pb-8 pt-6 md:px-10">
         <DecoCorner at="tl" />
         <DecoCorner at="tr" />
         <DecoCorner at="bl" />
@@ -24,7 +24,7 @@ export function Pending({ eyebrow, question, plan }: { eyebrow: string; question
                 style={{ rotate: `${(i - (plan.length - 1) / 2) * 2}deg` }}
                 aria-hidden
               />
-              <p className="mt-5 flex max-w-[26ch] items-baseline gap-2 text-sm text-fg">
+              <p className="mt-6 flex max-w-[26ch] items-baseline gap-2 text-sm text-fg">
                 <span className="serif shrink-0 text-gold-soft">{i + 1}</span>
                 {p}
               </p>

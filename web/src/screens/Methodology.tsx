@@ -134,7 +134,7 @@ function ClaimFacts({ c, open = false }: { c: Claim; open?: boolean }) {
   ];
   if (!open)
     return (
-      <dl className="mt-5 max-w-[720px] space-y-3 text-[15px]">
+      <dl className="mt-6 max-w-[720px] space-y-3 text-[15px]">
         <div>
           <dt className="eyebrow">Result</dt>
           <dd className="mt-1 text-fg">{rows[0][1]}</dd>
@@ -153,7 +153,7 @@ function ClaimFacts({ c, open = false }: { c: Claim; open?: boolean }) {
       </dl>
     );
   return (
-    <dl className="mt-5 max-w-[720px] space-y-3 text-[15px]">
+    <dl className="mt-6 max-w-[720px] space-y-3 text-[15px]">
       {rows.map(([k, v]) =>
         k === "Source" ? (
           <div key={k}>

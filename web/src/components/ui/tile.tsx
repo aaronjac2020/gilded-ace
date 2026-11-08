@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { cn } from "../../lib/cn";
 import { Chip } from "../theme/Chip";
 import { Button } from "./button";
+import { Lead } from "./more";
 
 export type TableData = { columns: string[]; rows: (string | number)[][] };
 
@@ -67,7 +68,7 @@ export function Tile({
       aria-label={typeof title === "string" ? title : label}
       data-testid={testId}
     >
-      <div className="flex h-8 items-center justify-between gap-3 border-b border-gold/25 pl-7 pr-2">
+      <div className="flex h-8 items-center justify-between gap-3 border-b border-divider pl-6 pr-2">
         <p className="label-sc truncate">{label ?? ""}</p>
         <div className="flex shrink-0 items-center gap-1">
           {actions}
@@ -103,13 +104,13 @@ export function Tile({
           </DM.Root>
         </div>
       </div>
-      <div className="flex min-w-0 flex-1 flex-col p-7">
-        <div className="mb-5 min-w-0">
+      <div className="flex min-w-0 flex-1 flex-col p-6">
+        <div className="mb-6 min-w-0">
           <h2 className="display text-xl text-fg">{title}</h2>
-          {sub && <p className="mt-1 max-w-prose text-sm text-fg-muted">{sub}</p>}
+          {sub && <Lead className="mt-1 max-w-prose text-sm text-fg-muted">{sub}</Lead>}
         </div>
         <div className="min-w-0 flex-1">{asTable && table ? <DataTable t={table} /> : children}</div>
-        {footer && <div className="mt-5 flex items-center justify-between gap-3 border-t border-divider pt-3">{footer}</div>}
+        {footer && <div className="mt-6 flex items-center justify-between gap-4 border-t border-divider pt-4">{footer}</div>}
       </div>
     </section>
   );

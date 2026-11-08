@@ -41,7 +41,7 @@ export function VerdictStamp({
       animate={{ scale: 1, opacity: 1 }}
       transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
-        "inline-flex -rotate-3 flex-col items-center rounded-[3px] border-[1.5px] border-current px-1.5 py-0.5 font-mono uppercase leading-none",
+        "inline-flex -rotate-3 flex-col items-center rounded-[3px] border-[1.5px] border-current px-1.5 py-0.5 num uppercase leading-none",
         surface === "ivory" ? ink[verdict] : onDark[verdict],
         className,
       )}

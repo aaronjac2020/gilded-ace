@@ -42,20 +42,20 @@ export function RevealTable({
   const n = rows.length;
 
   return (
-    <div className="rail relative px-6 pb-6 pt-5 md:px-8" data-testid="reveal-table">
+    <div className="rail relative px-6 pb-6 pt-6 md:px-8" data-testid="reveal-table">
       <DecoCorner at="tl" />
       <DecoCorner at="tr" />
       <DecoCorner at="bl" />
       <DecoCorner at="br" />
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3 px-2">
-        <p className="label-sc text-gold-soft/80">Manager&rsquo;s cut list · bottom {n} by house win</p>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 px-2">
+        <p className="label-sc text-ivory/80">Manager&rsquo;s cut list · bottom {n} by house win</p>
         <div className="flex items-center gap-1">
           {view === "cards" && (
             <Button variant="ghost" size="sm" onClick={() => setDeal((d) => d + 1)}>
               <RotateCcw size={14} aria-hidden /> Replay deal
             </Button>
           )}
-          <div role="group" aria-label="View" className="flex rounded-sm bg-black/30 p-0.5 ring-1 ring-inset ring-gold/15">
+          <div role="group" aria-label="View" className="flex rounded-sm bg-black/30 p-0.5 ring-1 ring-inset ring-ivory/15">
             {(
               [
                 ["cards", "Cards", LayoutGrid],
@@ -84,7 +84,7 @@ export function RevealTable({
       ) : (
         <ol
           key={deal}
-          className="mx-auto grid max-w-[720px] grid-cols-5 justify-items-center gap-x-3 gap-y-5 px-1 min-[1600px]:max-w-none min-[1600px]:grid-cols-10"
+          className="mx-auto grid max-w-[720px] grid-cols-5 justify-items-center gap-x-3 gap-y-6 px-1 min-[1600px]:max-w-none min-[1600px]:grid-cols-10"
           aria-label="Manager's bottom 10, as cards"
           data-testid="manager-list"
         >
@@ -105,12 +105,12 @@ export function RevealTable({
                   suit="♠"
                   className="aspect-[5/6] w-full transition-transform duration-hover ease-out group-hover:-translate-y-1"
                 >
-                  <div className="flex h-full flex-col items-center px-2 pb-5 pt-4 text-center">
+                  <div className="flex h-full flex-col items-center px-2 pb-6 pt-4 text-center">
                     <span className="font-mono text-[12px] font-semibold tracking-tight">{r.machine_id}</span>
                     <span className="serif mt-2 text-[20px] font-semibold leading-none">{fmt.usdK(r.house_win_usd)}</span>
                     <span className="mt-1 text-[10px] uppercase tracking-[0.12em] text-ink/70">house win</span>
                     {lowHold(r) && (
-                      <span className="absolute right-1.5 top-1 font-mono text-[10.5px] font-semibold text-[#5c5350]" title="Game setting">
+                      <span className="absolute right-1.5 top-1 num text-[10.5px] font-semibold text-[#5c5350]" title="Game setting">
                         {fmt.pct(r.hold_expected, 0)}
                       </span>
                     )}
@@ -127,7 +127,7 @@ export function RevealTable({
           ))}
         </ol>
       )}
-      {caption && <div className="mt-5 px-2 text-xs text-fg-muted">{caption}</div>}
+      {caption && <div className="mt-6 px-2 text-xs text-fg-muted">{caption}</div>}
     </div>
   );
 }

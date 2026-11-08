@@ -39,7 +39,7 @@ function Reproduce() {
   if (!fp) return null;
   const ok = fp.inputs.filter((h) => h.matches_release).length;
   const list = (title: string, hs: Hash[]) => (
-    <details className="card px-5 py-3">
+    <details className="card px-6 py-3">
       <summary className="cursor-pointer text-[15px] font-semibold text-fg">
         {title} ({hs.length})
       </summary>
@@ -95,7 +95,7 @@ export default function Evidence() {
           {REASON_ORDER.map((k, i) => {
             const Icon = REASON_ICON[k];
             return (
-              <li key={k} className="flex flex-wrap items-center gap-4 px-5 py-3.5">
+              <li key={k} className="flex flex-wrap items-center gap-4 px-6 py-3.5">
                 <span className="w-6 text-[15px] font-semibold tabular-nums text-fg-muted">{i + 1}</span>
                 <Icon size={18} aria-hidden style={{ color: REASON[k].color }} />
                 <span className="w-56 text-[15px] font-semibold text-fg">{REASON[k].label}</span>

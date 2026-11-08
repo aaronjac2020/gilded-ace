@@ -19,16 +19,38 @@ import { hoverStore, useHover, useMachineParam } from "../lib/uiStore";
 import { useJson, useScorecard } from "../lib/useData";
 import { useFilters } from "../lib/urlState";
 import { colors, scales, verdictColors, verdictLabels, verdictOrder, type Verdict } from "../theme/tokens";
+import { Lead } from "../components/ui/more";
 
-type Floor = { slots: Columnar; banks: Columnar; zones: Columnar; landmarks: Columnar; walkways: Columnar };
-type Slot = { location_id: string; zone_id: string; bank_id: string; x_m: number; y_m: number };
+type Floor = {
+  slots: Columnar;
+  banks: Columnar;
+  zones: Columnar;
+  landmarks: Columnar;
+  walkways: Columnar;
+};
+type Slot = {
+  location_id: string;
+  zone_id: string;
+  bank_id: string;
+  x_m: number;
+  y_m: number;
+};
 type Zone = { zone_id: string; name: string; x_m: number; y_m: number };
-type Walk = { walkway_id: string; zone_a: string; zone_b: string; closed_from_utc: string | null };
+type Walk = {
+  walkway_id: string;
+  zone_a: string;
+  zone_b: string;
+  closed_from_utc: string | null;
+};
 type Metric = "verdict" | "effect" | "win" | "downtime";
 
 const METRICS: { id: Metric; label: string; legend: string }[] = [
   { id: "verdict", label: "Verdict", legend: "" },
-  { id: "effect", label: "Machine effect", legend: "play vs. spot and game expectation" },
+  {
+    id: "effect",
+    label: "Machine effect",
+    legend: "play vs. spot and game expectation",
+  },
   { id: "win", label: "House win", legend: "house win, period quintiles" },
   { id: "downtime", label: "Downtime", legend: "theo lost to downtime" },
 ];
@@ -65,12 +87,25 @@ export default function FloorMap() {
       const pts = ss.map((s) => [sx(s.x_m), sy(s.y_m)] as [number, number]);
       const hull = d3.polygonHull(pts) ?? pts;
       const ys2 = d3.extent(pts, (p) => p[1]) as [number, number];
-      return { z, hull, c: d3.polygonCentroid(hull), top: ys2[0], name: zones.find((q) => q.zone_id === z)?.name ?? z };
+      return {
+        z,
+        hull,
+        c: d3.polygonCentroid(hull),
+        top: ys2[0],
+        name: zones.find((q) => q.zone_id === z)?.name ?? z,
+      };
     });
     const banks = [...d3.group(slots, (s) => s.bank_id)].map(([b, ss]) => {
       const x = d3.extent(ss, (s) => sx(s.x_m)) as [number, number];
       const y = d3.extent(ss, (s) => sy(s.y_m)) as [number, number];
-      return { b, zone: ss[0].zone_id, x0: x[0] - 8, y0: y[0] - 8, x1: x[1] + 8, y1: y[1] + 8 };
+      return {
+        b,
+        zone: ss[0].zone_id,
+        x0: x[0] - 8,
+        y0: y[0] - 8,
+        x1: x[1] + 8,
+        y1: y[1] + 8,
+      };
     });
     const center = new Map(hulls.map((h) => [h.z, h.c]));
     const pos = new Map(slots.map((s) => [s.location_id, [sx(s.x_m), sy(s.y_m)] as [number, number]]));
@@ -140,7 +175,11 @@ export default function FloorMap() {
             hi: fmt.usdK(d3.max(all, (r) => r.house_win_usd) ?? 0),
             stops: scales.sequential.slice(1, 6),
           }
-        : { lo: "$0", hi: fmt.usdK(lostMax), stops: scales.sequential.slice(1) };
+        : {
+            lo: "$0",
+            hi: fmt.usdK(lostMax),
+            stops: scales.sequential.slice(1),
+          };
   const hoverBank = hover && geo.banks.some((b) => b.b === hover) ? hover : null;
 
   const pickBank = (b: string, zone: string) => {
@@ -335,16 +374,20 @@ export default function FloorMap() {
         {tip && (
           <div
             className="float pointer-events-none absolute z-10 px-3 py-2 text-xs"
-            style={{ left: `${(tip.x / W) * 100}%`, top: `${(tip.y / H) * 100}%`, transform: "translate(14px, -50%)" }}
+            style={{
+              left: `${(tip.x / W) * 100}%`,
+              top: `${(tip.y / H) * 100}%`,
+              transform: "translate(14px, -50%)",
+            }}
           >
-            <p className="flex items-center gap-2 font-medium text-fg">
-              <span className="mono">{tip.r.machine_id}</span>
+            <Lead className="flex items-center gap-2 font-medium text-fg">
+              <span className="font-mono">{tip.r.machine_id}</span>
               <span className="text-fg-muted">{verdictLabels[tip.r.verdict]}</span>
-            </p>
-            <p className="mono mt-0.5 text-2xs text-fg-muted">
+            </Lead>
+            <Lead className="mono mt-0.5 text-2xs text-fg-muted">
               win {fmt.usdK(tip.r.house_win_usd)} · {fmt.usdK(tip.r.coin_in_per_avail_hr)}/hr · effect{" "}
               {fmt.num(tip.r.machine_effect_shrunk)}
-            </p>
+            </Lead>
           </div>
         )}
 
@@ -424,7 +467,12 @@ export default function FloorMap() {
         <ZoneLedger
           zones={geo.hulls.map((h) => {
             const zr = all.filter((r) => r.zone_id === h.z);
-            return { z: h.z, name: h.name, n: zr.length, flag: zr.filter((r) => r.verdict !== "ok" && r.verdict !== "truly_weak").length };
+            return {
+              z: h.z,
+              name: h.name,
+              n: zr.length,
+              flag: zr.filter((r) => r.verdict !== "ok" && r.verdict !== "truly_weak").length,
+            };
           })}
           active={f.zone}
           onPick={(z) => setF({ zone: f.zone === z ? null : z, bank: null })}
@@ -445,9 +493,9 @@ export default function FloorMap() {
         </KpiStrip>
       </div>
       <Scrubber period={f.period} onChange={(period) => setF({ period })} />
-      <p className="mx-6 mt-2 text-2xs text-fg-subtle md:mx-10">
+      <Lead className="mx-6 mt-2 text-2xs text-fg-subtle md:mx-10">
         Drag to pan · {navigator.platform.includes("Mac") ? "⌘" : "Ctrl"} + scroll to zoom · Tab to reach banks, Enter to filter
-      </p>
+      </Lead>
     </div>
   );
 }
@@ -590,7 +638,7 @@ function ZoneLedger({
   const max = Math.max(...zones.map((z) => z.flag), 1);
   return (
     <div className="absolute right-6 top-36 hidden w-[218px] min-[1440px]:block" data-testid="zone-ledger">
-      <p className="label-sc mb-2 text-gold-soft">By zone · reason besides weak play</p>
+      <Lead className="label-sc mb-2 text-gold-soft">By zone · reason besides weak play</Lead>
       <ul className="flex flex-col gap-0.5">
         {[...zones]
           .sort((a, b) => b.flag - a.flag)

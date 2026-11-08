@@ -11,7 +11,7 @@ export const buttonVariants = cva(
         secondary: "bg-surface-1 text-fg shadow-card ring-1 ring-inset ring-ring hover:ring-ring-strong active:bg-surface-2",
         ghost: "text-fg-muted hover:bg-surface-2 hover:text-fg",
       },
-      size: { lg: "h-12 px-5 text-base", md: "h-10 px-4", sm: "h-8 px-3", icon: "h-9 w-9", "icon-sm": "h-8 w-8" },
+      size: { lg: "h-12 px-6 text-base", md: "h-10 px-4", sm: "h-8 px-3", icon: "h-9 w-9", "icon-sm": "h-8 w-8" },
     },
     defaultVariants: { variant: "secondary", size: "md" },
   },

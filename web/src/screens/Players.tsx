@@ -12,6 +12,7 @@ import { useFilters } from "../lib/urlState";
 import { useJson } from "../lib/useData";
 import { areaFill, tipHtml } from "../theme/echartsTheme";
 import { colors } from "../theme/tokens";
+import { Evidence, Lead } from "../components/ui/more";
 
 const Chart = lazy(() => import("../components/Chart").then((m) => ({ default: m.Chart })));
 
@@ -60,7 +61,11 @@ type PlayersData = {
 
 const MONTHS = ["2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06"];
 const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
-const PERIOD_MONTHS: Record<string, string[]> = { full: MONTHS, train: MONTHS.slice(0, 4), test: MONTHS.slice(4) };
+const PERIOD_MONTHS: Record<string, string[]> = {
+  full: MONTHS,
+  train: MONTHS.slice(0, 4),
+  test: MONTHS.slice(4),
+};
 const DIMS: SegDim[] = ["tier", "region", "age"];
 
 const binLabel = (lo: number | null, hi: number | null) =>
@@ -130,7 +135,13 @@ export default function Players() {
                 height={300}
                 label={`Lorenz curve of theo across ${who}, Gini ${s.gini_theo.toFixed(2)}`}
                 option={{
-                  grid: { left: 4, right: 12, top: 12, bottom: 4, containLabel: true },
+                  grid: {
+                    left: 4,
+                    right: 12,
+                    top: 12,
+                    bottom: 4,
+                    containLabel: true,
+                  },
                   tooltip: {
                     trigger: "axis",
                     formatter: (q: unknown) => {
@@ -142,8 +153,18 @@ export default function Players() {
                       ]);
                     },
                   },
-                  xAxis: { type: "value", min: 0, max: 1, axisLabel: { formatter: (x: number) => fmt.pct(x, 0) } },
-                  yAxis: { type: "value", min: 0, max: 1, axisLabel: { formatter: (x: number) => fmt.pct(x, 0) } },
+                  xAxis: {
+                    type: "value",
+                    min: 0,
+                    max: 1,
+                    axisLabel: { formatter: (x: number) => fmt.pct(x, 0) },
+                  },
+                  yAxis: {
+                    type: "value",
+                    min: 0,
+                    max: 1,
+                    axisLabel: { formatter: (x: number) => fmt.pct(x, 0) },
+                  },
                   series: [
                     {
                       type: "line",
@@ -153,7 +174,11 @@ export default function Players() {
                       ],
                       symbol: "none",
                       silent: true,
-                      lineStyle: { color: colors["fg-subtle"], type: "dashed", width: 1 },
+                      lineStyle: {
+                        color: colors["fg-subtle"],
+                        type: "dashed",
+                        width: 1,
+                      },
                     },
                     {
                       type: "line",
@@ -161,15 +186,30 @@ export default function Players() {
                       symbol: "none",
                       smooth: false,
                       lineStyle: { color: colors["gold-soft"], width: 2 },
-                      areaStyle: { color: areaFill(colors.gold, 0.12), origin: "start" },
+                      areaStyle: {
+                        color: areaFill(colors.gold, 0.12),
+                        origin: "start",
+                      },
                       markPoint: {
                         symbol: "circle",
                         symbolSize: 7,
                         itemStyle: { color: colors.gold },
-                        label: { color: colors.fg, fontSize: 10, position: "left" },
+                        label: {
+                          color: colors.fg,
+                          fontSize: 10,
+                          position: "left",
+                        },
                         data: [
-                          { name: "top10", coord: [0.9, 1 - s.top10_theo], value: `top 10%: ${fmt.pct(s.top10_theo, 0)}` },
-                          { name: "top1", coord: [0.99, 1 - s.top1_theo], value: `top 1%: ${fmt.pct(s.top1_theo, 0)}` },
+                          {
+                            name: "top10",
+                            coord: [0.9, 1 - s.top10_theo],
+                            value: `top 10%: ${fmt.pct(s.top10_theo, 0)}`,
+                          },
+                          {
+                            name: "top1",
+                            coord: [0.99, 1 - s.top1_theo],
+                            value: `top 1%: ${fmt.pct(s.top1_theo, 0)}`,
+                          },
                         ],
                       },
                     },
@@ -177,7 +217,7 @@ export default function Players() {
                 }}
               />
             </Suspense>
-            <dl className="grid grid-cols-2 content-start gap-x-4 gap-y-5 md:grid-cols-1" data-testid="concentration-shares">
+            <dl className="grid grid-cols-2 content-start gap-x-4 gap-y-6 md:grid-cols-1" data-testid="concentration-shares">
               {(
                 [
                   ["Top 1%, theo", s.top1_theo],
@@ -191,9 +231,9 @@ export default function Players() {
                   <dd className="mono mt-1 text-xl text-fg">{fmt.pct(x)}</dd>
                 </div>
               ))}
-              <p className="col-span-2 text-2xs text-fg-subtle md:col-span-1">
+              <Lead className="col-span-2 text-2xs text-fg-subtle md:col-span-1">
                 Net-loss shares rank players by what they lost; winners offset losers, so a share can pass 100%.
-              </p>
+              </Lead>
             </dl>
           </div>
         </Tile>
@@ -215,7 +255,13 @@ export default function Players() {
                 height={300}
                 label={`Histogram of net per player for ${who}`}
                 option={{
-                  grid: { left: 4, right: 4, top: 12, bottom: 4, containLabel: true },
+                  grid: {
+                    left: 4,
+                    right: 4,
+                    top: 12,
+                    bottom: 4,
+                    containLabel: true,
+                  },
                   tooltip: {
                     trigger: "axis",
                     formatter: (q: unknown) => {
@@ -232,14 +278,20 @@ export default function Players() {
                     data: v.hist.map((h) => h.short),
                     axisLabel: { interval: 2, fontSize: 11, hideOverlap: true },
                   },
-                  yAxis: { type: "value", minInterval: 1, axisLabel: { formatter: (x: number) => `${x}%` } },
+                  yAxis: {
+                    type: "value",
+                    minInterval: 1,
+                    axisLabel: { formatter: (x: number) => `${x}%` },
+                  },
                   series: [
                     {
                       type: "bar",
                       barCategoryGap: "12%",
                       data: v.hist.map((h) => ({
                         value: (h.n / s.players) * 100,
-                        itemStyle: { color: h.hi != null && h.hi <= 0 ? colors.gold : "#6B6261" },
+                        itemStyle: {
+                          color: h.hi != null && h.hi <= 0 ? colors.gold : "#6B6261",
+                        },
                       })),
                     },
                   ],
@@ -247,7 +299,7 @@ export default function Players() {
               />
             </Suspense>
           </div>
-          <p className="mt-2 flex flex-wrap items-center gap-x-4 text-2xs text-fg-subtle">
+          <Lead className="mt-2 flex flex-wrap items-center gap-x-4 text-2xs text-fg-subtle">
             <span className="flex items-center gap-1.5">
               <span className="size-2 rounded-sm" style={{ background: colors.gold }} aria-hidden />
               Lost money
@@ -256,8 +308,10 @@ export default function Players() {
               <span className="size-2 rounded-sm bg-[#6B6261]" aria-hidden />
               Broke even or won
             </span>
-            <span>{data.notes.unit}</span>
-          </p>
+          </Lead>
+          <Evidence className="mt-2">
+            <p className="text-xs">{data.notes.unit}</p>
+          </Evidence>
         </Tile>
       </div>
 
@@ -268,7 +322,7 @@ export default function Players() {
             className="col-span-12 lg:col-span-4"
             label={`By ${DIM_LABEL[dim].toLowerCase()}`}
             title={v.breakTitle[dim]}
-            sub={`Share of theo (gold) vs. share of active player-months (grey)${parseSeg(seg) && parseSeg(seg)!.dim !== dim ? `, within ${who}` : ""}. Click to drill in.`}
+            sub={`Share of theo (dark) vs. share of active player-months (grey)${parseSeg(seg) && parseSeg(seg)!.dim !== dim ? `, within ${who}` : ""}. Click to drill in.`}
             table={{
               columns: [DIM_LABEL[dim], "Theo", "Share of theo", "Player-months", "Theo / player-month"],
               rows: v.breaks[dim].map((b) => [b.key, fmt.usd(b.theo), fmt.pct(b.theoShare), fmt.int(b.pm), fmt.usd(b.theo / b.pm)]),
@@ -292,8 +346,18 @@ export default function Players() {
                     >
                       <span className={on ? "text-sm text-gold-soft" : "text-sm text-fg"}>{b.key}</span>
                       <span className="flex flex-col gap-1">
-                        <span className="h-1.5 rounded-full bg-gold" style={{ width: `${Math.max(b.theoShare * 100, 0.5)}%` }} />
-                        <span className="h-1.5 rounded-full bg-fg-subtle/60" style={{ width: `${Math.max(b.pmShare * 100, 0.5)}%` }} />
+                        <span
+                          className="h-1.5 rounded-full bg-gold"
+                          style={{
+                            width: `${Math.max(b.theoShare * 100, 0.5)}%`,
+                          }}
+                        />
+                        <span
+                          className="h-1.5 rounded-full bg-fg-subtle/60"
+                          style={{
+                            width: `${Math.max(b.pmShare * 100, 0.5)}%`,
+                          }}
+                        />
                       </span>
                       <span className="mono text-right text-xs text-fg-muted">
                         {fmt.pct(b.theoShare, 0)} <span className="text-fg-subtle">/ {fmt.pct(b.pmShare, 0)}</span>
@@ -331,8 +395,18 @@ export default function Players() {
                 height={260}
                 label={`Monthly active players and theo per player for ${who}`}
                 option={{
-                  grid: { left: 4, right: 4, top: 48, bottom: 4, containLabel: true },
-                  legend: { top: 0, right: 0, textStyle: { color: colors["fg-muted"], fontSize: 11 } },
+                  grid: {
+                    left: 4,
+                    right: 4,
+                    top: 48,
+                    bottom: 4,
+                    containLabel: true,
+                  },
+                  legend: {
+                    top: 0,
+                    right: 0,
+                    textStyle: { color: colors["fg-muted"], fontSize: 11 },
+                  },
                   tooltip: {
                     trigger: "axis",
                     formatter: (q: unknown) => {
@@ -345,7 +419,10 @@ export default function Players() {
                       ]);
                     },
                   },
-                  xAxis: { type: "category", data: v.months.map((m) => m.label) },
+                  xAxis: {
+                    type: "category",
+                    data: v.months.map((m) => m.label),
+                  },
                   yAxis: [
                     {
                       type: "value",
@@ -365,7 +442,12 @@ export default function Players() {
                     {
                       name: "Active players",
                       type: "bar",
-                      data: v.months.map((m) => ({ value: m.players, itemStyle: { color: m.inPeriod ? "#8A7F7E" : "#DDD6D3" } })),
+                      data: v.months.map((m) => ({
+                        value: m.players,
+                        itemStyle: {
+                          color: m.inPeriod ? "#8A7F7E" : "#DDD6D3",
+                        },
+                      })),
                     },
                     {
                       name: "Theo / player",
@@ -390,12 +472,14 @@ export default function Players() {
           footer={<EvidenceLink to="/comps" focus="change-point" filters={{ period: f.period }} label="What the comp program spends" />}
         >
           <ul className="flex list-disc flex-col gap-2 pl-4 text-sm text-fg-muted">
-            <li>{data.notes.tier}</li>
-            <li>Players are identified only as counts and sums; {data.notes.privacy.toLowerCase()}</li>
             <li>
               No recommendation here aims more play at players with heavy losses; offers are sized to theo and capped by the comp budget.
             </li>
           </ul>
+          <Evidence>
+            <p>{data.notes.tier}</p>
+            <p>Players are identified only as counts and sums; {data.notes.privacy.toLowerCase()}</p>
+          </Evidence>
         </Tile>
       </div>
     </div>
@@ -450,13 +534,28 @@ function derive(data: PlayersData, period: string, seg: string) {
   const hist = s.net_hist.map((n, i) => {
     const lo = data.net_edges[i];
     const hi = data.net_edges[i + 1];
-    return { n, lo, hi, label: binLabel(lo, hi), short: lo == null ? `<${fmt.usdK(hi)}` : hi == null ? `${fmt.usdK(lo)}+` : fmt.usdK(lo) };
+    return {
+      n,
+      lo,
+      hi,
+      label: binLabel(lo, hi),
+      short: lo == null ? `<${fmt.usdK(hi)}` : hi == null ? `${fmt.usdK(lo)}+` : fmt.usdK(lo),
+    };
   });
   const histSmall =
     hist.filter((h) => h.lo != null && h.hi != null && h.lo >= -100 && h.hi <= 100).reduce((a, h) => a + h.n, 0) / s.players;
 
   // Breakdowns: other dimensions are filtered to the segment; the segment's own dimension shows all values.
-  const breaks = {} as Record<SegDim, { key: string; theo: number; pm: number; theoShare: number; pmShare: number }[]>;
+  const breaks = {} as Record<
+    SegDim,
+    {
+      key: string;
+      theo: number;
+      pm: number;
+      theoShare: number;
+      pmShare: number;
+    }[]
+  >;
   const breakTitle = {} as Record<SegDim, string>;
   for (const dim of DIMS) {
     const pool = cube.filter((c) => months.includes(c.month) && (p?.dim === dim ? true : inSeg(c)));
@@ -472,7 +571,12 @@ function derive(data: PlayersData, period: string, seg: string) {
     const tp = [...by.values()].reduce((a, b) => a + b.pm, 0) || 1;
     breaks[dim] = order
       .filter((k) => by.has(k))
-      .map((k) => ({ key: k, ...by.get(k)!, theoShare: by.get(k)!.theo / tt, pmShare: by.get(k)!.pm / tp }));
+      .map((k) => ({
+        key: k,
+        ...by.get(k)!,
+        theoShare: by.get(k)!.theo / tt,
+        pmShare: by.get(k)!.pm / tp,
+      }));
     const top = [...breaks[dim]].sort((a, b) => b.theoShare / b.pmShare - a.theoShare / a.pmShare)[0];
     breakTitle[dim] = top
       ? `${top.key}: ${fmt.pct(top.pmShare, 0)} of player-months, ${fmt.pct(top.theoShare, 0)} of theo`
@@ -495,5 +599,13 @@ function derive(data: PlayersData, period: string, seg: string) {
   const loM = monthRows[per.indexOf(Math.min(...per))];
   const monthTitle = `Theo per active player ranged ${fmt.usd(loM.theo / loM.players)} (${loM.label}) to ${fmt.usd(hiM.theo / hiM.players)} (${hiM.label})`;
 
-  return { s, hist, histSmall, breaks, breakTitle, months: monthRows, monthTitle };
+  return {
+    s,
+    hist,
+    histSmall,
+    breaks,
+    breakTitle,
+    months: monthRows,
+    monthTitle,
+  };
 }

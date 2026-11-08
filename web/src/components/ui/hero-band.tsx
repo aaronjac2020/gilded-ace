@@ -15,7 +15,7 @@ export function ChapterPart({ children, ...p }: Part & { children: ReactNode }) 
   return <PartCtx.Provider value={p}>{children}</PartCtx.Provider>;
 }
 
-/** Screen header: maroon spotlight, card-index eyebrow, Bodoni assertion title, subtitle, KPI strip, deco rule. */
+/** Screen header: maroon spotlight, card-index eyebrow, serif assertion title, subtitle, KPI strip, deco rule. */
 export function HeroBand({
   eyebrow,
   title,

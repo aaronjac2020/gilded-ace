@@ -165,7 +165,7 @@ export function CommandMenu() {
               className={item}
               onSelect={() => openMachine(m.machine_id)}
             >
-              <span className="mono w-[54px] text-xs text-fg">{m.machine_id}</span>
+              <span className="num w-[54px] font-mono text-xs text-fg">{m.machine_id}</span>
               <span className="flex-1 truncate">
                 {m.theme}{" "}
                 <span className="mono text-2xs text-fg-subtle">

@@ -16,6 +16,7 @@ import { REASON, REASON_ANCHOR, REASON_ORDER, supportSentence, tally } from "../
 import { tourStore, useMachineParam } from "../lib/uiStore";
 import { managerList, oursList } from "../lib/useData";
 import { useFilters } from "../lib/urlState";
+import { Evidence, Lead } from "../components/ui/more";
 
 const STAGGER = 0.06;
 
@@ -26,7 +27,13 @@ export default function Question() {
   const mgr = useMemo(() => managerList(rows), [rows]);
   const ours = useMemo(() => oursList(rows), [rows]);
   const [, open] = useMachineParam();
-  const lab = useJson<{ persistence: { precision_at_k: number; random_precision: number; k: number } }>("model_lab.json").data;
+  const lab = useJson<{
+    persistence: {
+      precision_at_k: number;
+      random_precision: number;
+      k: number;
+    };
+  }>("model_lab.json").data;
 
   if (error) return <ErrorState what="scorecard" error={error} />;
   if (!rows.length && (f.zone || f.bank))
@@ -64,9 +71,9 @@ export default function Question() {
         </>
       }
     >
-      <p className="mt-4 text-[13px] text-fg-muted">
+      <Lead className="mt-4 text-[13px] text-fg-muted">
         Each card shows its main reason. A &ldquo;+&rdquo; line means a second reason also applies.
-      </p>
+      </Lead>
 
       {t.setting > 0 && (
         <p id="game-setting" className="mt-6 scroll-mt-28 text-base text-fg-muted" data-testid="game-setting">
@@ -158,16 +165,16 @@ function ReasonChips({ counts, setting }: { counts: Record<string, number>; sett
   const notIt = REASON_ORDER.filter((k) => k !== "weak" && counts[k] > 0);
   const notN = notIt.reduce((s, k) => s + counts[k], 0);
   return (
-    <div className="mb-5 flex flex-wrap items-start gap-x-8 gap-y-4" data-testid="reason-chips">
+    <div className="mb-6 flex flex-wrap items-start gap-x-8 gap-y-4" data-testid="reason-chips">
       <div>
-        <p className="mb-2 text-[13px] font-semibold text-fg-muted">Not the problem · {notN}</p>
+        <Lead className="mb-2 text-[13px] font-semibold text-fg-muted">Not the problem · {notN}</Lead>
         <ul className="flex flex-wrap gap-2" aria-label="Not the problem">
           {notIt.map(chip)}
         </ul>
       </div>
       {counts.weak > 0 && (
         <div className="border-l border-divider pl-8">
-          <p className="mb-2 text-[13px] font-semibold text-fg-muted">The problem · {counts.weak}</p>
+          <Lead className="mb-2 text-[13px] font-semibold text-fg-muted">The problem · {counts.weak}</Lead>
           <ul className="flex gap-2" aria-label="The problem">
             {chip("weak")}
           </ul>
@@ -175,8 +182,12 @@ function ReasonChips({ counts, setting }: { counts: Record<string, number>; sett
       )}
       <p className="basis-full text-[13px] text-fg-muted" data-testid="chips-note">
         Each machine counted once, by its main reason.
-        {setting > counts.setting && ` ${setting} in all are set to pay back more.`}
       </p>
+      {setting > counts.setting && (
+        <Evidence className="mt-0 basis-full">
+          <p>{setting} in all are set to pay back more.</p>
+        </Evidence>
+      )}
     </div>
   );
 }
@@ -206,12 +217,12 @@ function Deal({
   const n = rows.length;
 
   return (
-    <div className="rail px-8 pb-7 pt-5 md:px-12" data-testid="reveal-table">
+    <div className="rail px-8 pb-8 pt-6 md:px-12" data-testid="reveal-table">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-[15px] font-semibold text-card/90">
+        <Lead className="text-[15px] font-semibold text-card/90">
           The manager&rsquo;s cut list · lowest {n} by house win{" "}
           <span className="font-normal text-card/70">(what each kept after paying out)</span>
-        </p>
+        </Lead>
         <div className="flex items-center gap-2">
           {view === "cards" && (
             <button
@@ -279,7 +290,7 @@ function Deal({
       ) : (
         <ol
           key={deal}
-          className="grid grid-cols-[repeat(5,132px)] justify-center gap-x-5 gap-y-4"
+          className="grid grid-cols-[repeat(5,132px)] justify-center gap-x-6 gap-y-4"
           aria-label="Manager's bottom 10, as cards"
           data-testid="manager-list"
         >
@@ -305,7 +316,7 @@ function Deal({
                     suit="♠"
                     className="aspect-[5/7] w-full transition-transform duration-hover ease-out group-hover:-translate-y-1"
                   >
-                    <div className="flex h-full flex-col items-center px-1.5 pb-5 pt-3.5 text-center text-ink">
+                    <div className="flex h-full flex-col items-center px-1.5 pb-6 pt-3.5 text-center text-ink">
                       <span className="font-mono text-[13px] font-semibold tracking-tight">{r.machine_id}</span>
                       <span className="serif mt-2.5 text-[24px] font-semibold leading-none">{fmt.usdK(r.house_win_usd)}</span>
                       <span className="mt-1 text-[13px] text-ink-2">house win</span>

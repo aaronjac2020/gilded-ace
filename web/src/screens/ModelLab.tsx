@@ -8,6 +8,7 @@ import { fmt } from "../lib/format";
 import { useJson } from "../lib/useData";
 import { areaFill, tipHtml } from "../theme/echartsTheme";
 import { colors } from "../theme/tokens";
+import { Evidence, Lead } from "../components/ui/more";
 
 const Chart = lazy(() => import("../components/Chart").then((m) => ({ default: m.Chart })));
 
@@ -85,12 +86,21 @@ type Lab = {
     random_precision: number;
     outcomes: Record<
       "effect" | "house_win",
-      Record<"manager" | "ours", Agreement> & { delta_rho: number; delta_rho_lo: number; delta_rho_hi: number }
+      Record<"manager" | "ours", Agreement> & {
+        delta_rho: number;
+        delta_rho_lo: number;
+        delta_rho_hi: number;
+      }
     >;
     train_house_win_rho?: { spot: number; effect: number; n: number };
   } | null;
   alternatives: { moved: Moved } | null;
-  move_test_pick: { swaps: number; moves: number; cost_usd: number; halfwidth: number } | null;
+  move_test_pick: {
+    swaps: number;
+    moves: number;
+    cost_usd: number;
+    halfwidth: number;
+  } | null;
   model1_change: {
     truly_weak_before: number;
     truly_weak_after: number;
@@ -124,7 +134,12 @@ const FEATURE_LABELS: Record<string, string> = {
   manufacturer: "Manufacturer",
   holiday: "Federal holiday",
 };
-type H = { gaming_date: string; actual: number; pred_model: number; pred_baseline: number };
+type H = {
+  gaming_date: string;
+  actual: number;
+  pred_model: number;
+  pred_baseline: number;
+};
 
 const LEAKAGE = [
   "Train Jan–Apr, test May–Jun; nothing from the test window is used to fit",
@@ -201,10 +216,13 @@ export default function ModelLab({ part }: { part?: "why" | "evidence" } = {}) {
       )}
 
       {!ev && m1 && (
-        <p className="max-w-[760px] text-[15px] text-fg" data-testid="model1-closer">
-          On unseen May–June days, Model 1&rsquo;s estimates are {fmt.pct(m1.improvement_pct, 0)} closer to actual play than a zone ×
-          weekday baseline (error {fmt.usd(m1.mae_model)} vs. {fmt.usd(m1.mae_baseline)} per machine-day).
-        </p>
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+          <SplitBars />
+          <p className="max-w-[560px] flex-1 text-[15px] text-fg" data-testid="model1-closer">
+            On unseen May–June days, Model 1&rsquo;s estimates are {fmt.pct(m1.improvement_pct, 0)} closer to actual play than a zone ×
+            weekday baseline (error {fmt.usd(m1.mae_model)} vs. {fmt.usd(m1.mae_baseline)} per machine-day).
+          </p>
+        </div>
       )}
       {m1 && (
         <div className="mt-16 grid grid-cols-12 gap-8">
@@ -215,7 +233,7 @@ export default function ModelLab({ part }: { part?: "why" | "evidence" } = {}) {
               title="Expected coin-in per available hour"
               sub={`LightGBM on location, game and calendar. No machine ID, theme or lags. ${m1.best_iteration} rounds chosen on April.`}
               testId="mae-table-model1"
-              footer={<p className="text-2xs text-fg-subtle">Test: {m1.n_test.toLocaleString()} machine-days, May–Jun</p>}
+              footer={<Lead className="text-2xs text-fg-subtle">Test: {m1.n_test.toLocaleString()} machine-days, May–Jun</Lead>}
             >
               <DataTable
                 t={{
@@ -226,10 +244,10 @@ export default function ModelLab({ part }: { part?: "why" | "evidence" } = {}) {
                   ],
                 }}
               />
-              <p className="mt-3 text-xs text-fg-muted">
+              <Lead className="mt-3 text-xs text-fg-muted">
                 Runs {fmt.usd(m1.bias_model)}/machine-day high in May–Jun, the same post-April drift Model 2 sees. Scorecard expectations
                 use out-of-fold predictions, so a machine never sets its own baseline.
-              </p>
+              </Lead>
             </Tile>
           )}
 
@@ -253,9 +271,19 @@ export default function ModelLab({ part }: { part?: "why" | "evidence" } = {}) {
                   height={260}
                   label="Bar chart of Model 1 feature importance"
                   option={{
-                    grid: { left: 4, right: 40, top: 0, bottom: 0, containLabel: true },
+                    grid: {
+                      left: 4,
+                      right: 40,
+                      top: 0,
+                      bottom: 0,
+                      containLabel: true,
+                    },
                     xAxis: { type: "value", show: false },
-                    yAxis: { type: "category", data: imp.map(([k]) => FEATURE_LABELS[k] ?? k), axisLabel: { color: colors["fg-muted"] } },
+                    yAxis: {
+                      type: "category",
+                      data: imp.map(([k]) => FEATURE_LABELS[k] ?? k),
+                      axisLabel: { color: colors["fg-muted"] },
+                    },
                     tooltip: {
                       trigger: "item",
                       formatter: (q: unknown) => {
@@ -269,7 +297,10 @@ export default function ModelLab({ part }: { part?: "why" | "evidence" } = {}) {
                         barWidth: 10,
                         data: imp.map(([, v], i) => ({
                           value: v,
-                          itemStyle: { color: i === imp.length - 1 ? colors.gold : colors["fg-subtle"], borderRadius: [0, 3, 3, 0] },
+                          itemStyle: {
+                            color: i === imp.length - 1 ? colors.gold : colors["fg-subtle"],
+                            borderRadius: [0, 3, 3, 0],
+                          },
                         })),
                         label: {
                           show: true,
@@ -376,19 +407,38 @@ export function Forecast({ m, h }: { m: Lab["model2"]; h: H[] }) {
             height={300}
             label="Line chart of actual and predicted daily coin-in for May and June 2025"
             option={{
-              grid: { left: 4, right: 72, top: 12, bottom: 4, containLabel: true },
+              grid: {
+                left: 4,
+                right: 72,
+                top: 12,
+                bottom: 4,
+                containLabel: true,
+              },
               tooltip: {
                 trigger: "axis",
                 formatter: (q: unknown) => {
-                  const a = q as { axisValueLabel: string; seriesName: string; value: [string, number]; color: string }[];
+                  const a = q as {
+                    axisValueLabel: string;
+                    seriesName: string;
+                    value: [string, number];
+                    color: string;
+                  }[];
                   return tipHtml(
                     a[0]?.axisValueLabel ?? "",
                     a.map((s) => [s.seriesName, fmt.usdK(s.value[1]), s.color]),
                   );
                 },
               },
-              xAxis: { type: "time", axisLabel: { formatter: "{MMM} {d}", hideOverlap: true }, minInterval: 7 * 864e5 },
-              yAxis: { type: "value", axisLabel: { formatter: (v: number) => fmt.usdK(v) }, scale: true },
+              xAxis: {
+                type: "time",
+                axisLabel: { formatter: "{MMM} {d}", hideOverlap: true },
+                minInterval: 7 * 864e5,
+              },
+              yAxis: {
+                type: "value",
+                axisLabel: { formatter: (v: number) => fmt.usdK(v) },
+                scale: true,
+              },
               series: [
                 {
                   name: "Actual",
@@ -397,7 +447,12 @@ export function Forecast({ m, h }: { m: Lab["model2"]; h: H[] }) {
                   lineStyle: { color: colors["fg-muted"], width: 1.25 },
                   itemStyle: { color: colors["fg-muted"] },
                   areaStyle: { color: areaFill(colors["fg-muted"], 0.12) },
-                  endLabel: { show: true, formatter: "Actual", color: colors["fg-muted"], fontSize: 11 },
+                  endLabel: {
+                    show: true,
+                    formatter: "Actual",
+                    color: colors["fg-muted"],
+                    fontSize: 11,
+                  },
                   labelLayout: { moveOverlap: "shiftY" },
                 },
                 {
@@ -406,16 +461,30 @@ export function Forecast({ m, h }: { m: Lab["model2"]; h: H[] }) {
                   data: h.map((r) => [r.gaming_date, r.pred_model]),
                   lineStyle: { color: colors.gold, width: 1.75 },
                   itemStyle: { color: colors.gold },
-                  endLabel: { show: true, formatter: "Model 2", color: colors["gold-soft"], fontSize: 11 },
+                  endLabel: {
+                    show: true,
+                    formatter: "Model 2",
+                    color: colors["gold-soft"],
+                    fontSize: 11,
+                  },
                   labelLayout: { moveOverlap: "shiftY" },
                 },
                 {
                   name: "Baseline",
                   type: "line",
                   data: h.map((r) => [r.gaming_date, r.pred_baseline]),
-                  lineStyle: { color: colors["fg-subtle"], type: [4, 4], width: 1 },
+                  lineStyle: {
+                    color: colors["fg-subtle"],
+                    type: [4, 4],
+                    width: 1,
+                  },
                   itemStyle: { color: colors["fg-subtle"] },
-                  endLabel: { show: true, formatter: "Baseline", color: colors["fg-subtle"], fontSize: 11 },
+                  endLabel: {
+                    show: true,
+                    formatter: "Baseline",
+                    color: colors["fg-subtle"],
+                    fontSize: 11,
+                  },
                   labelLayout: { moveOverlap: "shiftY" },
                 },
               ],
@@ -435,10 +504,11 @@ export function Forecast({ m, h }: { m: Lab["model2"]; h: H[] }) {
             ],
           }}
         />
-        <p className="mt-3 text-xs text-fg-muted">
+        <Lead className="mt-3 text-xs text-fg-muted">
           Event uplift ×{m.event_uplift.toFixed(3)}. Peaks {m.peak_days.join("/")}, troughs {m.trough_days.join("/")}. Runs{" "}
-          {fmt.usdK(m.bias_model)}/day high in May–Jun: demand drifted down after April.
-        </p>
+          {fmt.usdK(m.bias_model)}
+          /day high in May–Jun: demand drifted down after April.
+        </Lead>
         <Changed>
           Staff and time promotions to {m.peak_days.join("/")} peaks, not a flat schedule; re-fit monthly because of the drift.
         </Changed>
@@ -454,8 +524,14 @@ export function ForecastSection() {
   return <Forecast m={data.model2} h={rows<H>(data.model2_holdout)} />;
 }
 
-const OUTCOME_LABELS = { effect: "May–Jun play vs. spot and game", house_win: "May–Jun raw house win" } as const;
-const RANKING_LABELS = { manager: "Manager: house win", ours: "Ours: machine score" } as const;
+const OUTCOME_LABELS = {
+  effect: "May–Jun play vs. spot and game",
+  house_win: "May–Jun raw house win",
+} as const;
+const RANKING_LABELS = {
+  manager: "Manager: house win",
+  ours: "Ours: machine score",
+} as const;
 
 /** Dot-and-whisker: both Jan–Apr rankings scored on the same machines and the same May–Jun outcomes. */
 function RankingCompare({ c, moved, test }: { c: NonNullable<Lab["persistence_compare"]>; moved?: Moved; test: Lab["move_test_pick"] }) {
@@ -512,10 +588,10 @@ function RankingCompare({ c, moved, test }: { c: NonNullable<Lab["persistence_co
           return (
             <figure key={m.key} aria-label={m.label}>
               <figcaption className="eyebrow">{m.label}</figcaption>
-              <div className="mt-3 space-y-5">
+              <div className="mt-3 space-y-6">
                 {outcomes.map(([o, r]) => (
                   <div key={o}>
-                    <p className="text-xs text-fg-muted">{OUTCOME_LABELS[o]}</p>
+                    <Lead className="text-xs text-fg-muted">{OUTCOME_LABELS[o]}</Lead>
                     {(["manager", "ours"] as const).map((k) => {
                       const [v, a, b] = m.pick(r[k]);
                       return (
@@ -536,7 +612,10 @@ function RankingCompare({ c, moved, test }: { c: NonNullable<Lab["persistence_co
                                   ? "absolute top-1/2 h-0.5 -translate-y-1/2 bg-gold/60"
                                   : "absolute top-1/2 h-0.5 -translate-y-1/2 bg-fg-subtle"
                               }
-                              style={{ left: x(a), right: `calc(100% - ${x(b)})` }}
+                              style={{
+                                left: x(a),
+                                right: `calc(100% - ${x(b)})`,
+                              }}
                             />
                             <div
                               className={
@@ -568,10 +647,10 @@ function RankingCompare({ c, moved, test }: { c: NonNullable<Lab["persistence_co
           );
         })}
       </div>
-      <p className="mt-4 text-2xs text-fg-subtle">
+      <Lead className="mt-4 text-2xs text-fg-subtle">
         Same {c.n} machines, ranked on Jan–Apr only, scored on May–Jun. Dots are estimates, whiskers 90% intervals. Random bottom-{c.k} hit
         rate {fmt.pct(c.random_precision, 0)}.
-      </p>
+      </Lead>
       {moved && moved.n_moves > 0 && <FollowsSpot mv={moved} test={test} />}
       <Changed>
         Each ranking predicts its own yardstick. Low house win persists because the spot persists: Jan–Apr house win tracks the spot&apos;s
@@ -591,8 +670,20 @@ function FollowsSpot({ mv, test }: { mv: Moved; test: Lab["move_test_pick"] }) {
   const hi = 1.6;
   const x = (v: number) => `${((Math.min(hi, Math.max(lo, v)) - lo) / (hi - lo)) * 100}%`;
   const rows = [
-    { key: "model", label: "vs. Model 1 spot", v: mv.beta_model, a: mv.beta_model_lo, b: mv.beta_model_hi },
-    { key: "peer", label: "vs. same-bank peers", v: mv.beta_peer, a: mv.beta_peer_lo, b: mv.beta_peer_hi },
+    {
+      key: "model",
+      label: "vs. Model 1 spot",
+      v: mv.beta_model,
+      a: mv.beta_model_lo,
+      b: mv.beta_model_hi,
+    },
+    {
+      key: "peer",
+      label: "vs. same-bank peers",
+      v: mv.beta_peer,
+      a: mv.beta_peer_lo,
+      b: mv.beta_peer_hi,
+    },
   ];
   // the one move with a large spot change carries the estimate; name it from the data
   const big = [...mv.moves].sort(
@@ -606,15 +697,15 @@ function FollowsSpot({ mv, test }: { mv: Moved; test: Lab["move_test_pick"] }) {
         ? "No, it stays with the machine"
         : `Probably, but only ${mv.n_machines} machines moved`;
   return (
-    <figure className="mt-6 border-t border-divider pt-5" aria-label="Does performance follow the spot?" data-testid="follows-spot">
+    <figure className="mt-6 border-t border-divider pt-6" aria-label="Does performance follow the spot?" data-testid="follows-spot">
       <figcaption>
-        <p className="eyebrow">Does performance follow the spot?</p>
-        <p className="mt-1 text-base text-fg">{answer}</p>
-        <p className="mt-1 max-w-prose text-xs text-fg-muted">
+        <Lead className="eyebrow">Does performance follow the spot?</Lead>
+        <Lead className="mt-1 text-base text-fg">{answer}</Lead>
+        <Lead className="mt-1 max-w-prose text-xs text-fg-muted">
           Each machine that moved with ≥ {mv.min_days} days at both spots: how much its play changed vs. how much the spot predicted. 1 =
           play follows the spot, 0 = play stays with the machine. Pooled slope, 90% bootstrap interval.
-        </p>
-        <p className="mt-1 text-sm text-fg">That is why the plan tests moves before replacing anything.</p>
+        </Lead>
+        <Lead className="mt-1 text-sm text-fg">That is why the plan tests moves before replacing anything.</Lead>
       </figcaption>
       <div className="mt-3 space-y-2">
         {rows.map((r) => (
@@ -653,25 +744,27 @@ function FollowsSpot({ mv, test }: { mv: Moved; test: Lab["move_test_pick"] }) {
           </div>
         </div>
       </div>
-      <ul className="mt-3 max-w-prose list-disc space-y-1 pl-4 text-xs text-fg-muted">
-        <li>
-          Decision rule: “follows the spot” needs both lower bounds above 0.5. The 0.5 threshold was set after seeing these estimates, so it
-          is not pre-registered.
-        </li>
-        {big && loo && (
+      <Evidence className="mt-3">
+        <ul className="max-w-prose list-disc space-y-1 pl-4 text-xs text-fg-muted">
           <li>
-            Sensitivity: one move carries most of the signal ({big.machine_id}, {big.from_zone} → {big.to_zone}, spot{" "}
-            {fmt.usd(big.spot_before)} → {fmt.usd(big.spot_after)}/hr). Without it, the slope is {loo.model.toFixed(2)} (model) /{" "}
-            {loo.peer.toFixed(2)} (peers).
+            Decision rule: “follows the spot” needs both lower bounds above 0.5. The 0.5 threshold was set after seeing these estimates, so
+            it is not pre-registered.
           </li>
-        )}
-        {test && (
-          <li>
-            The plan settles it with a controlled test: {test.swaps} swaps ({test.moves} moves, {fmt.usdK(test.cost_usd)}) between quiet and
-            busy spots, each against an unmoved same-bank control; planned 90% interval about ±{test.halfwidth.toFixed(2)}.
-          </li>
-        )}
-      </ul>
+          {big && loo && (
+            <li>
+              Sensitivity: one move carries most of the signal ({big.machine_id}, {big.from_zone} → {big.to_zone}, spot{" "}
+              {fmt.usd(big.spot_before)} → {fmt.usd(big.spot_after)}/hr). Without it, the slope is {loo.model.toFixed(2)} (model) /{" "}
+              {loo.peer.toFixed(2)} (peers).
+            </li>
+          )}
+          {test && (
+            <li>
+              The plan settles it with a controlled test: {test.swaps} swaps ({test.moves} moves, {fmt.usdK(test.cost_usd)}) between quiet
+              and busy spots, each against an unmoved same-bank control; planned 90% interval about ±{test.halfwidth.toFixed(2)}.
+            </li>
+          )}
+        </ul>
+      </Evidence>
     </figure>
   );
 }
@@ -679,15 +772,40 @@ function FollowsSpot({ mv, test }: { mv: Moved; test: Lab["move_test_pick"] }) {
 function Changed({ children }: { children: ReactNode }) {
   return (
     <div className="mt-4 rounded-md bg-gold/[0.06] p-3 ring-1 ring-inset ring-gold/20">
-      <p className="eyebrow !text-gold-soft">What this changed</p>
-      <p className="mt-1 text-sm text-fg">{children}</p>
+      <Lead className="eyebrow !text-gold-soft">What this changed</Lead>
+      <Lead className="mt-1 text-sm text-fg">{children}</Lead>
+    </div>
+  );
+}
+
+/** Ch 2 time split: what the rankings were built on vs. the unseen months they were tested on. */
+function SplitBars() {
+  const bars = [
+    { label: "Built on Jan–Apr", days: 120, cls: "bg-fg-subtle/50" },
+    { label: "Tested on May–Jun", days: 61, cls: "bg-maroon/80" },
+  ];
+  return (
+    <div className="w-[240px] space-y-2" aria-label="Built on Jan–Apr, tested on May–Jun" data-testid="time-split">
+      {bars.map((b) => (
+        <div key={b.label}>
+          <p className="text-[13px] text-fg-muted">{b.label}</p>
+          <div className={`mt-1 h-2 rounded-full ${b.cls}`} style={{ width: `${(b.days / 120) * 100}%` }} />
+        </div>
+      ))}
     </div>
   );
 }
 
 function TimelineSplit(_: { split: Record<string, string> }) {
   const seg = [
-    { label: "Train", note: "Model 1 inner fit", from: "Jan 1", to: "Mar 31", cls: "bg-surface-3", w: 90 },
+    {
+      label: "Train",
+      note: "Model 1 inner fit",
+      from: "Jan 1",
+      to: "Mar 31",
+      cls: "bg-surface-3",
+      w: 90,
+    },
     {
       label: "Validate",
       note: "hyperparameters",
@@ -696,7 +814,14 @@ function TimelineSplit(_: { split: Record<string, string> }) {
       cls: "bg-surface-3",
       w: 30,
     },
-    { label: "Test", note: "never used to fit", from: "May 1", to: "Jun 30", cls: "bg-surface-3", w: 61 },
+    {
+      label: "Test",
+      note: "never used to fit",
+      from: "May 1",
+      to: "Jun 30",
+      cls: "bg-surface-3",
+      w: 61,
+    },
   ];
   return (
     <div aria-label="Train, validate and test timeline">

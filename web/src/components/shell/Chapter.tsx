@@ -7,6 +7,7 @@ import { commandStore } from "../../lib/uiStore";
 import { useFilters } from "../../lib/urlState";
 import { Monogram } from "./Monogram";
 import { NAV, navFor, nextFor, PERIOD_MENU } from "./nav";
+import { Lead } from "../ui/more";
 
 const red = (card: string) => /[♥♦]/.test(card);
 
@@ -165,9 +166,9 @@ export function ChapterHeader({
             {title}
           </h1>
           {sentence && (
-            <p className="mt-4 max-w-[680px] text-lg text-fg-muted" data-copy="sentence">
+            <Lead className="mt-4 max-w-[680px] text-lg text-fg-muted" data-copy="sentence">
               {sentence}
-            </p>
+            </Lead>
           )}
         </div>
         {n?.period && (
@@ -240,9 +241,9 @@ export function SectionHeader({
             {answers && <span className="answers-tag">Answers {answers}</span>}
           </h2>
           {sentence && (
-            <p className="mt-2 text-base text-fg-muted" data-copy="section-sentence">
+            <Lead className="mt-2 text-base text-fg-muted" data-copy="section-sentence">
               {sentence}
-            </p>
+            </Lead>
           )}
         </div>
         {aside}
@@ -288,7 +289,7 @@ export function NextChapter() {
     <div className="mt-24 flex justify-end border-t border-divider pt-10">
       <Link
         to={{ pathname: n.to, search: keep.toString() }}
-        className="focus-ring group inline-flex h-14 items-center gap-3 rounded-[10px] bg-surface-1 px-5 shadow-card ring-1 ring-inset ring-ring transition-transform duration-hover hover:-translate-y-1"
+        className="focus-ring group inline-flex h-14 items-center gap-3 rounded-[10px] bg-surface-1 px-6 shadow-card ring-1 ring-inset ring-ring transition-transform duration-hover hover:-translate-y-1"
         data-testid="next-chapter"
       >
         <span className={cn("serif text-xl font-semibold", red(n.card) ? "text-suit-red" : "text-ink")} aria-hidden>

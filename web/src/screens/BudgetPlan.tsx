@@ -12,8 +12,14 @@ import { cn } from "../lib/cn";
 import { rows, type Columnar } from "../lib/data";
 import { fmt } from "../lib/format";
 import { useJson } from "../lib/useData";
+import { Evidence as More, Lead } from "../components/ui/more";
 
-type Cmp = { cost_usd: number; theo_mid_usd: number; voi_usd: number; value_usd: number };
+type Cmp = {
+  cost_usd: number;
+  theo_mid_usd: number;
+  voi_usd: number;
+  value_usd: number;
+};
 type MoveTest = {
   sizing: {
     swaps: number;
@@ -25,7 +31,12 @@ type MoveTest = {
     theo_mid_usd: number;
   }[];
   power: { post_days: number };
-  pick: { swaps: number; halfwidth: number; halfwidth_noise_only: number; halfwidth_tau_peer: number };
+  pick: {
+    swaps: number;
+    halfwidth: number;
+    halfwidth_noise_only: number;
+    halfwidth_tau_peer: number;
+  };
   voi_usd: number;
   voi_usd_tau_peer?: number;
   comparison: {
@@ -37,7 +48,14 @@ type MoveTest = {
     included_tau_peer?: boolean;
   };
 };
-type Scenario = { scenario: string; label: string; plan: string; value_usd: number; cost_usd: number; changed: boolean };
+type Scenario = {
+  scenario: string;
+  label: string;
+  plan: string;
+  value_usd: number;
+  cost_usd: number;
+  changed: boolean;
+};
 type Budget = {
   rules: Rules;
   pool: Columnar;
@@ -86,7 +104,12 @@ const PLAIN: Record<string, string> = {
 };
 const plain = (s: string) => s.replace(/A-[A-Z-]+[A-Z]/g, (id) => PLAIN[id] ?? id);
 
-const DEFAULT_FOCUS: Record<string, string> = { "/": "ours", "/floor": "map", "/demand": "traffic", "/downtime": "lost" };
+const DEFAULT_FOCUS: Record<string, string> = {
+  "/": "ours",
+  "/floor": "map",
+  "/demand": "traffic",
+  "/downtime": "lost",
+};
 
 function Evidence({ href }: { href: string }) {
   const [to, qs = ""] = href.split("?");
@@ -136,7 +159,7 @@ export default function BudgetPlan() {
           formula={data.formula}
           total={data.effect}
         />
-        {data.errors.length > 0 && <p className="mt-2 text-xs text-verdict-downtime">{data.errors.join("; ")}</p>}
+        {data.errors.length > 0 && <Lead className="mt-2 text-xs text-verdict-downtime">{data.errors.join("; ")}</Lead>}
       </section>
       <div className="mx-6 mt-14 md:mx-10">
         <KpiStrip testId="plan-kpis">
@@ -179,38 +202,43 @@ export default function BudgetPlan() {
             }
             footer={<Evidence href={l.evidence} />}
           >
-            <p className="text-sm text-fg">{l.rationale}</p>
+            <Lead className="text-sm text-fg">{l.rationale}</Lead>
             <div className="mt-4" aria-label={`Expected theo ${fmt.usdK(l.effect_lo_usd)} to ${fmt.usdK(l.effect_hi_usd)}`}>
-              <p className="eyebrow">Expected theo, 30 days</p>
+              <Lead className="eyebrow">Expected theo, 30 days</Lead>
               <div className="relative mt-2 h-1.5 rounded-full bg-surface-2">
                 <div
                   className="absolute inset-y-0 rounded-full bg-gold/40"
-                  style={{ left: `${(l.effect_lo_usd / hiMax) * 100}%`, right: `${100 - (l.effect_hi_usd / hiMax) * 100}%` }}
+                  style={{
+                    left: `${(l.effect_lo_usd / hiMax) * 100}%`,
+                    right: `${100 - (l.effect_hi_usd / hiMax) * 100}%`,
+                  }}
                 />
                 <div
                   className="absolute -top-0.5 h-2.5 w-0.5 rounded-full bg-gold-soft"
                   style={{ left: `${(l.effect_mid_usd / hiMax) * 100}%` }}
                 />
               </div>
-              <p className="mono mt-1.5 flex justify-between text-2xs text-fg-muted">
+              <Lead className="mono mt-1.5 flex justify-between text-2xs text-fg-muted">
                 <span>{fmt.usdK(l.effect_lo_usd)}</span>
                 <span className="text-fg">mid {fmt.usdK(l.effect_mid_usd)}</span>
                 <span>{fmt.usdK(l.effect_hi_usd)}</span>
-              </p>
+              </Lead>
             </div>
-            <p className="mt-3 text-xs text-fg-subtle">{l.uncertainty}</p>
-            <p className="mt-3 text-xs text-fg-muted">
-              <span className="font-medium text-fg">Measure:</span> {l.measurement}
-            </p>
+            <More className="mt-3">
+              <p className="text-xs">{l.uncertainty}</p>
+              <p className="text-xs">
+                <span className="font-medium text-fg">Measure:</span> {l.measurement}
+              </p>
+            </More>
           </Tile>
         ))}
       </div>
       {data.move_test && <MoveTestCompare mt={data.move_test} />}
       <Allocator data={data} lines={lines} />
       {data.sensitivity && <Sensitivity data={data} />}
-      <p className="mt-6 max-w-prose text-xs text-fg-subtle">
+      <Lead className="mt-6 max-w-prose text-xs text-fg-subtle">
         Value of information is credited to the move test only; other lines count it as $0.
-      </p>
+      </Lead>
     </div>
   );
 }
@@ -265,11 +293,11 @@ function MoveTestCompare({ mt }: { mt: MoveTest }) {
           ))}
         </tbody>
       </table>
-      <p className="mt-3 text-xs text-fg-muted">
+      <Lead className="mt-3 text-xs text-fg-muted">
         Picked {mt.pick.swaps} swaps: the fewest with ≥ 3 swaps (so no single move carries the estimate) and a planned interval within ±0.2.
         Intervals are simulated from real same-bank play over {mt.power.post_days} operating days, plus machine-to-machine variation fitted
         to the 4 observed moves.
-      </p>
+      </Lead>
       <p className="mt-2 text-xs text-fg-muted" data-testid="move-test-width">
         Planned interval at {mt.pick.swaps} swaps: <span className="mono text-fg">±{mt.pick.halfwidth.toFixed(2)}</span> with
         machine-to-machine variation (noise alone ±{mt.pick.halfwidth_noise_only.toFixed(2)}). The information value uses this realistic
@@ -277,8 +305,9 @@ function MoveTestCompare({ mt }: { mt: MoveTest }) {
         {mt.voi_usd_tau_peer != null && c.move_test.value_usd_tau_peer != null && (
           <>
             {" "}
-            With the wider peer-calibrated variation (±{mt.pick.halfwidth_tau_peer.toFixed(2)}), information value is{" "}
-            {fmt.usdK(mt.voi_usd_tau_peer)} and the test {c.included_tau_peer ? "still" : "would no longer"} beat
+            With the wider peer-calibrated variation (±
+            {mt.pick.halfwidth_tau_peer.toFixed(2)}), information value is {fmt.usdK(mt.voi_usd_tau_peer)} and the test{" "}
+            {c.included_tau_peer ? "still" : "would no longer"} beat
             {c.included_tau_peer ? "s" : ""} {plain(c.lowest.action_type_id)} ({fmt.usdK(c.move_test.value_usd_tau_peer)} vs.{" "}
             {fmt.usdK(c.lowest.value_usd)}).
           </>
@@ -306,7 +335,13 @@ function Allocator({ data, lines }: { data: Budget; lines: Line[] }) {
   const [blocked, setBlocked] = useState<{ id: string; errs: string[] } | null>(null);
   const ids = [...cat.keys()].filter((i) => i !== HOLD);
   const plan = (q: Record<string, number>): AllocLine[] =>
-    ids.filter((i) => (q[i] ?? 0) > 0).map((i) => ({ id: i, quantity: q[i], targets: (cands.get(i) ?? []).slice(0, q[i]) }));
+    ids
+      .filter((i) => (q[i] ?? 0) > 0)
+      .map((i) => ({
+        id: i,
+        quantity: q[i],
+        targets: (cands.get(i) ?? []).slice(0, q[i]),
+      }));
   const cur = plan(qty);
   const total = planTotal(cur, cat);
   const errs = validate(cur, cat, data.rules);
@@ -410,7 +445,7 @@ function Allocator({ data, lines }: { data: Budget; lines: Line[] }) {
           </tbody>
         </table>
         <div className="self-start">
-          <p className="eyebrow">Spend vs. cap</p>
+          <Lead className="eyebrow">Spend vs. cap</Lead>
           <p className="mono mt-1 text-2xl text-fg" data-testid="alloc-total">
             {fmt.usd(total)}
           </p>
@@ -449,9 +484,9 @@ function Allocator({ data, lines }: { data: Budget; lines: Line[] }) {
               <RotateCcw size={12} /> Reset to the recommendation
             </button>
           )}
-          <p className="mt-4 text-2xs text-fg-subtle">
+          <Lead className="mt-4 text-2xs text-fg-subtle">
             Theo scales with quantity up to the plan's ranked candidates. Actions with no data-based estimate show none and add $0.
-          </p>
+          </Lead>
         </div>
       </div>
     </Tile>
@@ -484,7 +519,12 @@ function Sensitivity({ data }: { data: Budget }) {
   const bars = pool
     .map((l) => {
       const r = sc.filter((s) => s.scenario.startsWith(`${l.action_type_id}:`)).map((s) => s.value_usd);
-      return { id: l.action_type_id, name: l.name, min: Math.min(...r), max: Math.max(...r) };
+      return {
+        id: l.action_type_id,
+        name: l.name,
+        min: Math.min(...r),
+        max: Math.max(...r),
+      };
     })
     .sort((a, b) => b.max - b.min - (a.max - a.min));
   return (
@@ -500,10 +540,10 @@ function Sensitivity({ data }: { data: Budget }) {
         rows: sc.map((s) => [s.label, s.plan, fmt.usd(s.value_usd), fmt.usd(s.cost_usd), s.changed ? "yes" : "no"]),
       }}
     >
-      <p className="eyebrow">
+      <Lead className="eyebrow">
         Best plan's value when one line's effect moves · base {fmt.usdK(base.value_usd)} = {fmt.usdK(data.effect.mid)} theo +{" "}
         {fmt.usdK(base.value_usd - data.effect.mid)} information
-      </p>
+      </Lead>
       <div className="mt-3 space-y-3">
         {bars.map((b) => (
           <div key={b.id} className="grid grid-cols-[minmax(0,320px)_1fr_110px] items-center gap-4 text-xs">
@@ -520,14 +560,14 @@ function Sensitivity({ data }: { data: Budget }) {
           </div>
         ))}
       </div>
-      <p className="mt-5 text-sm text-fg" data-testid="sensitivity-flips">
+      <p className="mt-6 text-sm text-fg" data-testid="sensitivity-flips">
         {flips.length === 0 ? "No single change flips the plan." : flipText(flips)} Lease replacement never enters: it targets machines the
         move test already moves, and at its high end it is still worth less than the test once information value counts.
       </p>
-      <p className="mt-2 text-xs text-fg-subtle">
+      <Lead className="mt-2 text-xs text-fg-subtle">
         Inspection's low end is $0 (it may find nothing); at that end it no longer covers its {fmt.usd(1200)} and drops out. That is the
         price of checking, not a reason to skip it.
-      </p>
+      </Lead>
     </Tile>
   );
 }
