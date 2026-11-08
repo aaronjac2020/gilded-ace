@@ -16,7 +16,6 @@ export type Bet = {
   hi?: number;
 };
 
-const PER_CHIP = 1000;
 const TONES: ChipTone[] = ["gold", "maroon", "ivory"];
 
 /**
@@ -54,7 +53,8 @@ export function BettingTable({
       <p className="label-sc px-2 text-[#E3B36A]">The bets · {fmt.usdK(spend + held)} on the table</p>
       <ul className="mt-6 flex flex-wrap items-start justify-around gap-x-6 gap-y-8 px-2" aria-label="Plan spend by action">
         {spots.map((s, i) => {
-          const n = Math.max(1, Math.round(s.cost / PER_CHIP));
+          const maxCost = Math.max(...spots.map((x) => x.cost));
+          const n = Math.max(1, Math.round((s.cost / maxCost) * 22));
           return (
             <li key={s.id} className="flex w-[132px] flex-col items-center">
               <button
@@ -103,8 +103,8 @@ export function BettingTable({
           </p>
         ) : cur ? (
           <p>
-            <span className="text-ivory">Kept in reserve</span> · {fmt.usdK(cur.cost)} not spent. Keeping budget is a valid call when evidence
-            is thin.
+            <span className="text-ivory">Kept in reserve</span> · {fmt.usdK(cur.cost)} not spent. Keeping budget is a valid call when
+            evidence is thin.
           </p>
         ) : (
           <p>

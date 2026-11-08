@@ -249,7 +249,7 @@ export default function Demand() {
                     return tipHtml(a[0].name, [["Coin-in / day", fmt.usdK(a[0].value)]]);
                   },
                 },
-                xAxis: { type: "category", data: v.weekday.map((w) => w.wd) },
+                xAxis: { type: "category", data: v.weekday.map((w) => w.wd), axisLabel: { interval: 0 } },
                 yAxis: { type: "value", axisLabel: { formatter: (x: number) => fmt.usdK(x) } },
                 series: [
                   {

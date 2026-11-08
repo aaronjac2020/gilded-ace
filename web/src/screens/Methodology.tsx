@@ -63,13 +63,8 @@ export default function Methodology() {
       <DecoRule className="my-14" />
 
       <div className="grid grid-cols-12 items-start gap-8">
-        <Tile
-          id="decision-order"
-          className="col-span-12 scroll-mt-20 lg:sticky lg:top-24 lg:col-span-4"
-          label="Pipeline verdicts"
-          title="Decision order: first match wins"
-        >
-          <ol className="space-y-3 text-sm">
+        <Tile id="decision-order" className="col-span-12 scroll-mt-20" label="Pipeline verdicts" title="Pipeline order: first match wins">
+          <ol className="grid gap-x-10 gap-y-3 text-sm md:grid-cols-2">
             {RULES.map(([k, d], i) => (
               <li key={k} className="grid grid-cols-[24px_1fr] gap-2">
                 <span className="mono text-gold-soft">{i + 1}</span>

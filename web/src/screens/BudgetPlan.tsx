@@ -147,6 +147,10 @@ export default function BudgetPlan() {
             note={`Range ${fmt.usdK(data.effect.lo)}–${fmt.usdK(data.effect.hi)} within ${data.rules.horizon_days} days`}
           />
         </KpiStrip>
+        <p className="mt-6 max-w-[760px] text-[15px] text-fg" data-testid="plan-payback">
+          Spend and expected theo roughly match, so the plan about pays for itself. The bigger return is learning whether moves work before
+          paying for replacements. Our 10 weakest get the same {data.rules.horizon_days}-day re-check; replace any still weak.
+        </p>
       </div>
 
       <SectionHeader
@@ -478,7 +482,10 @@ function Sensitivity({ data }: { data: Budget }) {
         rows: sc.map((s) => [s.label, s.plan, fmt.usd(s.value_usd), fmt.usd(s.cost_usd), s.changed ? "yes" : "no"]),
       }}
     >
-      <p className="eyebrow">Best plan's value when one line's effect moves · base {fmt.usdK(base.value_usd)}</p>
+      <p className="eyebrow">
+        Best plan's value when one line's effect moves · base {fmt.usdK(base.value_usd)} = {fmt.usdK(data.effect.mid)} theo +{" "}
+        {fmt.usdK(base.value_usd - data.effect.mid)} information
+      </p>
       <div className="mt-3 space-y-3">
         {bars.map((b) => (
           <div key={b.id} className="grid grid-cols-[minmax(0,320px)_1fr_110px] items-center gap-4 text-xs">
@@ -498,7 +505,7 @@ function Sensitivity({ data }: { data: Budget }) {
       <p className="mt-5 text-sm text-fg" data-testid="sensitivity-flips">
         {flips.length === 0
           ? "No single change flips the plan."
-          : `The pick changes only in ${flips.length}: ${flips.map((f) => `${f.label.charAt(0).toLowerCase()}${f.label.slice(1)} (${plain(f.plan)})`).join("; ")}.`}{" "}
+          : `The pick changes only in ${flips.length}: ${flips.map((f) => `${f.label.charAt(0).toLowerCase()}${f.label.slice(1)}${f.label.includes(plain(f.plan)) ? "" : ` (${plain(f.plan)})`}`).join("; ")}.`}{" "}
         Lease replacement never enters: it targets machines the move test already moves, and at its high end it is still worth less than the
         test once information value counts.
       </p>

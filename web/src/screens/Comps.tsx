@@ -272,7 +272,7 @@ export default function Comps() {
                   <span className="text-sm text-fg">{t.tier}</span>
                   <span
                     className="h-2 rounded-full"
-                    style={{ width: `${(t.cost / t.theo / max) * 100}%`, background: TIER_COLOR[t.tier] }}
+                    style={{ width: `${(t.cost / t.theo / max) * 100}%`, background: TIER_COLOR[t.tier], minWidth: 4 }}
                   />
                   <span className="mono text-right text-xs text-fg-muted">{pp(t.cost / t.theo)}</span>
                 </li>

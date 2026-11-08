@@ -256,7 +256,13 @@ function Deal({
                 <span className="w-20 text-[15px] tabular-nums">{fmt.usdK(r.house_win_usd)}</span>
                 <ReasonStamp reason={reasonOf(flags, r.machine_id)} size="sm" />
                 <span className="ml-auto text-[13px] text-fg-subtle">
-                  {ours.has(r.machine_id) ? "in our 10 weakest" : <span data-testid="not-ours">not in our 10 weakest</span>}
+                  {ours.has(r.machine_id) ? (
+                    "in our 10 weakest"
+                  ) : (
+                    <span data-testid="not-ours">
+                      {flags?.get(r.machine_id)?.weak ? "truly weak, milder than our 10" : "not in our 10 weakest"}
+                    </span>
+                  )}
                 </span>
               </button>
             </li>
@@ -296,8 +302,8 @@ function Deal({
                       <span className="serif mt-2.5 text-[24px] font-semibold leading-none">{fmt.usdK(r.house_win_usd)}</span>
                       <span className="mt-1 text-[13px] text-ink-2">house win</span>
                       {setting && reason !== "setting" && (
-                        <span className="mt-2 whitespace-nowrap text-[13px] font-semibold" style={{ color: REASON.setting.color }}>
-                          + pays back more
+                        <span className="mt-2 text-[13px] font-semibold leading-tight" style={{ color: REASON.setting.color }}>
+                          + set to pay back more
                         </span>
                       )}
                       <ReasonStamp reason={reason} size="sm" compact animate={up} className="mt-auto" />

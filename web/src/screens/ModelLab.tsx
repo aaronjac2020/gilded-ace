@@ -338,8 +338,8 @@ export default function ModelLab({ part }: { part?: "why" | "evidence" } = {}) {
         >
           <ul className="grid gap-x-8 md:grid-cols-2">
             {LEAKAGE.map((t) => (
-              <li key={t} className="flex min-h-[36px] items-center gap-2.5 border-b border-divider py-2 text-sm text-fg-muted">
-                <span className="size-2 shrink-0 rotate-45 bg-gold" role="img" aria-label="passes" />
+              <li key={t} className="flex min-h-[36px] items-start gap-2.5 border-b border-divider py-2 text-sm text-fg-muted">
+                <span className="mt-1.5 size-2 shrink-0 rotate-45 bg-gold" role="img" aria-label="passes" />
                 {t}
               </li>
             ))}
@@ -605,6 +605,7 @@ function FollowsSpot({ mv, test }: { mv: Moved; test: Lab["move_test_pick"] }) {
           Each machine that moved with ≥ {mv.min_days} days at both spots: how much its play changed vs. how much the spot predicted. 1 =
           play follows the spot, 0 = play stays with the machine. Pooled slope, 90% bootstrap interval.
         </p>
+        <p className="mt-1 text-sm text-fg">That is why the plan tests moves before replacing anything.</p>
       </figcaption>
       <div className="mt-3 space-y-2">
         {rows.map((r) => (
@@ -683,10 +684,10 @@ function TimelineSplit(_: { split: Record<string, string> }) {
       note: "hyperparameters",
       from: "Apr 1",
       to: "Apr 30",
-      cls: "bg-maroon/10 ring-1 ring-inset ring-maroon/60",
+      cls: "bg-surface-3",
       w: 30,
     },
-    { label: "Test", note: "never used to fit", from: "May 1", to: "Jun 30", cls: "bg-ivory/10 ring-1 ring-inset ring-ivory/30", w: 61 },
+    { label: "Test", note: "never used to fit", from: "May 1", to: "Jun 30", cls: "bg-surface-3", w: 61 },
   ];
   return (
     <div aria-label="Train, validate and test timeline">

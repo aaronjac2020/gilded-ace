@@ -589,7 +589,7 @@ function ZoneLedger({
 }) {
   const max = Math.max(...zones.map((z) => z.flag), 1);
   return (
-    <div className="absolute right-6 top-36 hidden w-[218px] xl:block" data-testid="zone-ledger">
+    <div className="absolute right-6 top-36 hidden w-[218px] min-[1440px]:block" data-testid="zone-ledger">
       <p className="label-sc mb-2 text-gold-soft">By zone · reason besides weak play</p>
       <ul className="flex flex-col gap-0.5">
         {[...zones]
