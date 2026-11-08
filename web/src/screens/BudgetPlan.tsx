@@ -1,6 +1,7 @@
 import { Minus, Plus, RotateCcw } from "lucide-react";
 import { useMemo, useState } from "react";
 import { EvidenceLink } from "../components/EvidenceLink";
+import { SectionHeader } from "../components/shell/Chapter";
 import { HeroBand, Kpi, KpiStrip } from "../components/ui/hero-band";
 import { Num } from "../components/ui/num";
 import { ErrorState, ScreenSkeleton } from "../components/ui/skeleton";
@@ -139,7 +140,7 @@ export default function BudgetPlan() {
             value={<Num value={data.total_usd} kind="usdCompact" />}
             note={`${fmt.pct(data.total_usd / cap)} of the cap`}
           />
-          <Kpi label="Kept" value={<Num value={data.kept_usd} kind="usdCompact" />} note="Unspent, returned" />
+          <Kpi label="Kept" value={<Num value={data.kept_usd} kind="usdCompact" />} note="Not spent in this plan" />
           <Kpi
             label="Expected theo, mid"
             value={<Num value={data.effect.mid} kind="usdCompact" />}
@@ -148,7 +149,14 @@ export default function BudgetPlan() {
         </KpiStrip>
       </div>
 
-      <div className="mt-16 grid grid-cols-12 gap-8" data-testid="plan-lines">
+      <SectionHeader
+        id="actions"
+        title="The three actions"
+        answers="Q6"
+        sentence="What each costs, what it should return, and how we'll measure it."
+        className="mt-20"
+      />
+      <div className="mt-8 grid grid-cols-12 gap-8" data-testid="plan-lines">
         {lines.map((l) => (
           <Tile
             key={l.action_type_id}

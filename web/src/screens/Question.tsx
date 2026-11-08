@@ -52,7 +52,7 @@ export default function Question() {
       }
       sentence={
         <>
-          Only {t.weak} {t.weak === 1 ? "is" : "are"} truly weak. {supportSentence(ids, flags)}
+          Only {t.weak} {t.weak === 1 ? "is" : "are"} truly weak. {supportSentence(ids, flags)} Cut none yet.
         </>
       }
       visual={
@@ -76,7 +76,7 @@ export default function Question() {
           <Link
             to="/evidence#claim-game-setting"
             className="focus-ring rounded-sm font-semibold text-maroon underline-offset-4 hover:underline"
-            data-evidence
+            data-evidence="claim-game-setting"
           >
             Evidence
           </Link>
@@ -85,9 +85,9 @@ export default function Question() {
 
       <Section
         id="ours"
-        title="Our list instead"
+        title="Our 10 weakest instead"
         answers="Q1"
-        sentence="The ten farthest below their spot's expected play; milder truly weak cases miss the cut."
+        sentence="The ten farthest below their spot's expected play. Milder truly weak machines rank lower."
         aside={
           <Link to={{ pathname: "/why", hash: "ours" }} className="focus-ring rounded-sm text-sm font-semibold text-maroon hover:underline">
             How we picked them
@@ -256,7 +256,7 @@ function Deal({
                 <span className="w-20 text-[15px] tabular-nums">{fmt.usdK(r.house_win_usd)}</span>
                 <ReasonStamp reason={reasonOf(flags, r.machine_id)} size="sm" />
                 <span className="ml-auto text-[13px] text-fg-subtle">
-                  {ours.has(r.machine_id) ? "on our list" : <span data-testid="not-ours">not on our list</span>}
+                  {ours.has(r.machine_id) ? "in our 10 weakest" : <span data-testid="not-ours">not in our 10 weakest</span>}
                 </span>
               </button>
             </li>
@@ -305,7 +305,7 @@ function Deal({
                   </PlayingCard>
                   {!ours.has(r.machine_id) && (
                     <span className="sr-only" data-testid="not-ours">
-                      not on our list
+                      not in our 10 weakest
                     </span>
                   )}
                 </button>

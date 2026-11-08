@@ -40,9 +40,9 @@ function CutList() {
     const z = lines.find((l) => hits(l, r.zone_id));
     if (z)
       return weak
-        ? `Worth replacing later. For now its zone, ${r.zone_id}, gets new signage.`
+        ? `Replace if still weak at the 30-day re-rank. Its zone, ${r.zone_id}, gets new signage now.`
         : `Keep it. Its zone, ${r.zone_id}, gets new signage.`;
-    return weak ? "Worth replacing. Not funded in this budget." : "Keep it. No spend needed.";
+    return weak ? "Replace if still weak at the 30-day re-rank." : "Keep it. No spend needed.";
   };
   const ids = mgr.map((r) => r.machine_id);
 

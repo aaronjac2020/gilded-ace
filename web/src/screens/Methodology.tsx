@@ -65,7 +65,7 @@ export default function Methodology() {
       <div className="grid grid-cols-12 items-start gap-8">
         <Tile
           id="decision-order"
-          className="col-span-12 scroll-mt-20 lg:col-span-4"
+          className="col-span-12 scroll-mt-20 lg:sticky lg:top-24 lg:col-span-4"
           label="Pipeline verdicts"
           title="Decision order: first match wins"
         >

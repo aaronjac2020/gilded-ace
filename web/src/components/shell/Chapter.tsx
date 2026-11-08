@@ -300,3 +300,12 @@ export function NextChapter() {
     </div>
   );
 }
+
+/** One line tying a context chapter (floor, guests) back to the manager's cut list. */
+export function Bridge({ children }: { children: ReactNode }) {
+  return (
+    <p className="mt-12 max-w-[760px] border-l-2 border-maroon pl-4 text-[17px] text-fg" data-testid="bridge">
+      {children}
+    </p>
+  );
+}

@@ -176,7 +176,7 @@ export function supportSentence(ids: string[], flags: Map<string, Flags>): strin
   const k = t.counts[top];
   const both = set.filter((id) => flags.get(id)?.weak).length;
   const lead = set.length
-    ? `${set.length} are set to pay back more${both ? ` (${both} of them also truly weak)` : ""}; `
+    ? `${set.length} are set to pay back more${both ? ` (${both} also truly weak)` : ""}; `
     : "None are set to pay back more; ";
   if (!set.length) return `${lead}${k === rest.length ? "all" : k} of the ${rest.length} ${REST[top]}.`;
   return `${lead}${k === rest.length ? `the other ${k}` : `${k} more`} ${REST[top]}.`;

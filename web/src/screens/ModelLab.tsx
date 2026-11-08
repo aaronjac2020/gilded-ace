@@ -338,7 +338,7 @@ export default function ModelLab({ part }: { part?: "why" | "evidence" } = {}) {
         >
           <ul className="grid gap-x-8 md:grid-cols-2">
             {LEAKAGE.map((t) => (
-              <li key={t} className="flex h-row items-center gap-2.5 border-b border-divider text-sm text-fg-muted">
+              <li key={t} className="flex min-h-[36px] items-center gap-2.5 border-b border-divider py-2 text-sm text-fg-muted">
                 <span className="size-2 shrink-0 rotate-45 bg-gold" role="img" aria-label="passes" />
                 {t}
               </li>
@@ -452,7 +452,6 @@ const RANKING_LABELS = { manager: "Manager: house win", ours: "Ours: shrunk effe
 function RankingCompare({ c, moved, test }: { c: NonNullable<Lab["persistence_compare"]>; moved?: Moved; test: Lab["move_test_pick"] }) {
   const th = c.train_house_win_rho;
   const e = c.outcomes.effect;
-  const hw = c.outcomes.house_win;
   const metrics = [
     {
       key: "rho",
@@ -478,7 +477,7 @@ function RankingCompare({ c, moved, test }: { c: NonNullable<Lab["persistence_co
       testId="ranking-compare"
       className="mt-6 outline outline-1 outline-offset-[5px] outline-gold/35 ring-1 ring-gold/60"
       label="Manager vs. ours"
-      title={`Our ranking predicts play vs. the spot (ρ ${e.ours.spearman.toFixed(2)} vs. ${e.manager.spearman.toFixed(2)}); the manager's predicts next house win (ρ ${hw.manager.spearman.toFixed(2)} vs. ${hw.ours.spearman.toFixed(2)}) only because house win follows the spot`}
+      title="Our ranking finds machines that underperform their spot; the manager's mostly finds quiet spots"
       sub={
         th
           ? `The manager’s ranking is consistent, but it tracks the spot, not the machine. Jan–Apr house win follows the spot’s expected play (ρ ${th.spot.toFixed(2)}), not machine effect (ρ ${th.effect.toFixed(2)}). Our ranking is the one that predicts which machines underperform their spot (ρ ${e.ours.spearman.toFixed(2)} vs. ${e.manager.spearman.toFixed(2)}).`
@@ -684,7 +683,7 @@ function TimelineSplit(_: { split: Record<string, string> }) {
       note: "hyperparameters",
       from: "Apr 1",
       to: "Apr 30",
-      cls: "bg-maroon/40 ring-1 ring-inset ring-maroon-bright/70",
+      cls: "bg-maroon/10 ring-1 ring-inset ring-maroon/60",
       w: 30,
     },
     { label: "Test", note: "never used to fit", from: "May 1", to: "Jun 30", cls: "bg-ivory/10 ring-1 ring-inset ring-ivory/30", w: 61 },

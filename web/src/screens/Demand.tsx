@@ -1,6 +1,7 @@
 import { lazy, Suspense, useMemo } from "react";
 import { EvidenceLink } from "../components/EvidenceLink";
 import { PERIOD_LONG } from "../components/shell/nav";
+import { SectionHeader } from "../components/shell/Chapter";
 import { HeroBand, Kpi, KpiStrip } from "../components/ui/hero-band";
 import { Num } from "../components/ui/num";
 import { ErrorState, ScreenSkeleton, Skeleton } from "../components/ui/skeleton";
@@ -118,6 +119,13 @@ export default function Demand() {
         </KpiStrip>
       </HeroBand>
 
+      <SectionHeader
+        id="when"
+        title="When guests play"
+        answers="Q2"
+        sentence="Days, weekdays, events and zones, for the selected period."
+        className="mt-20"
+      />
       <section id="calendar" aria-label="Calendar" className="mt-16 scroll-mt-20">
         <Tile
           hero

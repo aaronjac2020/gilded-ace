@@ -66,6 +66,7 @@ export type ScoreRow = {
   verdict: import("../theme/tokens").Verdict;
   verdict_reason: string;
   zone_id: string;
+  zone_name: string;
   bank_id: string;
   location_id: string;
   theme: string;
