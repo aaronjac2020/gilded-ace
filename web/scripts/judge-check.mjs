@@ -56,14 +56,23 @@ const consoleErrors = [];
 page.on("console", (m) => m.type() === "error" && consoleErrors.push(m.text()));
 page.on("pageerror", (e) => consoleErrors.push(String(e)));
 
-const kpis = async () => (await page.locator("[data-testid=verdict-kpis] [data-kpi-value]").allInnerTexts()).join(" | ");
+// Ch 1's signature: headline count + every reason chip. Ch 2's: every hand count.
+const ch1 = async () =>
+  page.evaluate(() =>
+    [
+      document.querySelector("[data-testid=headline-count]")?.getAttribute("data-value"),
+      ...[...document.querySelectorAll("[data-reason-chip]")].map((el) => `${el.dataset.reasonChip}=${el.dataset.count}`),
+    ].join(" "),
+  );
+const hands = async () =>
+  page.evaluate(() => [...document.querySelectorAll("[data-hand]")].map((el) => `${el.dataset.hand}=${el.dataset.count}`).join(" "));
 
 try {
   const t0 = Date.now();
   await page.goto(`${url}/`, { waitUntil: "load" });
-  await page.locator("[data-testid=verdict-kpis] [data-kpi-value]").first().waitFor({ timeout: 10000 });
+  await page.locator("[data-testid=headline-count]").waitFor({ timeout: 10000 });
   const wallMs = Date.now() - t0;
-  // Page-side time from navigation start to KPIs rendered (excludes Playwright/browser cold-start overhead).
+  // Page-side time from navigation start to the headline rendered (excludes Playwright/browser cold-start overhead).
   const loadMs = Math.round(await page.evaluate(() => performance.now()));
   let slowest = "";
   if (loadMs >= 3000) {
@@ -74,70 +83,81 @@ try {
         .slice(0, 5)
         .map((e) => `${e.name.split("/").pop()} ${Math.round(e.duration)}ms`),
     );
-    const nav = await page.evaluate(() => {
-      const n = performance.getEntriesByType("navigation")[0];
-      return n
-        ? `doc ttfb ${Math.round(n.responseStart)}ms, doc done ${Math.round(n.responseEnd)}ms, dcl ${Math.round(n.domContentLoadedEventEnd)}ms, load ${Math.round(n.loadEventEnd)}ms`
-        : "no nav entry";
-    });
-    slowest = `; ${nav}; slowest: ${top.join(", ")}`;
+    slowest = `; slowest: ${top.join(", ")}`;
   }
-  record(0, "first load of / (KPIs visible)", loadMs < 3000, `${loadMs} ms in page, ${wallMs} ms wall (limit 3000)${slowest}`);
+  record(0, "first load of / (Ch 1 headline visible)", loadMs < 3000, `${loadMs} ms in page, ${wallMs} ms wall (limit 3000)${slowest}`);
 
   if (only.includes(1)) {
-    const before = await kpis();
+    const before = await ch1();
     const titleBefore = await page.getByTestId("assertion-title").innerText();
+    await page.getByTestId("period-menu").click();
     await page.locator("[data-period='2025-03']").click();
     await page
       .waitForFunction(
         (b) => {
-          const v = [...document.querySelectorAll("[data-testid=verdict-kpis] [data-kpi-value]")].map((e) => e.textContent).join(" | ");
+          const v = [
+            document.querySelector("[data-testid=headline-count]")?.getAttribute("data-value"),
+            ...[...document.querySelectorAll("[data-reason-chip]")].map((el) => `${el.dataset.reasonChip}=${el.dataset.count}`),
+          ].join(" ");
           return v !== b;
         },
-        before.replace(/\n/g, ""),
+        before,
         { timeout: 8000 },
       )
       .catch(() => {});
-    const after = await kpis();
+    const after = await ch1();
     const titleAfter = await page.getByTestId("assertion-title").innerText();
-    record(1, "period change alters Verdict KPIs", before !== after, `"${before}" -> "${after}" (title: ${titleBefore} -> ${titleAfter})`);
+    record(
+      1,
+      "period change alters Ch 1 headline + chips",
+      before !== after,
+      `"${before}" -> "${after}" (title: ${titleBefore} -> ${titleAfter})`,
+    );
   }
 
   if (only.includes(2)) {
+    // Bank drill on Ch 3's map: the filter pill appears, Ch 3's downtime KPI and Ch 2's hands change.
+    await page.goto(`${url}/why`);
+    await page.locator("[data-hand]").first().waitFor({ timeout: 8000 });
+    const h0 = await hands();
     await page.goto(`${url}/floor`);
-    const bank = page.locator("[data-bank]").first();
+    const dt = page.locator("[data-testid=downtime-kpi]");
+    await dt.waitFor({ timeout: 8000 });
+    const d0 = await dt.innerText();
+    const bank = page.locator("#map [data-bank], [data-testid=floor-map] [data-bank]").first();
     await bank.waitFor({ timeout: 8000 }).catch(() => {});
     if (await bank.count()) {
       const id = await bank.getAttribute("data-bank");
-      await page.goto(`${url}/`);
-      await page.locator("[data-testid=verdict-kpis] [data-kpi-value]").first().waitFor();
-      const before = await kpis();
-      await page.goto(`${url}/floor`);
-      await page.locator(`[data-bank='${id}']`).click();
-      await page.getByRole("link", { name: "Verdict" }).click();
-      await page.locator("[data-testid=verdict-kpis] [data-kpi-value]").first().waitFor();
+      await bank.click();
+      await page.waitForTimeout(500);
+      const pill = await page
+        .getByTestId("filter-pill")
+        .innerText()
+        .catch(() => "");
+      const d1 = await dt.innerText();
+      await page
+        .getByRole("link", { name: /Why they.re low/ })
+        .first()
+        .click();
+      await page
+        .locator("[data-hand]")
+        .first()
+        .waitFor({ timeout: 8000 })
+        .catch(() => {});
       await page.waitForTimeout(400);
-      const after = await kpis();
-      let dtOk = true;
-      let dtDetail = "downtime screen pending (M9)";
-      await page.getByRole("link", { name: "Downtime" }).click();
-      const dt = page.locator("[data-testid=downtime-kpi]");
-      await dt.waitFor({ timeout: 8000 }).catch(() => {});
-      if (await dt.count()) {
-        const withBank = await dt.innerText();
-        await page.goto(`${url}/downtime`);
-        await page.locator("[data-testid=downtime-kpi]").waitFor({ timeout: 8000 });
-        await page.waitForTimeout(300);
-        const noBank = await page.locator("[data-testid=downtime-kpi]").innerText();
-        dtOk = withBank !== noBank;
-        dtDetail = `downtime "${noBank}" -> "${withBank}"`;
-      }
-      record(2, `bank ${id} drill changes Verdict + Downtime`, before !== after && dtOk, `verdict "${before}" -> "${after}"; ${dtDetail}`);
-    } else record(2, "bank drill", false, "no bank elements");
+      const h1 = await hands();
+      const ok = pill.includes(id) && d0 !== d1 && h0 !== h1;
+      record(
+        2,
+        `bank ${id} drill: filter pill, Ch 3 downtime + Ch 2 hands change`,
+        ok,
+        `pill "${pill.replace(/\s+/g, " ")}"; downtime "${d0}" -> "${d1}"; hands "${h0}" -> "${h1}"`,
+      );
+    } else record(2, "bank drill", false, "no bank elements on /floor");
 
     // Guest variant: a player-segment drilldown must change every Players chart (each carries a data-sig of its data).
     const sigs = async () => page.locator("[data-sig]").evaluateAll((els) => els.map((e) => e.getAttribute("data-sig")));
-    await page.goto(`${url}/players`);
+    await page.goto(`${url}/guests`);
     await page.locator("[data-sig]").first().waitFor({ timeout: 8000 });
     await page.waitForTimeout(300);
     const s0 = await sigs();
@@ -156,14 +176,16 @@ try {
   }
 
   if (only.includes(3)) {
+    // Model checks: stepper to Evidence, then the MAE table in "How the models were checked".
     await page.goto(`${url}/`);
-    await page.getByRole("link", { name: "Model Lab" }).click();
-    const t = page.getByTestId("mae-table");
+    await page.getByRole("link", { name: "Evidence" }).first().click();
+    const t = page.locator("[data-testid^=mae-table]").first();
     await t.waitFor({ timeout: 8000 });
+    await t.scrollIntoViewIfNeeded();
     const txt = await t.innerText();
     record(
       3,
-      "Model Lab reachable with MAE table",
+      "Model checks reachable with MAE table",
       (await t.isVisible()) && /MAE/.test(txt) && /\$/.test(txt),
       txt.replace(/\s+/g, " ").slice(0, 120),
     );
@@ -211,7 +233,7 @@ try {
       `start ${t0} = plan ${rec}; 4th type: "${types}"; combo: "${incompat}"; budget: "${over}"; end ${tEnd}`,
     );
 
-    // Verdict's game-setting EvidenceLink lands on the /method claim anchor.
+    // Ch 1's game-setting Evidence link lands on its claim on /evidence.
     await page.goto(`${url}/`);
     const gs = page.locator("[data-evidence='claim-game-setting']").first();
     await gs.waitFor({ timeout: 8000 }).catch(() => {});
@@ -227,7 +249,7 @@ try {
       const u = new URL(page.url());
       cDetail = `${u.pathname}${u.search}; ${n} claims rendered`;
     }
-    record("4c", "game-setting EvidenceLink lands on /method claim", cOk, cDetail);
+    record("4c", "game-setting Evidence link lands on /evidence claim", cOk, cDetail);
   }
 
   record(9, "no console errors", consoleErrors.length === 0, consoleErrors.slice(0, 3).join(" || ") || "none");
