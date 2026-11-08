@@ -19,7 +19,13 @@ from pipeline.load import T
 EXCLUDE = {"meta.json", "fingerprint.json"}
 
 
+TEXT = {".json", ".csv", ".md", ".txt"}
+
+
 def sha256(p: Path) -> str:
+    """Hash of the file bytes; text files are hashed with CRLF normalized to LF so Windows and Linux reruns agree."""
+    if p.suffix in TEXT:
+        return hashlib.sha256(p.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
     h = hashlib.sha256()
     with open(p, "rb") as f:
         for chunk in iter(lambda: f.read(1 << 20), b""):
