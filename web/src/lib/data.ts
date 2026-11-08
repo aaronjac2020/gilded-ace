@@ -80,6 +80,8 @@ export type ScoreRow = {
   hold_flag: boolean;
   carded_share: number;
   carded_coin_in_usd: number;
+  gap_to_zone_median_theo_usd: number;
+  theo_per_avail_hr: number;
   coin_in_usd: number;
   [k: string]: unknown;
 };

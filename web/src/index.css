@@ -4,50 +4,58 @@
 
 @layer base {
   :root {
-    /* OKLCH channels (L C H); hex equivalents in theme/tokens.ts */
-    --bg: 14.1% 0.002 17.4;
-    --surface-1: 17.4% 0.002 17.3;
-    --surface-2: 19.8% 0.003 17.4;
-    --surface-3: 22.6% 0.005 17.5;
-    --fg: 93.9% 0.004 39.5;
-    --fg-muted: 63% 0.01 26.1;
-    --fg-subtle: 46.3% 0.009 27.3;
-    --maroon: 27.1% 0.111 29.2;
-    --maroon-bright: 38.3% 0.131 25.9;
-    --gold: 66.6% 0.129 66.1;
-    --gold-soft: 79.5% 0.107 76.7;
-    --luck: 71.3% 0.097 247.1;
-    --location: 66.6% 0.129 66.1;
-    --downtime: 59.9% 0.102 12.5;
-    --inspect_hold: 65.5% 0.122 298.7;
-    --truly_weak: 87.4% 0.006 31.1;
-    --ok: 33.1% 0.009 17.6;
-    --ring: rgb(255 255 255 / 0.08);
-    --ring-strong: rgb(255 255 255 / 0.14);
-    --divider: rgb(255 255 255 / 0.06);
-    --gold-tint: oklch(var(--gold) / 0.12);
+    /* Theme A (light). OKLCH channels; hex mirrors in theme/tokens.ts. Legacy names map onto the new palette. */
+    --paper: 95.4% 0.016 82.8; /* #F5EFE4 */
+    --card: 99.2% 0.009 84.6; /* #FFFCF6 */
+    --card-2: 97.2% 0.013 82.4; /* #FAF5EC */
+    --rule: 89.2% 0.023 78.2; /* #E4DACB */
+    --ink: 21.4% 0.013 26.5; /* #1F1716 */
+    --ink-2: 45.2% 0.016 41.1; /* #5E534F */
+    --ink-3: 50.6% 0.014 50.7; /* #6F655F: 5:1 on paper */
+    --bg: var(--paper);
+    --surface-1: var(--card);
+    --surface-2: var(--card-2);
+    --surface-3: var(--card);
+    --fg: var(--ink);
+    --fg-muted: var(--ink-2);
+    --fg-subtle: var(--ink-3);
+    --maroon: 27.1% 0.111 29.2; /* #500000 */
+    --maroon-bright: 38.3% 0.131 25.9; /* #7A1A1A */
+    --gold: 58.8% 0.117 70.6; /* #A86F1C */
+    --gold-soft: 50.9% 0.097 67.9; /* #8A5A1E: gold text on ivory */
+    --setting: 53.5% 0.122 301.3; /* #7A5AA8 */
+    --luck: 52.3% 0.106 247; /* #2F6EA3 */
+    --location: 50.9% 0.097 67.9; /* #8A5A1E */
+    --downtime: 51.4% 0.127 15.1; /* #A3434F */
+    --inspect_hold: 45.2% 0.016 41.1; /* #5E534F, outlined */
+    --truly_weak: 21.4% 0.013 26.5; /* #1F1716 */
+    --ok: 61.1% 0.016 50.7; /* #8C817B */
+    --ring: rgb(31 23 22 / 0.1);
+    --ring-strong: rgb(31 23 22 / 0.18);
+    --divider: #e4dacb;
+    --gold-tint: oklch(var(--gold) / 0.18);
     --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-    /* Casino kit: felt, leather rail, ivory card stock, lacquer, brushed gold */
-    --felt-hi: #2a0606;
-    --felt-lo: #1a0303;
-    --ivory: 94.6% 0.019 84.6;
-    --ink: 19.5% 0.012 20;
-    --lacquer: 9.5% 0.004 20;
-    --suit-red: 52% 0.17 25;
-    --brushed: linear-gradient(100deg, #9a6421 0%, #e3b36a 32%, #f6dda4 48%, #d9a251 64%, #a8702a 100%);
+    --shadow-card: 0 1px 2px rgb(31 23 22 / 0.06), 0 8px 24px -12px rgb(31 23 22 / 0.18);
+    --shadow-lift: 0 2px 4px rgb(31 23 22 / 0.08), 0 18px 40px -16px rgb(31 23 22 / 0.32);
+    /* Felt (Ch 1 and Ch 5 tables only), leather rail, card stock, gold foil */
+    --felt-hi: #5a0f12;
+    --felt-lo: #2e0507;
+    --rail: #2a1a14;
+    --ivory: 99.2% 0.009 84.6;
+    --lacquer: 99.2% 0.009 84.6;
+    --suit-red: 47.5% 0.162 16.3;
+    --gold-foil: linear-gradient(100deg, #7a4f18 0%, #a8742a 50%, #8a5a1e 100%);
+    --brushed: var(--gold-foil);
     --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    color-scheme: dark;
-    accent-color: oklch(var(--gold));
+    color-scheme: light;
+    accent-color: oklch(var(--maroon));
   }
   html {
     background: oklch(var(--bg));
   }
   body {
     @apply bg-bg font-sans text-base text-fg antialiased;
-    font-feature-settings:
-      "cv11" 1,
-      "ss01" 1,
-      "ss03" 1;
+    line-height: 1.6;
   }
   /* 2% grain on the page background only */
   body::before {
@@ -57,19 +65,21 @@
     z-index: -1;
     pointer-events: none;
     opacity: 0.02;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-image: var(--noise);
   }
   ::selection {
     background: var(--gold-tint);
   }
   :focus-visible {
-    outline: 2px solid oklch(var(--gold));
+    outline: 2px solid oklch(var(--maroon));
     outline-offset: 2px;
   }
   h1,
   h2,
   h3 {
     text-wrap: balance;
+    font-family: theme("fontFamily.display");
+    font-optical-sizing: auto;
   }
   p {
     text-wrap: pretty;
@@ -91,20 +101,31 @@
     @apply font-mono num;
   }
   .eyebrow {
-    @apply text-2xs font-medium uppercase tracking-eyebrow text-fg-subtle;
+    @apply text-2xs font-semibold text-fg-subtle;
+  }
+  /* The only uppercase label on the site: the chapter eyebrow. */
+  .chapter-eyebrow {
+    @apply font-sans text-[13px] font-semibold uppercase tracking-[0.14em] text-gold-soft;
   }
   .display {
-    @apply font-semibold tracking-tightest;
+    font-family: theme("fontFamily.display");
+    font-weight: 600;
+    letter-spacing: -0.015em;
   }
-  /* Tile / card: lighter surface + inset ring + top highlight; no shadow. */
+  /* "Answers Q1": small muted tag beside section titles. */
+  .answers-tag {
+    @apply whitespace-nowrap font-sans text-[13px] font-medium text-fg-subtle;
+  }
   .card {
-    @apply rounded-lg bg-surface-1 shadow-highlight ring-1 ring-inset ring-ring;
+    @apply rounded-[10px] border border-divider bg-surface-1;
+    box-shadow: var(--shadow-card);
   }
   .float {
-    @apply rounded-md bg-surface-3 shadow-float;
+    @apply rounded-md border border-divider bg-surface-1;
+    box-shadow: var(--shadow-lift);
   }
   .focus-ring {
-    @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold;
+    @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-maroon;
   }
   .hairline-dashed {
     background-image: linear-gradient(to right, var(--ring-strong) 50%, transparent 0);
@@ -112,38 +133,22 @@
     background-repeat: repeat-x;
     height: 1px;
   }
-  /* Faint 40px grid, faded at the edges (hero bands + floor map only). */
   .grid-backdrop {
     background-image:
-      linear-gradient(to right, rgb(255 255 255 / 0.035) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+      linear-gradient(to right, rgb(31 23 22 / 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(31 23 22 / 0.04) 1px, transparent 1px);
     background-size: 40px 40px;
     mask-image: radial-gradient(ellipse 70% 80% at 30% 0%, #000 30%, transparent 75%);
   }
   .spotlight {
-    background: radial-gradient(closest-side, oklch(var(--maroon) / 0.3), oklch(var(--maroon) / 0.12) 55%, transparent);
+    background: none;
   }
-  /* 1px gold->transparent gradient border for the one hero card per screen. */
   .gradient-ring {
     position: relative;
   }
-  .gradient-ring::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    padding: 1px;
-    border-radius: inherit;
-    background: linear-gradient(135deg, oklch(var(--gold) / 0.4), transparent 60%);
-    -webkit-mask:
-      linear-gradient(#000 0 0) content-box,
-      linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-  }
   .skeleton {
     @apply rounded-md bg-surface-2;
-    background-image: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.04), transparent);
+    background-image: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.7), transparent);
     background-size: 400px 100%;
     background-repeat: no-repeat;
     @apply animate-shimmer;
@@ -151,11 +156,11 @@
   .pulse-target {
     @apply animate-pulse-ring;
   }
-  /* Felt: radial maroon + 3% noise. Rail: 12px leather with a gold top highlight. */
+  /* Felt: radial maroon + noise, inside a dark leather rail with a gold top hairline. */
   .felt {
     position: relative;
     isolation: isolate;
-    background: radial-gradient(ellipse 85% 95% at 50% 18%, var(--felt-hi), var(--felt-lo) 78%);
+    background: radial-gradient(ellipse 85% 95% at 50% 30%, var(--felt-hi), var(--felt-lo) 80%);
   }
   .felt::after {
     content: "";
@@ -164,36 +169,49 @@
     z-index: -1;
     border-radius: inherit;
     pointer-events: none;
-    opacity: 0.03;
+    opacity: 0.06;
     background-image: var(--noise);
   }
   .felt-faint {
-    background: radial-gradient(ellipse 120% 70% at 0% 0%, rgb(42 6 6 / 0.35), rgb(26 3 3 / 0.35) 80%), oklch(var(--lacquer));
+    background: oklch(var(--card-2));
   }
   .rail {
+    position: relative;
+    color: oklch(var(--card));
     border: 12px solid transparent;
-    border-radius: 28px;
+    border-radius: 40px;
     background:
-      radial-gradient(ellipse 85% 95% at 50% 18%, var(--felt-hi), var(--felt-lo) 78%) padding-box,
-      linear-gradient(180deg, #3a2217, #241510 45%, #160c08) border-box;
+      radial-gradient(ellipse 85% 95% at 50% 30%, var(--felt-hi), var(--felt-lo) 80%) padding-box,
+      linear-gradient(180deg, #3a2419, var(--rail) 45%, #1c110c) border-box;
     box-shadow:
-      inset 0 1px 0 rgb(227 179 106 / 0.55),
-      0 0 0 1px rgb(0 0 0 / 0.7),
-      0 24px 48px -24px rgb(0 0 0 / 0.8);
+      inset 0 1px 0 rgb(227 179 106 / 0.6),
+      0 2px 4px rgb(31 23 22 / 0.12),
+      0 28px 56px -28px rgb(31 23 22 / 0.55);
   }
+  /* Gold hairline inset 16px + vignette */
   .rail::before {
     content: "";
     position: absolute;
-    inset: 0;
-    border-radius: 16px;
-    box-shadow:
-      inset 0 0 0 1px oklch(var(--gold) / 0.22),
-      inset 0 12px 32px -16px rgb(0 0 0 / 0.7);
+    inset: 16px;
+    border-radius: 22px;
+    box-shadow: inset 0 0 0 1px rgb(227 179 106 / 0.35);
     pointer-events: none;
+  }
+  .rail::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 28px;
+    pointer-events: none;
+    background: radial-gradient(ellipse 100% 90% at 50% 40%, transparent 55%, rgb(0 0 0 / 0.38));
+  }
+  .rail > * {
+    position: relative;
+    z-index: 1;
   }
   /* Brushed gold text for the one hero number per screen. */
   .gold-text {
-    background: var(--brushed);
+    background: var(--gold-foil);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -214,39 +232,42 @@
     font-family: theme("fontFamily.serif");
     font-optical-sizing: auto;
   }
-  /* Small-caps mono label (JetBrains has no true small caps; 10.5px caps + tracking reads the same). */
+  /* Small label: sentence-case Manrope 13px (mono caps labels were retired with the redesign). */
   .label-sc {
-    font-family: theme("fontFamily.mono");
-    font-size: 10.5px;
-    line-height: 16px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    font-family: theme("fontFamily.sans");
+    font-size: 13px;
+    line-height: 20px;
+    font-weight: 600;
     color: oklch(var(--fg-muted));
   }
   .card-face {
-    background: linear-gradient(160deg, oklch(97% 0.014 85), oklch(var(--ivory)) 55%, oklch(90% 0.022 80));
+    background: oklch(var(--card));
     color: oklch(var(--ink));
     box-shadow:
-      inset 0 0 0 1px rgb(0 0 0 / 0.08),
-      0 1px 0 rgb(255 255 255 / 0.4) inset,
-      0 10px 24px -10px rgb(0 0 0 / 0.75);
+      inset 0 0 0 1px oklch(var(--rule)),
+      var(--shadow-card);
+  }
+  .on-felt .card-face {
+    box-shadow:
+      inset 0 0 0 1px rgb(227 179 106 / 0.6),
+      0 10px 24px -10px rgb(0 0 0 / 0.7);
   }
   .card-back {
     background:
-      repeating-linear-gradient(45deg, oklch(var(--gold) / 0.16) 0 1px, transparent 1px 9px),
-      repeating-linear-gradient(-45deg, oklch(var(--gold) / 0.16) 0 1px, transparent 1px 9px),
-      radial-gradient(ellipse at 50% 30%, #5a0c0c, #330404);
+      repeating-linear-gradient(45deg, rgb(227 179 106 / 0.18) 0 1px, transparent 1px 9px),
+      repeating-linear-gradient(-45deg, rgb(227 179 106 / 0.18) 0 1px, transparent 1px 9px),
+      radial-gradient(ellipse at 50% 30%, #6a1216, #3a0507);
     box-shadow:
-      inset 0 0 0 4px #330404,
-      inset 0 0 0 5px oklch(var(--gold) / 0.55),
-      0 10px 24px -10px rgb(0 0 0 / 0.75);
+      inset 0 0 0 4px #3a0507,
+      inset 0 0 0 5px rgb(227 179 106 / 0.6),
+      0 10px 24px -10px rgb(0 0 0 / 0.7);
   }
   .backface-hidden {
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
   }
   .select {
-    @apply focus-ring h-8 rounded-sm bg-surface-2 px-2 text-sm text-fg ring-1 ring-inset ring-ring hover:ring-ring-strong;
+    @apply focus-ring h-9 rounded-md bg-surface-1 px-3 text-sm text-fg ring-1 ring-inset ring-ring hover:ring-ring-strong;
   }
 }
 
@@ -276,6 +297,6 @@
 
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 240ms;
+  animation-duration: 200ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }

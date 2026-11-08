@@ -312,88 +312,7 @@ export default function ModelLab() {
         <RankingCompare c={data.persistence_compare} moved={data.alternatives?.moved} test={data.move_test_pick} />
       )}
 
-      <div className="mt-16 grid grid-cols-12 gap-8">
-        <Tile
-          id="model2"
-          className="col-span-12 lg:col-span-8"
-          label="Model 2"
-          title="Daily floor coin-in, test window"
-          sub="Jan–Apr weekday mean × citywide-event uplift, against a flat Jan–Apr mean"
-          table={{
-            columns: ["Date", "Actual", "Model", "Baseline"],
-            rows: h.map((r) => [r.gaming_date, fmt.usd(r.actual), fmt.usd(r.pred_model), fmt.usd(r.pred_baseline)]),
-          }}
-        >
-          <Suspense fallback={<Skeleton className="h-[300px] w-full" />}>
-            <Chart
-              height={300}
-              label="Line chart of actual and predicted daily coin-in for May and June 2025"
-              option={{
-                grid: { left: 4, right: 72, top: 12, bottom: 4, containLabel: true },
-                tooltip: {
-                  trigger: "axis",
-                  formatter: (q: unknown) => {
-                    const a = q as { axisValueLabel: string; seriesName: string; value: [string, number]; color: string }[];
-                    return tipHtml(
-                      a[0]?.axisValueLabel ?? "",
-                      a.map((s) => [s.seriesName, fmt.usdK(s.value[1]), s.color]),
-                    );
-                  },
-                },
-                xAxis: { type: "time", axisLabel: { formatter: "{MMM} {d}" } },
-                yAxis: { type: "value", axisLabel: { formatter: (v: number) => fmt.usdK(v) }, scale: true },
-                series: [
-                  {
-                    name: "Actual",
-                    type: "line",
-                    data: h.map((r) => [r.gaming_date, r.actual]),
-                    lineStyle: { color: colors["fg-muted"], width: 1.25 },
-                    itemStyle: { color: colors["fg-muted"] },
-                    areaStyle: { color: areaFill(colors["fg-muted"], 0.12) },
-                    endLabel: { show: true, formatter: "Actual", color: colors["fg-muted"], fontSize: 11 },
-                  },
-                  {
-                    name: "Model 2",
-                    type: "line",
-                    data: h.map((r) => [r.gaming_date, r.pred_model]),
-                    lineStyle: { color: colors.gold, width: 1.75 },
-                    itemStyle: { color: colors.gold },
-                    endLabel: { show: true, formatter: "Model 2", color: colors["gold-soft"], fontSize: 11 },
-                  },
-                  {
-                    name: "Baseline",
-                    type: "line",
-                    data: h.map((r) => [r.gaming_date, r.pred_baseline]),
-                    lineStyle: { color: colors["fg-subtle"], type: [4, 4], width: 1 },
-                    itemStyle: { color: colors["fg-subtle"] },
-                    endLabel: { show: true, formatter: "Baseline", color: colors["fg-subtle"], fontSize: 11 },
-                  },
-                ],
-              }}
-            />
-          </Suspense>
-        </Tile>
-
-        <Tile className="col-span-12 lg:col-span-4" label="Model 2" title={`Test-window error, ${h.length} days`} testId="mae-table">
-          <DataTable
-            t={{
-              columns: ["Model", "MAE", "WAPE"],
-              rows: [
-                ["Weekday × event", fmt.usdK(m.mae_model), fmt.pct(m.wape_model)],
-                ["Weekday only", fmt.usdK(m.mae_weekday_only), "–"],
-                ["Baseline (flat mean)", fmt.usdK(m.mae_baseline), fmt.pct(m.wape_baseline)],
-              ],
-            }}
-          />
-          <p className="mt-3 text-xs text-fg-muted">
-            Event uplift ×{m.event_uplift.toFixed(3)}. Peaks {m.peak_days.join("/")}, troughs {m.trough_days.join("/")}. Runs{" "}
-            {fmt.usdK(m.bias_model)}/day high in May–Jun: demand drifted down after April.
-          </p>
-          <Changed>
-            Staff and time promotions to {m.peak_days.join("/")} peaks, not a flat schedule; re-fit monthly because of the drift.
-          </Changed>
-        </Tile>
-      </div>
+      <Forecast m={m} h={h} />
 
       <Tile className="mt-6" label="Guardrails" title="Leakage checklist" sub="Each line is an automated test in tests/test_no_leakage.py">
         <ul className="grid gap-x-8 md:grid-cols-2">
@@ -407,6 +326,101 @@ export default function ModelLab() {
       </Tile>
     </div>
   );
+}
+
+/** Model 2: daily floor coin-in forecast vs. a flat baseline (Ch 3 · The floor uses it too). */
+export function Forecast({ m, h }: { m: Lab["model2"]; h: H[] }) {
+  return (
+    <div className="mt-16 grid grid-cols-12 gap-8">
+      <Tile
+        id="model2"
+        className="col-span-12 lg:col-span-8"
+        label="Model 2"
+        title="Daily floor coin-in, test window"
+        sub="Jan–Apr weekday mean × citywide-event uplift, against a flat Jan–Apr mean"
+        table={{
+          columns: ["Date", "Actual", "Model", "Baseline"],
+          rows: h.map((r) => [r.gaming_date, fmt.usd(r.actual), fmt.usd(r.pred_model), fmt.usd(r.pred_baseline)]),
+        }}
+      >
+        <Suspense fallback={<Skeleton className="h-[300px] w-full" />}>
+          <Chart
+            height={300}
+            label="Line chart of actual and predicted daily coin-in for May and June 2025"
+            option={{
+              grid: { left: 4, right: 72, top: 12, bottom: 4, containLabel: true },
+              tooltip: {
+                trigger: "axis",
+                formatter: (q: unknown) => {
+                  const a = q as { axisValueLabel: string; seriesName: string; value: [string, number]; color: string }[];
+                  return tipHtml(
+                    a[0]?.axisValueLabel ?? "",
+                    a.map((s) => [s.seriesName, fmt.usdK(s.value[1]), s.color]),
+                  );
+                },
+              },
+              xAxis: { type: "time", axisLabel: { formatter: "{MMM} {d}" } },
+              yAxis: { type: "value", axisLabel: { formatter: (v: number) => fmt.usdK(v) }, scale: true },
+              series: [
+                {
+                  name: "Actual",
+                  type: "line",
+                  data: h.map((r) => [r.gaming_date, r.actual]),
+                  lineStyle: { color: colors["fg-muted"], width: 1.25 },
+                  itemStyle: { color: colors["fg-muted"] },
+                  areaStyle: { color: areaFill(colors["fg-muted"], 0.12) },
+                  endLabel: { show: true, formatter: "Actual", color: colors["fg-muted"], fontSize: 11 },
+                },
+                {
+                  name: "Model 2",
+                  type: "line",
+                  data: h.map((r) => [r.gaming_date, r.pred_model]),
+                  lineStyle: { color: colors.gold, width: 1.75 },
+                  itemStyle: { color: colors.gold },
+                  endLabel: { show: true, formatter: "Model 2", color: colors["gold-soft"], fontSize: 11 },
+                },
+                {
+                  name: "Baseline",
+                  type: "line",
+                  data: h.map((r) => [r.gaming_date, r.pred_baseline]),
+                  lineStyle: { color: colors["fg-subtle"], type: [4, 4], width: 1 },
+                  itemStyle: { color: colors["fg-subtle"] },
+                  endLabel: { show: true, formatter: "Baseline", color: colors["fg-subtle"], fontSize: 11 },
+                },
+              ],
+            }}
+          />
+        </Suspense>
+      </Tile>
+
+      <Tile className="col-span-12 lg:col-span-4" label="Model 2" title={`Test-window error, ${h.length} days`} testId="mae-table">
+        <DataTable
+          t={{
+            columns: ["Model", "MAE", "WAPE"],
+            rows: [
+              ["Weekday × event", fmt.usdK(m.mae_model), fmt.pct(m.wape_model)],
+              ["Weekday only", fmt.usdK(m.mae_weekday_only), "–"],
+              ["Baseline (flat mean)", fmt.usdK(m.mae_baseline), fmt.pct(m.wape_baseline)],
+            ],
+          }}
+        />
+        <p className="mt-3 text-xs text-fg-muted">
+          Event uplift ×{m.event_uplift.toFixed(3)}. Peaks {m.peak_days.join("/")}, troughs {m.trough_days.join("/")}. Runs{" "}
+          {fmt.usdK(m.bias_model)}/day high in May–Jun: demand drifted down after April.
+        </p>
+        <Changed>
+          Staff and time promotions to {m.peak_days.join("/")} peaks, not a flat schedule; re-fit monthly because of the drift.
+        </Changed>
+      </Tile>
+    </div>
+  );
+}
+
+/** Self-loading Forecast for chapters that don't otherwise read model_lab.json. */
+export function ForecastSection() {
+  const { data } = useJson<Lab>("model_lab.json");
+  if (!data) return <Skeleton className="h-[360px] w-full" />;
+  return <Forecast m={data.model2} h={rows<H>(data.model2_holdout)} />;
 }
 
 const OUTCOME_LABELS = { effect: "May–Jun play vs. spot and game", house_win: "May–Jun raw house win" } as const;

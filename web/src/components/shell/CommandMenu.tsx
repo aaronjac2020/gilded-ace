@@ -10,7 +10,7 @@ import { Keys } from "../ui/kbd";
 import { StatusPill } from "../ui/status-pill";
 import { copyLink } from "../ui/tile";
 import { NAV, MONTHS } from "./nav";
-import { PERIOD_LONG } from "./TopBar";
+import { PERIOD_LONG } from "./nav";
 
 const RECENT = "ga.recent";
 const item =
@@ -85,9 +85,9 @@ export function CommandMenu() {
             })}
           </Command.Group>
         )}
-        <Command.Group heading="Screens" className={group}>
+        <Command.Group heading="Chapters" className={group}>
           {NAV.map((n) => (
-            <Command.Item key={n.to} value={`screen ${n.label} ${n.q ?? ""}`} className={item} onSelect={() => go(n.to, n.label)}>
+            <Command.Item key={n.to} value={`screen ${n.label} ${n.answers ?? ""} ${n.n ?? ""}`} className={item} onSelect={() => go(n.to, n.label)}>
               <n.icon size={16} strokeWidth={1.5} aria-hidden />
               <span className="flex-1">{n.label}</span>
               <Keys keys={["G", n.key.toUpperCase()]} />

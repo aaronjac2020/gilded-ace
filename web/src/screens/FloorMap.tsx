@@ -3,7 +3,7 @@ import { Maximize2, Minus, Pause, Play, Plus } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { MONTHS } from "../components/shell/nav";
-import { PERIOD_LABELS, PERIOD_LONG } from "../components/shell/TopBar";
+import { PERIOD_LABELS, PERIOD_LONG } from "../components/shell/nav";
 import { HeroBand, Kpi, KpiStrip } from "../components/ui/hero-band";
 import { Num } from "../components/ui/num";
 import { ErrorState, ScreenSkeleton } from "../components/ui/skeleton";

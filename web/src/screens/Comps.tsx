@@ -1,6 +1,6 @@
 import { lazy, Suspense, useMemo } from "react";
 import { EvidenceLink } from "../components/EvidenceLink";
-import { PERIOD_LONG } from "../components/shell/TopBar";
+import { PERIOD_LONG } from "../components/shell/nav";
 import { HeroBand, Kpi, KpiStrip } from "../components/ui/hero-band";
 import { Num } from "../components/ui/num";
 import { ErrorState, ScreenSkeleton, Skeleton } from "../components/ui/skeleton";

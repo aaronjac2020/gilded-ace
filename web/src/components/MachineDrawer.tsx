@@ -1,6 +1,6 @@
 import { m } from "framer-motion";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { useEffect, useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Drawer } from "vaul";
 import type { ScoreRow } from "../lib/data";
 import { fmt } from "../lib/format";
@@ -12,7 +12,8 @@ import { Button } from "./ui/button";
 import { Kbd } from "./ui/kbd";
 import { EvidenceLink } from "./EvidenceLink";
 import { MachineTickets, MachineTimeline } from "./MachineTimeline";
-import { VerdictStamp } from "./theme/VerdictStamp";
+import { ReasonStamp, ReasonTag, reasonOf, tagsOf, useReasons } from "./Reason";
+import { REASON } from "../lib/reasons";
 import { Tabs, TabsContent, TabsList } from "./ui/tabs";
 import { Tip } from "./ui/tooltip";
 
@@ -51,7 +52,7 @@ export function MachineDrawer() {
         <Drawer.Content
           data-testid="machine-drawer"
           aria-describedby={undefined}
-          className="fixed right-2 top-2 z-50 flex max-h-[calc(100vh-16px)] w-[520px] max-w-[calc(100vw-16px)] flex-col overflow-hidden rounded-xl border-l border-gold/50 bg-lacquer shadow-float outline-none ring-1 ring-gold/15"
+          className="fixed right-2 top-2 z-50 flex max-h-[calc(100vh-16px)] w-[520px] max-w-[calc(100vw-16px)] flex-col overflow-hidden rounded-[14px] border border-divider bg-card shadow-float outline-none"
         >
           {row && (
             <Body
@@ -94,10 +95,10 @@ function Body({
     <>
       <div className="sticky top-0 border-b border-divider px-5 pb-0 pt-4">
         <div className="flex items-center justify-between gap-3">
-          <p className="label-sc text-gold-soft/80">Case file</p>
+          <p className="text-[13px] font-semibold text-gold-soft">Case file</p>
           <div className="flex items-center gap-1">
             {pos >= 0 && (
-              <span className="mono mr-1 text-2xs text-fg-subtle">
+              <span className="mono mr-1 text-[13px] text-fg-subtle">
                 {pos + 1} / {n}
               </span>
             )}
@@ -121,7 +122,7 @@ function Body({
         <div className="mt-1 flex items-start justify-between gap-4">
           <div className="min-w-0">
             <Drawer.Title asChild>
-              <m.h2 layoutId={`id-${row.machine_id}`} className="mono text-3xl font-semibold tracking-tight text-ivory">
+              <m.h2 layoutId={`id-${row.machine_id}`} className="mono text-3xl font-semibold tracking-tight text-fg">
                 {row.machine_id}
               </m.h2>
             </Drawer.Title>
@@ -129,11 +130,11 @@ function Body({
               {row.zone_id} › {row.bank_id} › {row.location_id}
             </p>
           </div>
-          <VerdictStamp key={row.machine_id} verdict={row.verdict} surface="dark" animate className="mt-2 text-[13px]" />
+          <DrawerStamp key={row.machine_id} id={row.machine_id} />
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-1.5">
-          <span className="rounded-sm border border-divider px-1.5 py-0.5 text-2xs text-fg-muted">{row.theme}</span>
-          <span className="rounded-sm border border-divider px-1.5 py-0.5 text-2xs text-fg-muted">
+          <span className="rounded-sm border border-divider px-2 py-0.5 text-[13px] text-fg-muted">{row.theme}</span>
+          <span className="rounded-sm border border-divider px-2 py-0.5 text-[13px] text-fg-muted">
             {String(row.volatility_class ?? "")} volatility
           </span>
           {rules && row.hold_expected <= rules.low_hold_design && (
@@ -184,7 +185,7 @@ function Body({
                 ]}
               />
               {moves.map((mv) => (
-                <p key={mv.moved_on} className="mt-3 text-xs text-fg-muted" data-testid="drawer-move">
+                <p key={mv.moved_on} className="mt-3 text-[13px] text-fg-muted" data-testid="drawer-move">
                   Moved {mv.moved_on}, {mv.from_zone} → {mv.to_zone}: spot expected {fmt.usd(mv.spot_before)} → {fmt.usd(mv.spot_after)}
                   /hr, actual {fmt.usd(mv.rate_before)} → {fmt.usd(mv.rate_after)}/hr.
                 </p>
@@ -199,7 +200,7 @@ function Body({
           </div>
         </Tabs>
       </div>
-      <p className="mt-auto flex items-center gap-2 border-t border-divider px-5 py-2 text-2xs text-fg-subtle">
+      <p className="mt-auto flex items-center gap-2 border-t border-divider px-5 py-2 text-[13px] text-fg-subtle">
         <Kbd>←</Kbd>
         <Kbd>→</Kbd> step through list · <Kbd>Esc</Kbd> close
       </p>
@@ -220,69 +221,103 @@ const NEXT: Record<ScoreRow["verdict"], [string, string]> = {
     "A replace or lease-swap candidate in the plan.",
     "The effect interval moves above zero with more days, or a move test lifts play.",
   ],
-  ok: ["No action. Performs in line with its spot and game.", "The effect interval drops below zero in a later period."],
+  ok: ["No action. Earned less, but within normal range for its spot and game.", "The effect interval drops below zero in a later period."],
 };
 
-/** Numbered evidence with dotted leaders, each line linked to the chart behind it, then the call in one sentence. */
+/** Primary reason stamp + secondary tags, from the same rules as Ch 1. */
+function DrawerStamp({ id }: { id: string }) {
+  const [f] = useFilters();
+  const { flags } = useReasons(f);
+  if (!flags) return null;
+  const r = reasonOf(flags, id);
+  const tags = tagsOf(flags, id);
+  return (
+    <div className="mt-1 flex flex-col items-end gap-1.5" data-testid="drawer-reason" data-reason={r}>
+      <ReasonStamp reason={r} size="md" animate />
+      {REASON[r].sub && <span className="text-[13px] text-fg-muted">{REASON[r].sub}</span>}
+      {tags.length > 0 && (
+        <span className="flex flex-wrap justify-end gap-1">
+          {tags.map((t) => (
+            <ReasonTag key={t} reason={t} />
+          ))}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** The call in plain words, one line per check; technical values sit muted underneath, each linked to its chart. */
 function TheCall({ row, rules }: { row: ScoreRow; rules?: { low_hold_design: number; floor_median_hold: number } }) {
   const low = !!rules && row.hold_expected <= rules.low_hold_design;
-  const items: { k: string; v: string; link: ReactNode; note?: string }[] = [
+  const eff = row.machine_effect_shrunk;
+  const play =
+    row.effect_shrunk_hi < 1
+      ? `It draws ${fmt.pct(1 - eff, 0)} less play than that spot predicts.`
+      : row.effect_shrunk_lo > 1
+        ? `It draws ${fmt.pct(eff - 1, 0)} more play than that spot predicts.`
+        : "It draws about the play that spot predicts.";
+  const won = -row.luck_resid_usd;
+  const items: { k: string; tech: string; link: ReactNode }[] = [
     {
-      k: "Expected play at this spot",
-      v: `${fmt.usd(row.location_expected_per_hr)}/hr`,
+      k: `Its spot should draw about ${fmt.usd(row.location_expected_per_hr)} of play an hour.`,
+      tech: `location model · ${row.location_id}`,
       link: <EvidenceLink to="/floor" focus="map" filters={{ bank: row.bank_id }} label="Floor" />,
     },
     {
-      k: "Actual play · effect",
-      v: `${fmt.usd(row.coin_in_per_avail_hr)}/hr · ${fmt.num(row.machine_effect_shrunk)} [${fmt.num(row.effect_shrunk_lo)}–${fmt.num(row.effect_shrunk_hi)}]`,
-      link: <EvidenceLink to="/model" focus="persistence" label="Model" />,
+      k: play,
+      tech: `${fmt.usd(row.coin_in_per_avail_hr)}/hr · effect ${fmt.num(eff)} [${fmt.num(row.effect_shrunk_lo)}–${fmt.num(row.effect_shrunk_hi)}]`,
+      link: <EvidenceLink to="/why" focus="persistence" label="Model" />,
     },
     {
-      k: "Availability · lost theo",
-      v: `${fmt.pct(row.availability)} · ${fmt.usd(row.lost_theo_usd)}`,
-      link: <EvidenceLink to="/downtime" focus="lost" label="Downtime" />,
+      k: `It was working ${fmt.pct(row.availability)} of the time.`,
+      tech: `lost theo ${fmt.usd(row.lost_theo_usd)}`,
+      link: <EvidenceLink to="/floor" focus="lost" label="Downtime" />,
     },
     {
-      k: "Luck · z",
-      v: `${fmt.usd(row.luck_resid_usd)} · ${fmt.num(row.luck_z, 2)}`,
-      link: <EvidenceLink to="/floor" focus="map" label="Floor" />,
+      k: won > 0 ? `Guests won ${fmt.usd(won)} more than the game math expects.` : `The house won ${fmt.usd(-won)} more than the game math expects.`,
+      tech: `luck z ${fmt.num(row.luck_z, 2)}`,
+      link: <EvidenceLink to="/why" focus="luck" label="Luck" />,
     },
     {
-      k: "Hold vs. configured",
-      v: `${fmt.pct(row.hold_obs)} vs. ${fmt.pct(row.hold_expected)}`,
-      link: <EvidenceLink to="/model" focus="ranking-compare" label="Model" />,
-      note: low ? "Game setting: pays back more by design. Low win here is partly game math." : undefined,
+      k: low
+        ? `It is set to keep ${fmt.pct(row.hold_expected, 0)} of each bet; the floor median is ${fmt.pct(rules!.floor_median_hold, 0)}.`
+        : `It kept ${fmt.pct(row.hold_obs)} of bets; it is set to keep ${fmt.pct(row.hold_expected)}.`,
+      tech: `hold ${fmt.pct(row.hold_obs)} [${fmt.pct(row.hold_ci_lo)}–${fmt.pct(row.hold_ci_hi)}]${row.hold_flag ? " · flagged to verify" : ""}`,
+      link: <EvidenceLink to="/why" focus="game-setting" label="Setting" />,
     },
   ];
+  const [nums, setNums] = useState(false);
   return (
     <div data-testid="the-call">
-      <p className="mb-6 border-b border-gold/25 pb-5 text-base leading-relaxed text-ivory">
-        <span className="label-sc mb-1.5 block text-gold-soft">The call</span>
-        {row.verdict_reason}
-      </p>
-      <p className="label-sc mb-3 text-fg-muted">Evidence</p>
-      <ol className="space-y-3">
+      <ol className="space-y-4">
         {items.map((it, i) => (
-          <li key={it.k} className="text-sm">
-            <div className="flex items-baseline gap-2">
-              <span className="serif w-4 shrink-0 text-gold-soft">{i + 1}</span>
-              <span className="shrink-0 text-fg-muted">{it.k}</span>
-              <span className="mb-1 min-w-4 flex-1 border-b border-dotted border-fg-subtle/60" aria-hidden />
-              <span className="mono shrink-0 text-xs text-fg">{it.v}</span>
-              <span className="w-[72px] shrink-0 text-right [&_a]:text-fg-muted [&_a:hover]:text-gold">{it.link}</span>
+          <li key={i} className="flex gap-3">
+            <span className="serif w-4 shrink-0 pt-0.5 text-gold-soft">{i + 1}</span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[15px] leading-snug text-fg">{it.k}</p>
+              {nums && <p className="mono mt-0.5 text-[13px] text-fg-subtle">{it.tech}</p>}
             </div>
-            {it.note && <p className="ml-6 mt-1 text-xs text-gold-soft">{it.note}</p>}
+            <span className="shrink-0 text-[13px] [&_a]:text-fg-muted [&_a:hover]:text-maroon">{it.link}</span>
           </li>
         ))}
       </ol>
+      <button
+        type="button"
+        onClick={() => setNums((v) => !v)}
+        aria-expanded={nums}
+        className="focus-ring ml-7 mt-4 rounded-sm text-[13px] font-semibold text-maroon hover:underline"
+        data-testid="show-numbers"
+      >
+        {nums ? "Hide the numbers" : "Show the numbers"}
+      </button>
       <dl className="mt-8 grid gap-6 border-t border-divider pt-6 sm:grid-cols-2">
         <div>
-          <dt className="label-sc text-fg-muted">What we’d do</dt>
-          <dd className="mt-2 text-sm text-fg">{NEXT[row.verdict][0]}</dd>
+          <dt className="text-[13px] font-semibold text-fg-muted">What we&rsquo;d do</dt>
+          <dd className="mt-2 text-[15px] text-fg">{NEXT[row.verdict][0]}</dd>
         </div>
         <div>
-          <dt className="label-sc text-fg-muted">What would change the call</dt>
-          <dd className="mt-2 text-sm text-fg">{NEXT[row.verdict][1]}</dd>
+          <dt className="text-[13px] font-semibold text-fg-muted">What would change the call</dt>
+          <dd className="mt-2 text-[15px] text-fg">{NEXT[row.verdict][1]}</dd>
         </div>
       </dl>
     </div>

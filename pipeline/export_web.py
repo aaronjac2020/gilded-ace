@@ -469,6 +469,11 @@ def run() -> dict[str, int]:
             "low_hold_design": cfg()["verdicts"]["low_hold_design"],
             "floor_median_hold": float(full["hold_expected"].median()),
         },
+        # presentation only: lets web/src/lib/reasons.ts re-derive each verdict rule's mask (checked by consistency.mjs)
+        "verdict_rules": {
+            k: cfg()["verdicts"][k]
+            for k in ("luck_z", "downtime_avail_quantile", "downtime_gap_share", "location_quantile", "theo_hr_low_quantile")
+        },
     }
     sizes["meta.json"] = write("meta.json", meta)
     total = sum(sizes.values())

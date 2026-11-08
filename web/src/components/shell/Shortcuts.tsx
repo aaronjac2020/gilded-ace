@@ -52,10 +52,8 @@ export function useGlobalKeys() {
 
 const ROWS: [string, string[]][] = [
   ["Open command menu", [MOD, "K"]],
-  ...NAV.map((n): [string, string[]] => [`Go to ${n.label}`, ["G", n.key.toUpperCase()]]),
+  ...NAV.map((n): [string, string[]] => [`Go to ${n.n ? `chapter ${n.n}: ` : ""}${n.label}`, ["G", n.key.toUpperCase()]]),
   ["Previous / next month", ["[", "]"]],
-  ["Play / pause months", ["Space"]],
-  ["Step month (playback)", [",", "."]],
   ["Move in a list", ["J", "K"]],
   ["Open selected row", ["↵"]],
   ["Step machines in drawer", ["←", "→"]],
